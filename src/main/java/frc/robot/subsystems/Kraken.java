@@ -7,15 +7,29 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.*;
+import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 public class Kraken extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
 
   private TalonFX IshaanAndAdityasKraken = new TalonFX(1);
+  VelocityVoltage setpoint = new VelocityVoltage(0);
 
   public Kraken() {
 
+  }
+
+
+  public void runMotor()
+  {
+    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(20));
+  }
+
+  public void runMotorFast()
+  {
+    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(50));
   }
 
   /**
@@ -23,12 +37,17 @@ public class Kraken extends SubsystemBase {
    *
    * @return a command
    */
-  public Command runMotor() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
+  public Command runMotorCommand() {
     return this.run(
         () -> {
-          IshaanAndAdityasKraken.set(0.1);
+          runMotor();
+        }).finallyDo(interruped -> IshaanAndAdityasKraken.set(0));
+  }
+
+  public Command runMotorFastCommand() {
+    return this.run(
+        () -> {
+          runMotorFast();
         }).finallyDo(interruped -> IshaanAndAdityasKraken.set(0));
   }
 
