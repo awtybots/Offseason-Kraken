@@ -7,9 +7,12 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.*;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class Kraken extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
@@ -18,7 +21,25 @@ public class Kraken extends SubsystemBase {
   VelocityVoltage setpoint = new VelocityVoltage(0);
 
   public Kraken() {
+TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
 
+                        IshaanAndAdityasKrakenConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+                        IshaanAndAdityasKrakenConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+                        IshaanAndAdityasKrakenConfig.CurrentLimits.StatorCurrentLimit = 40.0; // Amps
+                        IshaanAndAdityasKrakenConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+
+
+                        IshaanAndAdityasKrakenConfig.Slot0.kP = 0.1;
+                        IshaanAndAdityasKrakenConfig.Slot0.kI = 0.0;
+                        IshaanAndAdityasKrakenConfig.Slot0.kD = 0.0;
+
+                        IshaanAndAdityasKrakenConfig.Slot0.kS = 0.1;
+                        IshaanAndAdityasKrakenConfig.Slot0.kV = 0.1;
+                        IshaanAndAdityasKrakenConfig.Slot0.kA = 0.0;
+
+                        IshaanAndAdityasKraken.getConfigurator().apply(IshaanAndAdityasKrakenConfig);
   }
 
 

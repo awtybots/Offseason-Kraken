@@ -15,28 +15,9 @@ public final class Configs
                 
             
             // public static final SparkFlexConfig IntakeRightMotorConfig = new SparkFlexConfig();
-                public static TalonFX IshaanAndAdityasKraken = new TalonFX(1);
 
                 static {
-                        TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
-
-                        IshaanAndAdityasKrakenConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-                        IshaanAndAdityasKrakenConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-                        IshaanAndAdityasKrakenConfig.CurrentLimits.StatorCurrentLimit = 40.0; // Amps
-                        IshaanAndAdityasKrakenConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-
-
-                        IshaanAndAdityasKrakenConfig.Slot0.kP = 0.1;
-                        IshaanAndAdityasKrakenConfig.Slot0.kI = 0.0;
-                        IshaanAndAdityasKrakenConfig.Slot0.kD = 0.0;
-
-                        IshaanAndAdityasKrakenConfig.Slot0.kS = 0.1;
-                        IshaanAndAdityasKrakenConfig.Slot0.kV = 0.1;
-                        IshaanAndAdityasKrakenConfig.Slot0.kA = 0.0;
-
-                        IshaanAndAdityasKraken.getConfigurator().apply(IshaanAndAdityasKrakenConfig);
+                        
 
 
 
