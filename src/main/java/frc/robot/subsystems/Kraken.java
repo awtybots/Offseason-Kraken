@@ -45,12 +45,12 @@ TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
 
   public void runMotor()
   {
-    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(20).withAcceleration(50));
+    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(20).withAcceleration(50).withSlot(0));
   }
 
   public void runMotorFast()
   {
-    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(50).withAcceleration(50));
+    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(50).withAcceleration(50).withSlot(0));
   }
 
   /**
@@ -62,6 +62,9 @@ TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
     return this.run(
         () -> {
           runMotor();
+        }).finallyDo(
+        () -> {
+          IshaanAndAdityasKraken.setControl(setpoint.withVelocity(0));
         });
   }
 
@@ -69,6 +72,9 @@ TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
     return this.run(
         () -> {
           runMotorFast();
+        }).finallyDo(
+        () -> {
+          IshaanAndAdityasKraken.setControl(setpoint.withVelocity(0));
         });
   }
 
