@@ -41,14 +41,14 @@ public class Kraken extends SubsystemBase {
     return this.run(
         () -> {
           runMotor();
-        }).finallyDo(interruped -> IshaanAndAdityasKraken.set(0));
+        });
   }
 
   public Command runMotorFastCommand() {
     return this.run(
         () -> {
           runMotorFast();
-        }).finallyDo(interruped -> IshaanAndAdityasKraken.set(0));
+        });
   }
 
   /**
