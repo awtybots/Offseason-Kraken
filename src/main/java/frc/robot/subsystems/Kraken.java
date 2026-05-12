@@ -24,12 +24,12 @@ public class Kraken extends SubsystemBase {
 
   public void runMotor()
   {
-    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(20));
+    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(20).withAcceleration(50));
   }
 
   public void runMotorFast()
   {
-    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(50));
+    IshaanAndAdityasKraken.setControl(setpoint.withVelocity(50).withAcceleration(50));
   }
 
   /**
