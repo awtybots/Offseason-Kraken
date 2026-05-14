@@ -46,6 +46,9 @@ public class RobotContainer {
     // cancelling on release.
     m_driverController.rightTrigger().whileTrue(m_kraken.runMotorCommand());
     m_driverController.leftTrigger().whileTrue(m_kraken.runMotorFastCommand());
+
+    m_driverController.start().whileTrue(m_kraken.runAwayCommand());
+    m_driverController.back().whileTrue(m_kraken.stopRunaway());
   }
 
   /**

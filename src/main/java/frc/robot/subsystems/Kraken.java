@@ -18,10 +18,14 @@ public class Kraken extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
 
   private TalonFX IshaanAndAdityasKraken = new TalonFX(1);
+    private TalonFX david = new TalonFX(2);
   VelocityVoltage setpoint = new VelocityVoltage(0);
+  Orchestra orchestra = new Orchestra();
+  Orchestra orchestra2 = new Orchestra();
 
   public Kraken() {
 TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
+TalonFXConfiguration dAVIDConfig = new TalonFXConfiguration();
 
                         IshaanAndAdityasKrakenConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -29,8 +33,7 @@ TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
 
                         IshaanAndAdityasKrakenConfig.CurrentLimits.StatorCurrentLimit = 40.0; // Amps
                         IshaanAndAdityasKrakenConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-
-
+   
                         IshaanAndAdityasKrakenConfig.Slot0.kP = 0.1;
                         IshaanAndAdityasKrakenConfig.Slot0.kI = 0.0;
                         IshaanAndAdityasKrakenConfig.Slot0.kD = 0.0;
@@ -40,12 +43,37 @@ TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
                         IshaanAndAdityasKrakenConfig.Slot0.kA = 0.0;
 
                         IshaanAndAdityasKraken.getConfigurator().apply(IshaanAndAdityasKrakenConfig);
+
+                        orchestra.addInstrument(IshaanAndAdityasKraken);
+                        orchestra.loadMusic("output.chrp");
+                      IshaanAndAdityasKrakenConfig.Audio.AllowMusicDurDisable = true;
+
+                                orchestra2.addInstrument(david);
+                        orchestra2.loadMusic("output.chrp");
+                      dAVIDConfig.Audio.AllowMusicDurDisable = true;
+                     
+
   }
 
+
+  public void runAway()
+  {
+    // IshaanAndAdityasKraken.setControl(setpoint.withVelocity(20).withAcceleration(50).withSlot(0));
+      orchestra.play();
+      orchestra2.play();
+  }
+
+  public void stopRunAway()
+  {
+    // IshaanAndAdityasKraken.setControl(setpoint.withVelocity(50).withAcceleration(50).withSlot(0));
+    orchestra.stop();
+    orchestra2.stop();
+  }
 
   public void runMotor()
   {
     IshaanAndAdityasKraken.setControl(setpoint.withVelocity(20).withAcceleration(50).withSlot(0));
+
   }
 
   public void runMotorFast()
@@ -78,6 +106,20 @@ TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
         });
   }
 
+  public Command runAwayCommand() {
+    return this.run(
+        () -> {
+          runAway();
+        });
+  }
+
+  public Command stopRunaway() {
+    return this.run(
+        () -> {
+          stopRunAway();
+        });
+  }
+
   /**
    * An example method querying a boolean state of the subsystem (for example, a digital sensor).
    *
@@ -91,6 +133,7 @@ TalonFXConfiguration IshaanAndAdityasKrakenConfig = new TalonFXConfiguration();
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    
   }
 
   @Override
