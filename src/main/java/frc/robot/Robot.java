@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.BuildConstants; // <---------- WISCONSIN???
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -44,6 +45,8 @@ public class Robot extends LoggedRobot {
         }
 
         Logger.recordMetadata("ProjectName", "2026Rebuilt");
+        Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+        Logger.recordMetadata("GitDirty", Boolean.toString(BuildConstants.DIRTY != 0));
 
         if (isReal()) {
             Logger.addDataReceiver(new WPILOGWriter());

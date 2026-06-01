@@ -146,7 +146,7 @@ public class ControlAllShooting extends Command {
                 m_intake.runIntake();
                 m_pushout.PushIntake();
             } else {
-                // turret is wrapping — stop feeding but shooter and hood keep running
+                // turret is wrapping stop feeding but dont jam
                 isFiring = false;
                 m_kicker.ClearBallCommand();
                 m_conveyor.stopConveyor();
