@@ -93,6 +93,7 @@ public final class Constants {
       Pose3d pose = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? redHubPose : blueHubPose;
       return pose;
     }
+    
 
     public static final Pose2d getFerryPose(Translation2d robotPose) {
       if (DriverStation.getAlliance().equals(Optional.of(Alliance.Red))) {

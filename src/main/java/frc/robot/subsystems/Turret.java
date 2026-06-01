@@ -53,6 +53,8 @@ public class Turret extends SubsystemBase {
         lastAbsolutePosition = getAbsoluteDegrees();
     }
 
+    
+
     public double getAbsoluteDegrees() {
         return absoluteEncoder.getAbsolutePosition().getValueAsDouble() * 360.0;
     }

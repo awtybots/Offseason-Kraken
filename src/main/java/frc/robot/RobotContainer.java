@@ -128,14 +128,11 @@ public class RobotContainer {
             ControlAllShooting shootCmd = new ControlAllShooting(
                     m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
             return Commands.sequence(
-                    Commands.runOnce(() -> {
-                        drivebase.setAimLocations();
-                        drivebase.isAiming = true;
-                    }),
+                 
                     Commands.parallel(
                             shootCmd,
                             m_pushout.AgitateWhileIntakingCommand()))
-                    .finallyDo(() -> drivebase.isAiming = false);
+  ;
         }, java.util.Collections.emptySet()).withTimeout(5.3));
 
         // ==================== AUTO CHOOSER ====================
@@ -240,10 +237,7 @@ public class RobotContainer {
                 ControlAllShooting shootCmd = new ControlAllShooting(
                   m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
                 return Commands.sequence(
-                  Commands.runOnce(() -> {
-                      drivebase.setAimLocations();
-                      drivebase.isAiming = true;
-                  }),
+                 
                   Commands.parallel(
                     shootCmd,
                     m_pushout.AgitateCommand(),
@@ -254,7 +248,6 @@ public class RobotContainer {
                       driveAngularVelocity::get)
                   ).onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
                 ).finallyDo(() -> {
-                  drivebase.isAiming = false;
                   m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
                   });
             }, java.util.Collections.emptySet())
