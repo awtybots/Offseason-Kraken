@@ -108,16 +108,16 @@ public class RobotContainer {
         configureBindings();
 
         DriverStation.silenceJoystickConnectionWarning(true);
-        SmartDashboard.putNumber("Heading Bias Deg", 0.0);
-        SmartDashboard.putBoolean("Is Shooter Running", m_shooter.isShooterRunning());
-        SmartDashboard.putNumber("Heading Bias Gain", 0);
+
+      
+
 
         // ==================== NAMED COMMANDS ====================
 
         NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
         // pushout
-        NamedCommands.registerCommand("extend", m_pushout.PushCommand());
+        NamedCommands.registerCommand("extend intake", m_pushout.PushCommand());
         NamedCommands.registerCommand("retract intake", m_pushout.RetractCommand());
 
         // intake
@@ -357,22 +357,6 @@ public class RobotContainer {
         return 1.0;
     }
 
-    private ChassisSpeeds applyHeadingBias(ChassisSpeeds speeds) {
-        boolean headingBiasEnabled = SmartDashboard.getBoolean("headingBiasEnabled", false);
-        if (!headingBiasEnabled)
-            return speeds;
-
-        double biasDeg = SmartDashboard.getNumber("Heading Bias Deg", 0.0);
-        double gain = SmartDashboard.getNumber("Heading Bias Gain", 0.0);
-        double omega = speeds.omegaRadiansPerSecond;
-
-        if (biasDeg != 0.0 && gain != 0.0) {
-            double biasRad = Units.degreesToRadians(biasDeg);
-            omega += gain * biasRad;
-        }
-
-        return new ChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, omega);
-    }
 
     private Alliance getAlliance() {
         return DriverStation.getAlliance().orElse(Alliance.Red);
