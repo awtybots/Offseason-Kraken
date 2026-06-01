@@ -225,11 +225,9 @@ public class RobotContainer {
         if (RobotBase.isSimulation()) {
             drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
         } else {
-            if (Constants.USE_ROBOT_RELATIVE) {
-                drivebase.setDefaultCommand(drivebase.run(() -> drivebase.drive(driveRobotOriented.get())));
-            } else {
+           
                 drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
-            }
+            
         }
 
         // ==================== DRIVER BINDINGS ====================
@@ -341,11 +339,9 @@ public class RobotContainer {
         }
 
         if (DriverStation.isTest()) {
-            if (Constants.USE_ROBOT_RELATIVE) {
-                drivebase.setDefaultCommand(drivebase.run(() -> drivebase.drive(driveRobotOriented.get())));
-            } else {
+            
                 drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
-            }
+            
         }
     }
 
