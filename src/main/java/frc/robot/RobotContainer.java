@@ -105,7 +105,6 @@ public class RobotContainer {
 
     private Trigger A_runOuttake;
 
-
     // ========= OPERATOR TRIGGERS ===========
     private Trigger LT_OP_1900Shot; // fixed speed shot
     private Trigger RT_OP_VariableShoot; // variable shoot
@@ -144,12 +143,13 @@ public class RobotContainer {
         return isAsierSelected() ? driverXbox : operatorXbox;
     }
 
-    public void warmupCommands() {
     @SuppressWarnings("unused")
-    ControlAllShooting shootWarm = new ControlAllShooting(
-        m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-    AimTurret aimTurretWarm = new AimTurret(m_turret, drivebase);
-    AimHood aimHoodWarm = new AimHood(m_hood, drivebase);
+    public void warmupCommands() {
+
+        ControlAllShooting shootWarm = new ControlAllShooting(
+                m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+        AimTurret aimTurretWarm = new AimTurret(m_turret, drivebase);
+        AimHood aimHoodWarm = new AimHood(m_hood, drivebase);
     }
 
     public RobotContainer() {
@@ -188,9 +188,8 @@ public class RobotContainer {
                     }),
                     Commands.parallel(
                             shootCmd,
-                            m_pushout.AgitateWhileIntakingCommand()
-                    )
-            ).finallyDo(() -> drivebase.isAiming = false);
+                            m_pushout.AgitateWhileIntakingCommand()))
+                    .finallyDo(() -> drivebase.isAiming = false);
         }, java.util.Collections.emptySet()).withTimeout(5.3));
 
         // ==================== AUTO CHOOSER ====================
@@ -319,62 +318,60 @@ public class RobotContainer {
 
         // RT shoots
         RTScore.whileTrue(
-            Commands.defer(() -> {
-                ControlAllShooting shootCmd = new ControlAllShooting(
-                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-                return Commands.sequence(
-                  Commands.runOnce(() -> {
-                      drivebase.setAimLocations();
-                      drivebase.isAiming = true;
-                  }),
-                  Commands.parallel(
-                    shootCmd,
-                    m_pushout.AgitateCommand(),
-                    drivebase.lockCommand( // lock wheels while shooting
-                      dc()::getLeftX,
-                      dc()::getLeftY,
-                      dc()::getRightX,
-                      driveAngularVelocity::get)
-                  ).onlyWhile(() -> !LT_Intake.getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
-                ).finallyDo(() -> {
-                  drivebase.isAiming = false;
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0); // keep flywheel spun up briefly after shot
-                });
-            }, java.util.Collections.emptySet())
-        );
+                Commands.defer(() -> {
+                    ControlAllShooting shootCmd = new ControlAllShooting(
+                            m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret,
+                            drivebase);
+                    return Commands.sequence(
+                            Commands.runOnce(() -> {
+                                drivebase.setAimLocations();
+                                drivebase.isAiming = true;
+                            }),
+                            Commands.parallel(
+                                    shootCmd,
+                                    m_pushout.AgitateCommand(),
+                                    drivebase.lockCommand( // lock wheels while shooting
+                                            dc()::getLeftX,
+                                            dc()::getLeftY,
+                                            dc()::getRightX,
+                                            driveAngularVelocity::get))
+                                    .onlyWhile(() -> !LT_Intake.getAsBoolean() && m_turret.isAtAngle()
+                                            && m_hood.isAtAngle()))
+                            .finallyDo(() -> {
+                                drivebase.isAiming = false;
+                                m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0); // keep
+                                                                                                            // flywheel
+                                                                                                            // spun up
+                                                                                                            // briefly
+                                                                                                            // after
+                                                                                                            // shot
+                            });
+                }, java.util.Collections.emptySet()));
 
         // LT intakes
         LT_Intake.whileTrue(
-          Commands.parallel(
-            m_pushout.PushCommand(),
-            m_intake.runIntakeCommand()
-          )
-        );
+                Commands.parallel(
+                        m_pushout.PushCommand(),
+                        m_intake.runIntakeCommand()));
 
         // LB retracts and stops intake
         LBretract_and_stop.whileTrue(
-          Commands.parallel(
-            m_pushout.RetractCommand(),
-            m_intake.stopIntakeCommand()
-          )
-        );
+                Commands.parallel(
+                        m_pushout.RetractCommand(),
+                        m_intake.stopIntakeCommand()));
 
         // RB unjams
         RBUnjam.whileTrue(
-          Commands.parallel(
-            m_kicker.ReverseKickerCommand(),
-            m_conveyor.ReverseConveyorCommand(),
-            m_rollers.runReverseRollersCommand()
-          )
-        );
+                Commands.parallel(
+                        m_kicker.ReverseKickerCommand(),
+                        m_conveyor.ReverseConveyorCommand(),
+                        m_rollers.runReverseRollersCommand()));
 
         // B — agitate manually
         A_runOuttake.whileTrue(
-          Commands.parallel(
-            m_intake.runOuttakeCommand(),
-            m_rollers.runReverseRollersCommand()
-          )
-        );
+                Commands.parallel(
+                        m_intake.runOuttakeCommand(),
+                        m_rollers.runReverseRollersCommand()));
 
         // POV left — drive to pose
         PLDriveToPose.whileTrue(drivebase.driveToPoseDeffered());
@@ -390,11 +387,9 @@ public class RobotContainer {
         // intake
         X_OP_intake.whileTrue(m_intake.runIntakeCommand());
         A_OP_outtake.whileTrue(
-          Commands.parallel(
-            m_intake.runOuttakeCommand(),
-            m_rollers.runReverseRollersCommand()
-          )
-        );
+                Commands.parallel(
+                        m_intake.runOuttakeCommand(),
+                        m_rollers.runReverseRollersCommand()));
 
         // pushout
         Y_OP_extendIntake.whileTrue(m_pushout.PushoutDutyCycleCommand());
@@ -431,14 +426,17 @@ public class RobotContainer {
     }
 
     private double aimTolerance(double distance) {
-        if (distance < 2) return 5.0;
-        else if (distance < 3.5) return 2.0;
+        if (distance < 2)
+            return 5.0;
+        else if (distance < 3.5)
+            return 2.0;
         return 1.0;
     }
 
     private ChassisSpeeds applyHeadingBias(ChassisSpeeds speeds) {
         boolean headingBiasEnabled = SmartDashboard.getBoolean("headingBiasEnabled", false);
-        if (!headingBiasEnabled) return speeds;
+        if (!headingBiasEnabled)
+            return speeds;
 
         double biasDeg = SmartDashboard.getNumber("Heading Bias Deg", 0.0);
         double gain = SmartDashboard.getNumber("Heading Bias Gain", 0.0);
@@ -461,8 +459,10 @@ public class RobotContainer {
         Distance blueZone = Inches.of(182);
         Distance redZone = Inches.of(469);
 
-        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().lt(blueZone)) return true;
-        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().gt(redZone)) return true;
+        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().lt(blueZone))
+            return true;
+        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().gt(redZone))
+            return true;
         return false;
     }
 
@@ -471,8 +471,10 @@ public class RobotContainer {
         Distance blueZone = Inches.of(182);
         Distance redZone = Inches.of(469);
 
-        if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().lt(blueZone)) return true;
-        else if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().gt(redZone)) return true;
+        if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().lt(blueZone))
+            return true;
+        else if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().gt(redZone))
+            return true;
         return false;
     }
 
@@ -480,8 +482,10 @@ public class RobotContainer {
         Alliance alliance = getAlliance();
         Distance midLine = Inches.of(158.84375);
 
-        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureY().lt(midLine)) return true;
-        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureY().gt(midLine)) return true;
+        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureY().lt(midLine))
+            return true;
+        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureY().gt(midLine))
+            return true;
         return false;
     }
 
@@ -492,7 +496,8 @@ public class RobotContainer {
                 target.getX() - robot.getX()));
         double currentAngle = robot.getRotation().getDegrees();
         double error = Math.abs(currentAngle - targetAngle) % 360;
-        if (error > 180) error = 360 - error;
+        if (error > 180)
+            error = 360 - error;
         return error <= toleranceDegrees;
     }
 
@@ -517,7 +522,8 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         Command selected = loggedAutoChooser.get();
-        if (selected == null) return Commands.none();
+        if (selected == null)
+            return Commands.none();
         return selected;
     }
 
