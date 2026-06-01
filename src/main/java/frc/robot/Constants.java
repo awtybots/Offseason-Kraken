@@ -72,6 +72,11 @@ public final class Constants {
     public static final Pose3d blueHubPose = new Pose3d(Units.inchesToMeters(182.12598), Units.inchesToMeters(158.6614),
         Units.inchesToMeters(72.0), new Rotation3d());
 
+    // shooter position: back left corner, 3" in from each edge, 21" above ground
+    public static final double SHOOTER_HEIGHT_M = Units.inchesToMeters(21.0);
+    public static final double SHOOTER_OFFSET_FWD_M = Units.inchesToMeters(-(29.5 / 2.0 - 3.0)); // -11.75" behind center
+    public static final double SHOOTER_OFFSET_LEFT_M = Units.inchesToMeters(24.5 / 2.0 - 3.0);   // 9.25" left of center    
+
     public static final Pose3d redFerryPoseDepot = new Pose3d(14.3, 6, 0, Rotation3d.kZero);
     public static final Pose3d redFerryPoseOutpost = new Pose3d(14.3, 2, 0, Rotation3d.kZero);
     public static final Pose3d blueFerryPoseDepot = new Pose3d(2.1, 2, 0, Rotation3d.kZero);
