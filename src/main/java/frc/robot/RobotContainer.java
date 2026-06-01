@@ -92,7 +92,7 @@ public class RobotContainer {
 
     private PathConstraints autoConstraints;
 
-    @SuppressWarnings("unused")
+
     public void warmupCommands() {
         @SuppressWarnings("unused")
         ControlAllShooting shootWarm = new ControlAllShooting(
