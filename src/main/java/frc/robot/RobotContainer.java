@@ -92,7 +92,7 @@ public class RobotContainer {
 
     private PathConstraints autoConstraints;
 
-    @SuppressWarnings("unused")
+
     public void warmupCommands() {
         @SuppressWarnings("unused")
         ControlAllShooting shootWarm = new ControlAllShooting(
@@ -200,17 +200,20 @@ public class RobotContainer {
                 .translationHeadingOffset(Rotation2d.fromDegrees(0));
 
         // ==================== DRIVE COMMANDS ====================
+        Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+        Command driveFieldOrientedDirectAngleKeyboard = drivebase.driveFieldOriented(driveDirectAngleKeyboard);
+       
+        @SuppressWarnings("unused")
+        Command driveFieldOrientedDirectAngle = drivebase.driveFieldOriented(driveDirectAngle);
 
-        Command driveFieldOrientedDirectAngle = drivebase
-                .driveFieldOriented(() -> applyHeadingBias(driveDirectAngle.get()));
-        Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(
-                () -> applyHeadingBias(driveAngularVelocity.get()));
+        @SuppressWarnings("unused")
         Command driveRobotOrientedAngularVelocity = drivebase.driveFieldOriented(driveRobotOriented);
+        @SuppressWarnings("unused")
         Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngle);
-        Command driveFieldOrientedDirectAngleKeyboard = drivebase.driveFieldOriented(
-                () -> applyHeadingBias(driveDirectAngleKeyboard.get()));
-        Command driveFieldOrientedAngularVelocityKeyboard = drivebase.driveFieldOriented(
-                () -> applyHeadingBias(driveAngularVelocityKeyboard.get()));
+
+        @SuppressWarnings("unused")
+        Command driveFieldOrientedAngularVelocityKeyboard = drivebase.driveFieldOriented(driveAngularVelocityKeyboard);
+        @SuppressWarnings("unused")
         Command driveSetpointGenKeyboard = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngleKeyboard);
 
         // ==================== DEFAULT COMMANDS ====================
