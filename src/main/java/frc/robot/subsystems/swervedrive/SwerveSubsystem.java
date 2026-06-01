@@ -84,8 +84,7 @@ public class SwerveSubsystem extends SubsystemBase {
   private volatile ChassisSpeeds lastCommandedRobotVelocity = new ChassisSpeeds();
   private volatile ChassisSpeeds lastCommandedFieldVelocity = new ChassisSpeeds();
   // Track yaw over time to estimate yaw rate for logs.
-  private double lastYawRadians = 0.0;
-  private double lastYawTimeSec = 0.0;
+
 
   public int allMegaTagNumber = 1;
 
