@@ -252,8 +252,8 @@ public class RobotContainer {
                   ).onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
                 ).finallyDo(() -> {
                   drivebase.isAiming = false;
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0).schedule(); // keep flywheel spun up briefly after shot
-                });
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
             }, java.util.Collections.emptySet())
         );
 
