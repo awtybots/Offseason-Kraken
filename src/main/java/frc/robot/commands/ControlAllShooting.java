@@ -31,7 +31,7 @@ public class ControlAllShooting extends Command {
     private boolean isFiring = false;
     private boolean isAtSpeed = false;
 
-    // maps distance to shooter RPS 
+    // maps distance to shooter RPS
     private final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
 
@@ -61,7 +61,7 @@ public class ControlAllShooting extends Command {
             hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
         }
 
-        // ferry table is gonna be diff angles and rpms so tune 
+        // ferry table is gonna be diff angles and rpms so tune
         for (var entry : List.of(
                 Pair.of(Meters.of(2.0), RPM.of(1500)),
                 Pair.of(Meters.of(3.0), RPM.of(1800)),
@@ -137,13 +137,23 @@ public class ControlAllShooting extends Command {
         }
 
         if (isReadyToFire()) {
-            // get da balls into da shooter
-            isFiring = true;
-            m_kicker.ConveyorToShooter();
-            m_conveyor.HopperToShooter();
-            m_rollers.RollersToConveyor();
-            m_intake.runIntake();
-            m_pushout.PushIntake();
+            if (!m_turret.isAtCableLimit()) { // only feed balls if turret is not wrapping
+                // get da balls into da shooter
+                isFiring = true;
+                m_kicker.ConveyorToShooter();
+                m_conveyor.HopperToShooter();
+                m_rollers.RollersToConveyor();
+                m_intake.runIntake();
+                m_pushout.PushIntake();
+            } else {
+                // turret is wrapping — stop feeding but shooter and hood keep running
+                isFiring = false;
+                m_kicker.ClearBallCommand();
+                m_conveyor.stopConveyor();
+                m_intake.stopIntake();
+                m_rollers.stopRollers();
+                m_pushout.PushIntake();
+            }
         } else {
             isFiring = false;
             m_conveyor.stopConveyor();
@@ -160,6 +170,7 @@ public class ControlAllShooting extends Command {
         Logger.recordOutput("Shooting/IsReadyToFire", isReadyToFire());
         Logger.recordOutput("Shooting/TurretAtAngle", m_turret.isAtAngle());
         Logger.recordOutput("Shooting/HoodAtAngle", m_hood.isAtAngle());
+        Logger.recordOutput("Shooting/TurretAtCableLimit", m_turret.isAtCableLimit());
         Logger.recordOutput("Shooting/Distance", distance);
     }
 

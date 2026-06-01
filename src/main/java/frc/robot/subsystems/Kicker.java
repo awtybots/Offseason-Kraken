@@ -59,6 +59,10 @@ public class Kicker extends SubsystemBase {
         KickerMotor.setControl(velocityRequest.withVelocity(KickerConstants.KICKER_RPS).withSlot(0));
     }
 
+    public void ClearBall() {
+        KickerMotor.setControl(velocityRequest.withVelocity(KickerConstants.KICKER_RPS).withSlot(0));
+    }
+
 
     public void stopKicker() {
         KickerMotor.setControl(velocityRequest.withVelocity(0));
@@ -72,6 +76,12 @@ public class Kicker extends SubsystemBase {
     public Command KickerCommand() {
         return this.run(() -> {
             ConveyorToShooter();
+        }).finallyDo(interrupted -> stopKicker());
+    }
+
+    public Command ClearBallCommand() {
+        return this.run(() -> {
+            ClearBall();
         }).finallyDo(interrupted -> stopKicker());
     }
 

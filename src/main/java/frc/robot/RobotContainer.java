@@ -317,18 +317,28 @@ public class RobotContainer {
 
         // RT shoots
         RTScore.whileTrue(
-          Commands.defer(() -> {
-            ControlAllShooting shootCmd = new ControlAllShooting(m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-            return Commands.sequence(
-              Commands.runOnce(() -> {
-                drivebase.setAimLocations();
-                drivebase.isAiming = true;
-              }),
-              Commands.parallel(
-                shootCmd,
-                m_pushout.AgitateCommand().onlyWhile(() -> !LT_Intake.getAsBoolean())
-                )).finallyDo(() -> Commands.parallel(m_pushout.PushCommand(), Commands.runOnce(() -> drivebase.isAiming = false)));
-          }, java.util.Collections.emptySet())
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                return Commands.sequence(
+                  Commands.runOnce(() -> {
+                      drivebase.setAimLocations();
+                      drivebase.isAiming = true;
+                  }),
+                  Commands.parallel(
+                    shootCmd,
+                    m_pushout.AgitateCommand(),
+                    drivebase.lockCommand( // lock wheels while shooting
+                      dc()::getLeftX,
+                      dc()::getLeftY,
+                      dc()::getRightX,
+                      driveAngularVelocity::get)
+                  ).onlyWhile(() -> !LT_Intake.getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
+                ).finallyDo(() -> {
+                  drivebase.isAiming = false;
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0); // keep flywheel spun up briefly after shot
+                });
+            }, java.util.Collections.emptySet())
         );
 
         // LT intakes
