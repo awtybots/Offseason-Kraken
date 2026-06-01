@@ -224,6 +224,10 @@ public final class Constants {
 
   public static final class TurretConstants {
     public static final int TURRET_ID = 0; // set ts
+    public static final int TURRET_CANCODER_ID = 0;  // set ts too
+
+    public static final double CANCODER_OFFSET = 0.0; // tune so 0 is the center of turret range
+    public static final double GEAR_RATIO = 10.0; // tune to correct reduction
 
     public static final double RELATIVE_DEGREES_PER_ROTATION = 36.0; // set it to however many rotations of the motor it takes to spin the turret 360 degs
 

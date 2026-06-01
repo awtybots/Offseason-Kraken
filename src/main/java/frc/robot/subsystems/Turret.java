@@ -3,78 +3,102 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.ResetMode;
-import com.revrobotics.PersistMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkAbsoluteEncoder;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import org.littletonrobotics.junction.Logger;
 
-import frc.robot.Configs;
 import frc.robot.Constants.TurretConstants;
 
 public class Turret extends SubsystemBase {
 
-    private SparkMax TurretMotor = new SparkMax(TurretConstants.TURRET_ID, MotorType.kBrushless);
-    private SparkClosedLoopController TurretController = TurretMotor.getClosedLoopController();
+    private TalonFX TurretMotor = new TalonFX(TurretConstants.TURRET_ID);
+    private CANcoder absoluteEncoder = new CANcoder(TurretConstants.TURRET_CANCODER_ID); // always knows true angle even after power cycle
 
-    private SparkAbsoluteEncoder absoluteEncoder = TurretMotor.getAbsoluteEncoder();
-    private RelativeEncoder relativeEncoder = TurretMotor.getEncoder();
+    private final PositionVoltage positionRequest = new PositionVoltage(0); // position control
+    private final VoltageOut voltageRequest = new VoltageOut(0); // open loop for manual + stop
 
     private int wrapCount = 0; // # of times its wrapped
-    private double lastAbsolutePosition = 0.0; // last absolute encoder reading in degrees, used for tracking wraps
+    private double lastAbsolutePosition = 0.0; // last abs encoder reading in degrees, used for tracking wraps
 
     public Turret() {
-        TurretMotor.configure(Configs.TurretSubsystem.TurretMotorConfig, ResetMode.kResetSafeParameters,
-                PersistMode.kPersistParameters);
+        CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
+        cancoderConfig.MagnetSensor.MagnetOffset = TurretConstants.CANCODER_OFFSET; // tune so 0 is the center of the turret range
+        cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive; // correct i think
+        cancoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5; // makes range -0.5 to 0.5 rotations so basically just -180 to 180 degrees
+        absoluteEncoder.getConfigurator().apply(cancoderConfig);        
 
-        relativeEncoder.setPosition(absoluteEncoder.getPosition()); // set relative to absolute at startup
-        lastAbsolutePosition = absoluteEncoder.getPosition();
+        TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+        motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // hopefully correct
+        motorConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+        motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        motorConfig.Slot0.kP = TurretConstants.p;
+        motorConfig.Slot0.kI = TurretConstants.i;
+        motorConfig.Slot0.kD = TurretConstants.d;
+        motorConfig.Slot0.kS = TurretConstants.s;
+        motorConfig.Slot0.kV = TurretConstants.v;
+        motorConfig.Slot0.kA = TurretConstants.a;
+        TurretMotor.getConfigurator().apply(motorConfig);
+
+        TurretMotor.setPosition(degreesToRotations(getAbsoluteDegrees())); // makes relative equal to abs at beginning
+        lastAbsolutePosition = getAbsoluteDegrees();
     }
 
-    public double getAbsoluteDegrees() {
-        return absoluteEncoder.getPosition(); // returns 0-360, resets at boundary
+    public double getAbsoluteDegrees() { 
+        return absoluteEncoder.getAbsolutePosition().getValueAsDouble() * 360.0; 
     }
 
-    public double getRelativeDegrees() {
-        return relativeEncoder.getPosition(); // continuous, doesnt reset at boundary
+    public double getRelativeDegrees() { 
+        return rotationsToDegrees(TurretMotor.getPosition().getValueAsDouble());
     }
 
-    public double getContinuousDegrees() { // ts gets the continuous angle without wrapping
-        return wrapCount * 360.0 + getAbsoluteDegrees(); // makes the turret know where it is w/o losing track across the wrap boundaries
+    public double getContinuousDegrees() { 
+        return wrapCount * 360.0 + getAbsoluteDegrees();
     }
 
-    private void updateWrapCount() { // detects when the abs encoder crosses boundary and changes the wrap count
-        double current = getAbsoluteDegrees(); // if the reading jumps 180 degrees, then it wrapped
+    private double degreesToRotations(double degrees) { // gets motor rotations from the desired angle accounting for the gear ratio
+        return (degrees / 360.0) * TurretConstants.GEAR_RATIO;
+    }
+
+    private double rotationsToDegrees(double rotations) { // same but backwards
+        return (rotations / TurretConstants.GEAR_RATIO) * 360.0;
+    }
+
+    private void updateWrapCount() { // detects when abs encoder crosses boundary and changes the wrap count
+        double current = getAbsoluteDegrees(); // if the reading jumps 180 degrees then it wrapped itself
         double delta = current - lastAbsolutePosition;
 
         if (delta < -180.0) {
-            wrapCount++; // crossed 0 going forward (359 → 0)
+            wrapCount++; // crossed 0 going forward from 359 to 0
         } else if (delta > 180.0) {
-            wrapCount--; // crossed 0 going backward (0 → 359)
+            wrapCount--; // crossed 0 going backward from 0 to 359
         }
 
         lastAbsolutePosition = current; // update for next loop
     }
 
-    public boolean isAtCableLimit() { // true = turret hit its leash, needs to wrap around
+    public boolean isAtCableLimit() { 
         double continuous = getContinuousDegrees();
         return continuous >= TurretConstants.MAX_CONTINUOUS_DEGREES
                 || continuous <= TurretConstants.MIN_CONTINUOUS_DEGREES;
     }
 
-    public void resetWrapCount() { // call this when turret is known to be at home/zero
+    public void zeroEncoder() { // call when turret is at center
+        TurretMotor.setPosition(0);
         wrapCount = 0;
-        lastAbsolutePosition = getAbsoluteDegrees();
-        relativeEncoder.setPosition(getAbsoluteDegrees()); // re-sync relative to absolute
+        lastAbsolutePosition = 0;
     }
 
-    public double angleToSetpoint(double targetDegrees) { // converts a field-relative angle to a safe turret setpoint
-        double candidate = targetDegrees + wrapCount * 360.0; // normalize into the same lap as current position
+    public double angleToSetpoint(double targetDegrees) { // converts angle to setpoint
+        double candidate = targetDegrees + wrapCount * 360.0; // put into same lap as current position
 
         if (candidate > TurretConstants.MAX_CONTINUOUS_DEGREES) {
             candidate -= 360.0; // try one lap down
@@ -84,32 +108,32 @@ public class Turret extends SubsystemBase {
 
         if (candidate > TurretConstants.MAX_CONTINUOUS_DEGREES
                 || candidate < TurretConstants.MIN_CONTINUOUS_DEGREES) {
-            return Double.NaN; // no valid position exists, caller needs to handle this
+            return Double.NaN; // if no valid pos, it doesnt kill itself
         }
 
         return candidate;
     }
 
-    public void setAngle(double degrees) { // send turret to angle using relative encoder for precision
-        TurretController.setSetpoint(degrees, ControlType.kPosition);
+    public void setAngle(double degrees) { // send turret to angle in degrees using position control
+        TurretMotor.setControl(positionRequest.withPosition(degreesToRotations(degrees)).withSlot(0));
     }
 
     public void stopTurret() {
-        TurretMotor.set(0);
+        TurretMotor.setControl(voltageRequest.withOutput(0));
     }
 
     public void manualDrive(double speed) {
-        if (isAtCableLimit()) { // dont let it drive past the cable limit
-            TurretMotor.set(0);
+        if (isAtCableLimit()) { // dont let it pull its leash more than possible
+            TurretMotor.setControl(voltageRequest.withOutput(0));
             return;
         }
-        TurretMotor.set(speed);
+        TurretMotor.setControl(voltageRequest.withOutput(speed * 12.0)); // scale -1 to 1 → volts
     }
 
-    public Command goToAngleCommand(double degrees) { // points turret to a field-relative angle, handles wrap automatically
+    public Command goToAngleCommand(double degrees) { // full go to angle cmd
         return this.run(() -> {
             double setpoint = angleToSetpoint(degrees);
-            if (!Double.isNaN(setpoint)) { // only move if theres a valid position to go to
+            if (!Double.isNaN(setpoint)) { // only move if theres a valid pos
                 setAngle(setpoint);
             }
         }).finallyDo(interrupted -> stopTurret());
@@ -117,13 +141,13 @@ public class Turret extends SubsystemBase {
 
     public Command manualDriveCommand(double speed) {
         return this.run(() -> {
-            manualDrive(speed); // cable limit check is inside manualDrive()
+            manualDrive(speed); 
         }).finallyDo(interrupted -> stopTurret());
     }
 
-    public Command resetWrapCountCommand() {
+    public Command zeroEncoderCommand() { 
         return this.runOnce(() -> {
-            resetWrapCount();
+            zeroEncoder();
         });
     }
 
@@ -135,14 +159,15 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
-        updateWrapCount(); // must run every loop for wrap detection to work
+        updateWrapCount(); // must run every loop for it to not blow up
 
         Logger.recordOutput("Turret/AbsoluteDegrees", getAbsoluteDegrees());
         Logger.recordOutput("Turret/RelativeDegrees", getRelativeDegrees());
         Logger.recordOutput("Turret/ContinuousDegrees", getContinuousDegrees());
         Logger.recordOutput("Turret/WrapCount", wrapCount);
         Logger.recordOutput("Turret/IsAtCableLimit", isAtCableLimit());
-        Logger.recordOutput("Turret/AppliedVolts", TurretMotor.getAppliedOutput() * TurretMotor.getBusVoltage());
-        Logger.recordOutput("Turret/StatorCurrent", TurretMotor.getOutputCurrent());
+        Logger.recordOutput("Turret/AppliedVolts", TurretMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Turret/StatorCurrent", TurretMotor.getStatorCurrent().getValueAsDouble());
+        Logger.recordOutput("Turret/MotorRotations", TurretMotor.getPosition().getValueAsDouble());
     }
 }
