@@ -92,6 +92,7 @@ public class RobotContainer {
 
     private PathConstraints autoConstraints;
 
+    @SuppressWarnings("unused")
     public void warmupCommands() {
         @SuppressWarnings("unused")
         ControlAllShooting shootWarm = new ControlAllShooting(
@@ -133,9 +134,8 @@ public class RobotContainer {
                     }),
                     Commands.parallel(
                             shootCmd,
-                            m_pushout.AgitateWhileIntakingCommand()
-                    )
-            ).finallyDo(() -> drivebase.isAiming = false);
+                            m_pushout.AgitateWhileIntakingCommand()))
+                    .finallyDo(() -> drivebase.isAiming = false);
         }, java.util.Collections.emptySet()).withTimeout(5.3));
 
         // ==================== AUTO CHOOSER ====================
@@ -347,14 +347,17 @@ public class RobotContainer {
     }
 
     private double aimTolerance(double distance) {
-        if (distance < 2) return 5.0;
-        else if (distance < 3.5) return 2.0;
+        if (distance < 2)
+            return 5.0;
+        else if (distance < 3.5)
+            return 2.0;
         return 1.0;
     }
 
     private ChassisSpeeds applyHeadingBias(ChassisSpeeds speeds) {
         boolean headingBiasEnabled = SmartDashboard.getBoolean("headingBiasEnabled", false);
-        if (!headingBiasEnabled) return speeds;
+        if (!headingBiasEnabled)
+            return speeds;
 
         double biasDeg = SmartDashboard.getNumber("Heading Bias Deg", 0.0);
         double gain = SmartDashboard.getNumber("Heading Bias Gain", 0.0);
@@ -377,8 +380,10 @@ public class RobotContainer {
         Distance blueZone = Inches.of(182);
         Distance redZone = Inches.of(469);
 
-        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().lt(blueZone)) return true;
-        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().gt(redZone)) return true;
+        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().lt(blueZone))
+            return true;
+        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().gt(redZone))
+            return true;
         return false;
     }
 
@@ -387,8 +392,10 @@ public class RobotContainer {
         Distance blueZone = Inches.of(182);
         Distance redZone = Inches.of(469);
 
-        if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().lt(blueZone)) return true;
-        else if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().gt(redZone)) return true;
+        if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().lt(blueZone))
+            return true;
+        else if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().gt(redZone))
+            return true;
         return false;
     }
 
@@ -396,8 +403,10 @@ public class RobotContainer {
         Alliance alliance = getAlliance();
         Distance midLine = Inches.of(158.84375);
 
-        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureY().lt(midLine)) return true;
-        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureY().gt(midLine)) return true;
+        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureY().lt(midLine))
+            return true;
+        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureY().gt(midLine))
+            return true;
         return false;
     }
 
@@ -408,7 +417,8 @@ public class RobotContainer {
                 target.getX() - robot.getX()));
         double currentAngle = robot.getRotation().getDegrees();
         double error = Math.abs(currentAngle - targetAngle) % 360;
-        if (error > 180) error = 360 - error;
+        if (error > 180)
+            error = 360 - error;
         return error <= toleranceDegrees;
     }
 
@@ -433,7 +443,8 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         Command selected = loggedAutoChooser.get();
-        if (selected == null) return Commands.none();
+        if (selected == null)
+            return Commands.none();
         return selected;
     }
 
