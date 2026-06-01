@@ -5,7 +5,13 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.Kraken;
+import frc.robot.subsystems.Conveyor;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Kicker;
+import frc.robot.subsystems.Pushout;
+import frc.robot.subsystems.Rollers;
+import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 
 import java.io.File;
@@ -25,7 +31,13 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
     private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
       "swerve"));
-  private final Kraken m_kraken = new Kraken();
+  private final Intake m_inatke = new Intake();
+  private final Shooter m_shooter = new Shooter();
+  private final Turret m_turret = new Turret();
+  private final Conveyor m_conveyor = new Conveyor();
+  private final Rollers m_roller = new Rollers();
+  private final Pushout m_pushout = new Pushout();
+  private final Kicker m_kicker = new Kicker();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -51,14 +63,6 @@ public class RobotContainer {
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.rightTrigger().whileTrue(m_kraken.runMotorCommand());
-    m_driverController.rightBumper().whileTrue(m_kraken.runMotorFastCommand());
-
-    m_driverController.leftTrigger().whileTrue(m_kraken.extendCommand());
-    m_driverController.leftBumper().whileTrue(m_kraken.retractCommand());
-
-    m_driverController.start().whileTrue(m_kraken.runAwayCommand());
-    m_driverController.back().whileTrue(m_kraken.stopRunaway());
   }
 
   /**
