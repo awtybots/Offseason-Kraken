@@ -108,41 +108,31 @@ public class RobotContainer {
         configureBindings();
 
         DriverStation.silenceJoystickConnectionWarning(true);
-        SmartDashboard.putNumber("Heading Bias Deg", 0.0);
-        SmartDashboard.putBoolean("Is Shooter Running", m_shooter.isShooterRunning());
-        SmartDashboard.putNumber("Heading Bias Gain", 0);
+
+      
+
 
         // ==================== NAMED COMMANDS ====================
 
         NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
         // pushout
-        NamedCommands.registerCommand("extend", m_pushout.PushCommand());
+        NamedCommands.registerCommand("extend intake", m_pushout.PushCommand());
         NamedCommands.registerCommand("retract intake", m_pushout.RetractCommand());
 
         // intake
         NamedCommands.registerCommand("intake", m_intake.runIntakeCommand());
 
         // control all shooting
-        NamedCommands.registerCommand("Control All Shooting",             Commands.defer(() -> {
-                ControlAllShooting shootCmd = new ControlAllShooting(
-                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-                return Commands.sequence(
-                  Commands.runOnce(() -> {
-                      drivebase.setAimLocations();
-                  }),
-                  Commands.parallel(
-                    shootCmd,
-                    m_pushout.AgitateCommand(),
-                    drivebase.lockCommand( // lock wheels while shooting
-                      driverXbox::getLeftX,
-                      driverXbox::getLeftY,
-                      driverXbox::getRightX,
-                      driveAngularVelocity::get)
-                  ).onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
-                ).finallyDo(() -> {
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
-                  });
+        NamedCommands.registerCommand("Control All Shooting", Commands.defer(() -> {
+            ControlAllShooting shootCmd = new ControlAllShooting(
+                    m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+            return Commands.sequence(
+                 
+                    Commands.parallel(
+                            shootCmd,
+                            m_pushout.AgitateWhileIntakingCommand()))
+  ;
         }, java.util.Collections.emptySet()).withTimeout(5.3));
 
         
@@ -234,11 +224,9 @@ public class RobotContainer {
         if (RobotBase.isSimulation()) {
             drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
         } else {
-            if (Constants.USE_ROBOT_RELATIVE) {
-                drivebase.setDefaultCommand(drivebase.run(() -> drivebase.drive(driveRobotOriented.get())));
-            } else {
+           
                 drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
-            }
+            
         }
 
         // ==================== DRIVER BINDINGS ====================
@@ -249,9 +237,7 @@ public class RobotContainer {
                 ControlAllShooting shootCmd = new ControlAllShooting(
                   m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
                 return Commands.sequence(
-                  Commands.runOnce(() -> {
-                      drivebase.setAimLocations();
-                  }),
+                 
                   Commands.parallel(
                     shootCmd,
                     m_pushout.AgitateCommand(),
@@ -348,11 +334,9 @@ public class RobotContainer {
         }
 
         if (DriverStation.isTest()) {
-            if (Constants.USE_ROBOT_RELATIVE) {
-                drivebase.setDefaultCommand(drivebase.run(() -> drivebase.drive(driveRobotOriented.get())));
-            } else {
+            
                 drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
-            }
+            
         }
     }
 
@@ -364,22 +348,6 @@ public class RobotContainer {
         return 1.0;
     }
 
-    private ChassisSpeeds applyHeadingBias(ChassisSpeeds speeds) {
-        boolean headingBiasEnabled = SmartDashboard.getBoolean("headingBiasEnabled", false);
-        if (!headingBiasEnabled)
-            return speeds;
-
-        double biasDeg = SmartDashboard.getNumber("Heading Bias Deg", 0.0);
-        double gain = SmartDashboard.getNumber("Heading Bias Gain", 0.0);
-        double omega = speeds.omegaRadiansPerSecond;
-
-        if (biasDeg != 0.0 && gain != 0.0) {
-            double biasRad = Units.degreesToRadians(biasDeg);
-            omega += gain * biasRad;
-        }
-
-        return new ChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, omega);
-    }
 
     private Alliance getAlliance() {
         return DriverStation.getAlliance().orElse(Alliance.Red);
