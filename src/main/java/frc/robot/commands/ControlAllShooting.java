@@ -24,7 +24,7 @@ public class ControlAllShooting extends Command {
     private final Hood m_hood;
     private final Rollers m_rollers;
     private final Turret m_turret;
-    private final SwerveSubsystem m_swervesubsystem;
+    private final SwerveSubsystem drivebase;
 
     public double distance = 0.0;
     public double recordedTargetRPS = 0.0;
@@ -45,7 +45,7 @@ public class ControlAllShooting extends Command {
         this.m_intake = intake;
         this.m_hood = hood;
         this.m_turret = turret;
-        this.m_swervesubsystem = swerve;
+        this.drivebase = swerve;
 
         addRequirements(shooter, conveyor, kicker, pushout, intake, rollers); // AimTurret and AimHood do their own things so we dont need them here
 
@@ -82,10 +82,7 @@ public class ControlAllShooting extends Command {
     }
 
     private double aimTolerance(double dist) {
-        if (dist < 2.5) return 2.5;
-        else if (dist < 3.5) return 2;
-        else if (dist < 5.0) return 1.5;
-        else return 1;
+        return 1.0;
     }
 
     private boolean isReadyToFire() { // must be at speed, turret at angle, and hood at angle to shoot
@@ -102,10 +99,10 @@ public class ControlAllShooting extends Command {
 
     @Override
     public void execute() {
-        Pose2d robotPose = m_swervesubsystem.getPose();
+        Pose2d robotPose = drivebase.getPose();
 
-        if (m_swervesubsystem.isInAllianceZone()) { // shoot at hub
-            Translation2d turretToHub = m_swervesubsystem.getDynamicHubLocation()
+        if (drivebase.isInAllianceZone()) { // shoot at hub
+            Translation2d turretToHub = drivebase.getDynamicHubLocation()
                     .getTranslation().minus(robotPose.getTranslation());
             double dist = turretToHub.getNorm();
             distance = dist;
@@ -120,7 +117,7 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/DistanceToHub", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         } else { // ferry
-            Translation2d turretToFerry = m_swervesubsystem.getDynamicFerryLocation()
+            Translation2d turretToFerry = drivebase.getDynamicFerryLocation()
                     .getTranslation().minus(robotPose.getTranslation());
             double dist = turretToFerry.getNorm();
             distance = dist;
@@ -135,6 +132,8 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/DistanceToFerry", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         }
+        
+
 
         if (isReadyToFire()) {
             if (!m_turret.isAtCableLimit()) { // only feed balls if turret is not wrapping

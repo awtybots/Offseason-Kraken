@@ -60,7 +60,6 @@ public class AimTurret extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        swerveSubsystem.isAiming = false;
         turret.stopTurret();
     }
 }
