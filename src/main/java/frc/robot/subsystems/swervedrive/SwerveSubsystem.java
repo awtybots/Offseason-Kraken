@@ -84,8 +84,7 @@ public class SwerveSubsystem extends SubsystemBase {
   private volatile ChassisSpeeds lastCommandedRobotVelocity = new ChassisSpeeds();
   private volatile ChassisSpeeds lastCommandedFieldVelocity = new ChassisSpeeds();
   // Track yaw over time to estimate yaw rate for logs.
-  private double lastYawRadians = 0.0;
-  private double lastYawTimeSec = 0.0;
+
 
   public int allMegaTagNumber = 1;
 
@@ -96,8 +95,6 @@ public class SwerveSubsystem extends SubsystemBase {
   public boolean useMegaTag2 = false; // MT1 during disabled, MT2 during auto/teleop
   
   public boolean useMegaTag1 = false; // MT1 during disabled, MT2 during auto/teleop
-
-  public boolean shouldAimAtHubAuto = false;
 
 
   public boolean useFrontLimelight = true;
@@ -113,8 +110,6 @@ public class SwerveSubsystem extends SubsystemBase {
   private Pose2d cachedDynamicFerry = Constants.DrivebaseConstants.getFerryPose(new Translation2d());
 
   
-
-  public boolean isAiming = false;
 
   public boolean visionToggleAll = false;
 
@@ -366,8 +361,6 @@ public class SwerveSubsystem extends SubsystemBase {
     // Measured module positions (drive distance + angle).
     Logger.recordOutput("Drive/ModulePositions", swerveDrive.getModulePositions());
 
-    if(isAiming)
-    {
       // --- Aim debugging ---
       cachedDynamicHub = getDynamicHubLocation();
       cachedDynamicFerry = getDynamicFerryLocation();
@@ -397,12 +390,6 @@ public class SwerveSubsystem extends SubsystemBase {
       Logger.recordOutput("Drive/Aim/DynamicFerryPose", dynamicFerry);
       Logger.recordOutput("Drive/Aim/ErrorDegFerry", ferryAimError);
       Logger.recordOutput("Drive/Aim/DistanceToFerryM", distanceToFerry);
-    }
-
-    // --- Auto recovery debugging ---
-    Logger.recordOutput("Drive/Auto/TargetPathPose", targetPathPose);
-    Logger.recordOutput("Drive/Auto/PathFollowingErrorM", getPathFollowingError());
-    Logger.recordOutput("Drive/Auto/IsOffPath", isOffPath(0.15));
   }
 
   @Override
@@ -1164,29 +1151,83 @@ public class SwerveSubsystem extends SubsystemBase {
    *
    * @return A Pose2d representing the compensated aim point.
    */
-  public Pose2d getDynamicHubLocation() {
+  /**
+ * Computes a virtual hub location that compensates for robot velocity
+ * (shoot-on-the-move) and robot tilt (shoot-on-the-tilt).
+ * Uses an iterative time-of-flight lookup to converge on the correct lead.
+ *
+ * @return A Pose2d representing the compensated aim point.
+ */
+    public Pose2d getDynamicHubLocation() {
 
-    if(locked)
-    {
-      return new Pose2d(Constants.DrivebaseConstants.getHubPose2D().getTranslation(), new Rotation2d(0));
+        if(locked) {
+            return new Pose2d(Constants.DrivebaseConstants.getHubPose2D().getTranslation(), new Rotation2d(0));
+        }
+
+        Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
+        Translation2d robotVec = getPose().getTranslation();
+        ChassisSpeeds vel = getFieldVelocity();
+        Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
+
+        // velocity compensation — iterative TOF convergence
+        Translation2d CompensatedHub = hubVec;
+        for (int i = 0; i < 15; i++) {
+            double distance = CompensatedHub.minus(robotVec).getNorm();
+            double tof = Constants.ShooterConstants.TOF.get(distance);
+            CompensatedHub = hubVec.minus(robotVel.times(tof));
+        }
+
+        // tilt compensation
+        double pitchRad = swerveDrive.getPitch().getRadians(); // tilt forward/back
+        double rollRad = swerveDrive.getRoll().getRadians();   // tilt left/right
+
+        if (Math.abs(pitchRad) > Math.toRadians(1.0) || Math.abs(rollRad) > Math.toRadians(1.0)) {
+
+            // hub target height is fixed, shooter height changes with tilt
+            // based on shooter position: back left corner, 3" in from each edge
+            // robot 29.5" long x 24.5" wide → offsets from center:
+            // fwd = -(29.5/2 - 3) = -11.75", left = (24.5/2 - 3) = 9.25"
+            double actualShooterHeight = Constants.DrivebaseConstants.SHOOTER_HEIGHT_M
+                    + Constants.DrivebaseConstants.SHOOTER_OFFSET_FWD_M * Math.sin(pitchRad)
+                    + Constants.DrivebaseConstants.SHOOTER_OFFSET_LEFT_M * Math.sin(rollRad);
+
+            // height difference between shooter exit and hub target
+            double dz = Constants.DrivebaseConstants.getHubPose3D().getZ() - actualShooterHeight;
+
+            // vector from robot to compensated hub in field space
+            Translation2d robotToHub = CompensatedHub.minus(robotVec);
+            double dx = robotToHub.getX();
+            double dy = robotToHub.getY();
+
+            // robot heading so we can decompose into forward/side components
+            double yaw = getHeading().getRadians();
+
+            // project dx/dy into robot-relative forward and left components
+            double fwd  =  dx * Math.cos(yaw) + dy * Math.sin(yaw); // forward in robot frame
+            double left = -dx * Math.sin(yaw) + dy * Math.cos(yaw); // left in robot frame
+
+            // pitch forward → shooter tilts down → hub appears further → correct fwd
+            // roll left → shooter tilts left → hub appears shifted → correct left
+            double correctedFwd  = fwd  + dz * Math.tan(pitchRad);
+            double correctedLeft = left - dz * Math.tan(rollRad);
+
+            // convert back to field coordinates
+            double correctedDx = correctedFwd * Math.cos(yaw) - correctedLeft * Math.sin(yaw);
+            double correctedDy = correctedFwd * Math.sin(yaw) + correctedLeft * Math.cos(yaw);
+
+            CompensatedHub = robotVec.plus(new Translation2d(correctedDx, correctedDy));
+
+            Logger.recordOutput("Drive/Tilt/PitchDeg", Math.toDegrees(pitchRad));
+            Logger.recordOutput("Drive/Tilt/RollDeg", Math.toDegrees(rollRad));
+            Logger.recordOutput("Drive/Tilt/ActualShooterHeightM", actualShooterHeight);
+            Logger.recordOutput("Drive/Tilt/DzM", dz);
+            Logger.recordOutput("Drive/Tilt/CorrectedFwd", correctedFwd);
+            Logger.recordOutput("Drive/Tilt/CorrectedLeft", correctedLeft);
+        }
+
+        Rotation2d aimRotation = CompensatedHub.minus(robotVec).getAngle();
+        return new Pose2d(CompensatedHub, aimRotation);
     }
-
-    Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
-    Translation2d robotVec = getPose().getTranslation();
-    ChassisSpeeds vel = getFieldVelocity();
-    Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
-
-    Translation2d CompensatedHub = hubVec;
-    for (int i = 0; i < 15; i++) {
-      double distance = CompensatedHub.minus(robotVec).getNorm();
-      double tof = Constants.ShooterConstants.TOF.get(distance);
-      CompensatedHub = hubVec.minus(robotVel.times(tof));
-    }
-
-    Rotation2d aimRotation = CompensatedHub.minus(robotVec).getAngle();
-
-    return new Pose2d(CompensatedHub, aimRotation);
-  }
 
   /**
    * Computes a virtual ferry location that compensates for robot velocity,

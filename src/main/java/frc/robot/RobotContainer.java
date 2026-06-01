@@ -61,6 +61,7 @@ public class RobotContainer {
     private final Rollers m_rollers = new Rollers();
     private final Pushout m_pushout = new Pushout();
     private final Kicker m_kicker = new Kicker();
+    @SuppressWarnings("unused")
     private final HubTrackerSubsystem m_hubtracker = new HubTrackerSubsystem(drivebase, driverXbox);
 
     // auto choosers
@@ -90,6 +91,7 @@ public class RobotContainer {
     // Derive the heading axis with math!
     SwerveInputStream driveDirectAngleKeyboard;
 
+    @SuppressWarnings("unused")
     private PathConstraints autoConstraints;
 
 
@@ -124,16 +126,23 @@ public class RobotContainer {
         NamedCommands.registerCommand("intake", m_intake.runIntakeCommand());
 
         // control all shooting
-        NamedCommands.registerCommand("Control All Shooting", Commands.defer(() -> {
-            ControlAllShooting shootCmd = new ControlAllShooting(
-                    m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-            return Commands.sequence(
+        NamedCommands.registerCommand("Control All Shooting",             
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                return Commands.sequence(
                  
-                    Commands.parallel(
-                            shootCmd,
-                            m_pushout.AgitateWhileIntakingCommand()))
-  ;
-        }, java.util.Collections.emptySet()).withTimeout(5.3));
+                  Commands.parallel(
+                    shootCmd,
+                    m_pushout.AgitateCommand()
+                  ).onlyWhile(() -> m_turret.isAtAngle() && m_hood.isAtAngle())
+                ).finallyDo(() -> {
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
+            }, java.util.Collections.emptySet())
+        );
+
+        
 
         // ==================== AUTO CHOOSER ====================
 
@@ -338,6 +347,7 @@ public class RobotContainer {
         }
     }
 
+    @SuppressWarnings("unused")
     private double aimTolerance(double distance) {
         if (distance < 2)
             return 5.0;
@@ -363,6 +373,7 @@ public class RobotContainer {
         return false;
     }
 
+    @SuppressWarnings("unused")
     private boolean isInOpponentZone() {
         Alliance alliance = getAlliance();
         Distance blueZone = Inches.of(182);
@@ -375,6 +386,7 @@ public class RobotContainer {
         return false;
     }
 
+    @SuppressWarnings("unused")
     private boolean isOnAllianceOutpostSide() {
         Alliance alliance = getAlliance();
         Distance midLine = Inches.of(158.84375);
@@ -386,6 +398,7 @@ public class RobotContainer {
         return false;
     }
 
+    @SuppressWarnings("unused")
     private boolean isAimedAt(Pose2d target, double toleranceDegrees) {
         Pose2d robot = drivebase.getPose();
         double targetAngle = Math.toDegrees(Math.atan2(

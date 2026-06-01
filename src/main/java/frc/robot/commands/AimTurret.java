@@ -20,7 +20,6 @@ public class AimTurret extends Command {
 
     @Override
     public void initialize() {
-        swerveSubsystem.isAiming = true;
     }
 
     private Pose2d getTargetPose() {
