@@ -28,7 +28,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-// import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 // import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
@@ -45,15 +45,15 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
-// import frc.robot.Constants.LimelightConstants;
-// import frc.robot.LimelightHelpers;
+import frc.robot.Constants.LimelightConstants;
+import frc.robot.LimelightHelpers;
 
 import java.io.File;
 import java.io.IOException;
-// import java.net.http.HttpResponse.PushPromiseHandler;
+import java.net.http.HttpResponse.PushPromiseHandler;
 import java.util.Arrays;
-// import java.util.Optional;
-// import java.util.ResourceBundle;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -61,7 +61,7 @@ import org.json.simple.parser.ParseException;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
-// import swervelib.imu.SwerveIMU;
+import swervelib.imu.SwerveIMU;
 import swervelib.math.SwerveMath;
 import swervelib.parser.SwerveControllerConfiguration;
 import swervelib.parser.SwerveDriveConfiguration;
@@ -69,7 +69,7 @@ import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 import org.littletonrobotics.junction.Logger;
-// import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class SwerveSubsystem extends SubsystemBase {
   /**
@@ -84,8 +84,8 @@ public class SwerveSubsystem extends SubsystemBase {
   private volatile ChassisSpeeds lastCommandedRobotVelocity = new ChassisSpeeds();
   private volatile ChassisSpeeds lastCommandedFieldVelocity = new ChassisSpeeds();
   // Track yaw over time to estimate yaw rate for logs.
-  // private double lastYawRadians = 0.0;
-  // private double lastYawTimeSec = 0.0;
+  private double lastYawRadians = 0.0;
+  private double lastYawTimeSec = 0.0;
 
   public int allMegaTagNumber = 1;
 
@@ -366,38 +366,38 @@ public class SwerveSubsystem extends SubsystemBase {
     // Measured module positions (drive distance + angle).
     Logger.recordOutput("Drive/ModulePositions", swerveDrive.getModulePositions());
 
-    // if(isAiming)
-    // {
-    //   // --- Aim debugging ---
-    //   cachedDynamicHub = getDynamicHubLocation();
-    //   cachedDynamicFerry = getDynamicFerryLocation();
-    //   Pose2d dynamicHub = cachedDynamicHub;
-    //   Translation2d robotToHub = dynamicHub.getTranslation().minus(pose.getTranslation());
-    //   Rotation2d targetAngle = robotToHub.getAngle().plus(Rotation2d.fromDegrees(180));
-    //   double aimError = targetAngle.minus(getHeading()).getDegrees();
-    //   double distanceToHub = robotToHub.getNorm();
+    if(isAiming)
+    {
+      // --- Aim debugging ---
+      cachedDynamicHub = getDynamicHubLocation();
+      cachedDynamicFerry = getDynamicFerryLocation();
+      Pose2d dynamicHub = cachedDynamicHub;
+      Translation2d robotToHub = dynamicHub.getTranslation().minus(pose.getTranslation());
+      Rotation2d targetAngle = robotToHub.getAngle().plus(Rotation2d.fromDegrees(180));
+      double aimError = targetAngle.minus(getHeading()).getDegrees();
+      double distanceToHub = robotToHub.getNorm();
 
-    //   Logger.recordOutput("Drive/Aim/DynamicHubPose", dynamicHub);
-    //   Logger.recordOutput("Drive/Aim/StaticHubPose", Constants.DrivebaseConstants.getHubPose2D());
-    //   Logger.recordOutput("Drive/Aim/TargetAngleDeg", targetAngle.getDegrees());
-    //   Logger.recordOutput("Drive/Aim/CurrentHeadingDeg", getHeading().getDegrees());
-    //   Logger.recordOutput("Drive/Aim/ErrorDegHub", aimError);
-    //   Logger.recordOutput("Drive/Aim/DistanceToHubM", distanceToHub);
-    //   Logger.recordOutput("Drive/Aim/RobotVelX", fieldVel.vxMetersPerSecond);
-    //   Logger.recordOutput("Drive/Aim/RobotVelY", fieldVel.vyMetersPerSecond);
-    //   Logger.recordOutput("Drive/Aim/IsLocked", locked);
+      Logger.recordOutput("Drive/Aim/DynamicHubPose", dynamicHub);
+      Logger.recordOutput("Drive/Aim/StaticHubPose", Constants.DrivebaseConstants.getHubPose2D());
+      Logger.recordOutput("Drive/Aim/TargetAngleDeg", targetAngle.getDegrees());
+      Logger.recordOutput("Drive/Aim/CurrentHeadingDeg", getHeading().getDegrees());
+      Logger.recordOutput("Drive/Aim/ErrorDegHub", aimError);
+      Logger.recordOutput("Drive/Aim/DistanceToHubM", distanceToHub);
+      Logger.recordOutput("Drive/Aim/RobotVelX", fieldVel.vxMetersPerSecond);
+      Logger.recordOutput("Drive/Aim/RobotVelY", fieldVel.vyMetersPerSecond);
+      Logger.recordOutput("Drive/Aim/IsLocked", locked);
 
-    //   // --- Ferry aim debugging ---
-    //   Pose2d dynamicFerry = cachedDynamicFerry;
-    //   Translation2d robotToFerry = dynamicFerry.getTranslation().minus(pose.getTranslation());
-    //   Rotation2d ferryTargetAngle = robotToFerry.getAngle().plus(Rotation2d.fromDegrees(180));
-    //   double ferryAimError = ferryTargetAngle.minus(getHeading()).getDegrees();
-    //   double distanceToFerry = robotToFerry.getNorm();
+      // --- Ferry aim debugging ---
+      Pose2d dynamicFerry = cachedDynamicFerry;
+      Translation2d robotToFerry = dynamicFerry.getTranslation().minus(pose.getTranslation());
+      Rotation2d ferryTargetAngle = robotToFerry.getAngle().plus(Rotation2d.fromDegrees(180));
+      double ferryAimError = ferryTargetAngle.minus(getHeading()).getDegrees();
+      double distanceToFerry = robotToFerry.getNorm();
 
-    //   Logger.recordOutput("Drive/Aim/DynamicFerryPose", dynamicFerry);
-    //   Logger.recordOutput("Drive/Aim/ErrorDegFerry", ferryAimError);
-    //   Logger.recordOutput("Drive/Aim/DistanceToFerryM", distanceToFerry);
-    // }
+      Logger.recordOutput("Drive/Aim/DynamicFerryPose", dynamicFerry);
+      Logger.recordOutput("Drive/Aim/ErrorDegFerry", ferryAimError);
+      Logger.recordOutput("Drive/Aim/DistanceToFerryM", distanceToFerry);
+    }
 
     // --- Auto recovery debugging ---
     Logger.recordOutput("Drive/Auto/TargetPathPose", targetPathPose);
@@ -452,7 +452,7 @@ public class SwerveSubsystem extends SubsystemBase {
               // drive trains
               new PIDConstants(10, 0.0, 0.0), //1.5 i swear i see eople saying they shouldnt be lower than 5
               // Translation PID constants
-              new PIDConstants(10, 0.0, 0.0) //1
+              new PIDConstants(8, 0.0, 0.0) //1
           // Rotation PID constants
           ),
           config,
@@ -472,14 +472,14 @@ public class SwerveSubsystem extends SubsystemBase {
           this
       // Reference to this subsystem to set requirements
       );
-      // PPHolonomicDriveController.setRotationTargetOverride(() ->
-      // {
-      //   if (shouldAimAtHubAuto)
-      //   {
-      //     return Optional.of(getDynamicHubLocation().getRotation());
-      //   }
-      //   return Optional.empty();
-      // });
+      PPHolonomicDriveController.setRotationTargetOverride(() ->
+      {
+        if (shouldAimAtHubAuto)
+        {
+          return Optional.of(getDynamicHubLocation().getRotation());
+        }
+        return Optional.empty();
+      });
     } catch (Exception e) {
       // Handle exception as needed
       e.printStackTrace();
@@ -835,103 +835,103 @@ public class SwerveSubsystem extends SubsystemBase {
     return swerveDrive.getPose();
   }
 
-  // private void updateLimelight(String cameraName, int megaTag)
-  // {
-  //   boolean doRejectUpdate = false;
-  //   if(megaTag == 1) // If using mega tag 1
-  //   {
-  //     LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
+  private void updateLimelight(String cameraName, int megaTag)
+  {
+    boolean doRejectUpdate = false;
+    if(megaTag == 1) // If using mega tag 1
+    {
+      LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
 
-  //     if(mt1.tagCount == 0)
-  //     {
-  //       doRejectUpdate = true;
-  //     }
-  //     else if(mt1.tagCount == 1 && mt1.rawFiducials.length == 1)
-  //     {
-  //       if(mt1.rawFiducials[0].ambiguity > 0.3)
-  //       {
-  //         doRejectUpdate = true;
-  //       }
-  //       if(mt1.rawFiducials[0].distToCamera > 3)
-  //       {
-  //         doRejectUpdate = true;
-  //       }
-  //     }
-  //     else
-  //     {
-  //       // Multi-tag: reject if average distance is too far
-  //       if(mt1.avgTagDist > 3)
-  //       {
-  //         doRejectUpdate = true;
-  //       }
-  //     }
+      if(mt1.tagCount == 0)
+      {
+        doRejectUpdate = true;
+      }
+      else if(mt1.tagCount == 1 && mt1.rawFiducials.length == 1)
+      {
+        if(mt1.rawFiducials[0].ambiguity > 0.3)
+        {
+          doRejectUpdate = true;
+        }
+        if(mt1.rawFiducials[0].distToCamera > 3)
+        {
+          doRejectUpdate = true;
+        }
+      }
+      else
+      {
+        // Multi-tag: reject if average distance is too far
+        if(mt1.avgTagDist > 3)
+        {
+          doRejectUpdate = true;
+        }
+      }
 
-  //     // Reject if spinning fast
-  //     if(Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(DegreesPerSecond)) > 360)
-  //     {
-  //       doRejectUpdate = true;
-  //     }
+      // Reject if spinning fast
+      if(Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(DegreesPerSecond)) > 360)
+      {
+        doRejectUpdate = true;
+      }
 
-  //     if(!doRejectUpdate)
-  //     {
-  //       // Scale std devs by distance: close tags = more trust, far tags = less trust
-  //       double dist = mt1.avgTagDist;
-  //       double xyStd = 0.3 + (dist * dist * 0.15);
-  //       // Multi-tag is more reliable, so reduce std devs
-  //       if(mt1.tagCount >= 2) xyStd *= 0.5;
-  //       // Trust vision more while disabled to lock in pose before match
-  //       if(DriverStation.isDisabled()) xyStd *= 0.25;
+      if(!doRejectUpdate)
+      {
+        // Scale std devs by distance: close tags = more trust, far tags = less trust
+        double dist = mt1.avgTagDist;
+        double xyStd = 0.3 + (dist * dist * 0.15);
+        // Multi-tag is more reliable, so reduce std devs
+        if(mt1.tagCount >= 2) xyStd *= 0.5;
+        // Trust vision more while disabled to lock in pose before match
+        if(DriverStation.isDisabled()) xyStd *= 0.25;
 
-  //       swerveDrive.setVisionMeasurementStdDevs(VecBuilder.fill(xyStd, xyStd, 9999999));
-  //       swerveDrive.addVisionMeasurement(
-  //           mt1.pose,
-  //           mt1.timestampSeconds);
-  //     }
-  //   }
-  //   else  // If using mega tag 2
-  //   {
-  //     LimelightHelpers.SetRobotOrientation(cameraName,
-  //     swerveDrive.getOdometryHeading().getDegrees(),
-  //     0.0, 0.0, 0.0, 0.0, 0.0);
-  //     LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+        swerveDrive.setVisionMeasurementStdDevs(VecBuilder.fill(xyStd, xyStd, 9999999));
+        swerveDrive.addVisionMeasurement(
+            mt1.pose,
+            mt1.timestampSeconds);
+      }
+    }
+    else  // If using mega tag 2
+    {
+      LimelightHelpers.SetRobotOrientation(cameraName,
+      swerveDrive.getOdometryHeading().getDegrees(),
+      0.0, 0.0, 0.0, 0.0, 0.0);
+      LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
 
-  //     if(Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(DegreesPerSecond)) > 720)
-  //     {
-  //       doRejectUpdate = true;
-  //     }
-  //     if(mt2.tagCount == 0)
-  //     {
-  //       doRejectUpdate = true;
-  //     }
-  //     // Reject if average tag distance is too far for reliable MT2
-  //     if(mt2.avgTagDist > 3)
-  //     {
-  //       doRejectUpdate = true;
-  //     }
-  //     if(!doRejectUpdate)
-  //     {
-  //       // Scale std devs by distance and tag count
-  //       double dist = mt2.avgTagDist;
-  //       double xyStd = 0.3 + (dist * dist * 0.1);
-  //       if(mt2.tagCount >= 2) xyStd *= 0.5;
-  //       // Trust vision more while disabled to lock in pose before match
-  //       if(DriverStation.isDisabled()) xyStd *= 0.25;
+      if(Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(DegreesPerSecond)) > 720)
+      {
+        doRejectUpdate = true;
+      }
+      if(mt2.tagCount == 0)
+      {
+        doRejectUpdate = true;
+      }
+      // Reject if average tag distance is too far for reliable MT2
+      if(mt2.avgTagDist > 3)
+      {
+        doRejectUpdate = true;
+      }
+      if(!doRejectUpdate)
+      {
+        // Scale std devs by distance and tag count
+        double dist = mt2.avgTagDist;
+        double xyStd = 0.3 + (dist * dist * 0.1);
+        if(mt2.tagCount >= 2) xyStd *= 0.5;
+        // Trust vision more while disabled to lock in pose before match
+        if(DriverStation.isDisabled()) xyStd *= 0.25;
 
-  //       swerveDrive.setVisionMeasurementStdDevs(VecBuilder.fill(xyStd, xyStd, 9999999));
-  //       swerveDrive.addVisionMeasurement(
-  //           mt2.pose,
-  //           mt2.timestampSeconds);
-  //     }
-  //   }
-  // }
+        swerveDrive.setVisionMeasurementStdDevs(VecBuilder.fill(xyStd, xyStd, 9999999));
+        swerveDrive.addVisionMeasurement(
+            mt2.pose,
+            mt2.timestampSeconds);
+      }
+    }
+  }
 
   /** Updates the field relative position of the robot. */
   public void updateOdometry() {
 
 
-    // if(useBackLimelight) updateLimelight(LimelightConstants.LIMELIGHT_BACK, backMegatagNumber);
-    // if(useFrontLimelight) updateLimelight(LimelightConstants.LIMELIGHT_FRONT, frontMegatagNumber);
-    // if(useLeftLimelight) updateLimelight(LimelightConstants.LIMELIGHT_LEFT, leftMegatagNumber);
+    if(useBackLimelight) updateLimelight(LimelightConstants.LIMELIGHT_BACK, backMegatagNumber);
+    if(useFrontLimelight) updateLimelight(LimelightConstants.LIMELIGHT_FRONT, frontMegatagNumber);
+    if(useLeftLimelight) updateLimelight(LimelightConstants.LIMELIGHT_LEFT, leftMegatagNumber);
     
     swerveDrive.updateOdometry();
   }
@@ -1171,29 +1171,29 @@ public class SwerveSubsystem extends SubsystemBase {
    *
    * @return A Pose2d representing the compensated aim point.
    */
-  // public Pose2d getDynamicHubLocation() {
+  public Pose2d getDynamicHubLocation() {
 
-  //   if(locked)
-  //   {
-  //     return new Pose2d(Constants.DrivebaseConstants.getHubPose2D().getTranslation(), new Rotation2d(0));
-  //   }
+    if(locked)
+    {
+      return new Pose2d(Constants.DrivebaseConstants.getHubPose2D().getTranslation(), new Rotation2d(0));
+    }
 
-  //   Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
-  //   Translation2d robotVec = getPose().getTranslation();
-  //   ChassisSpeeds vel = getFieldVelocity();
-  //   Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
+    Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
+    Translation2d robotVec = getPose().getTranslation();
+    ChassisSpeeds vel = getFieldVelocity();
+    Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
 
-  //   Translation2d CompensatedHub = hubVec;
-  //   for (int i = 0; i < 15; i++) {
-  //     double distance = CompensatedHub.minus(robotVec).getNorm();
-  //     double tof = Constants.ShooterConstants.TOF.get(distance);
-  //     CompensatedHub = hubVec.minus(robotVel.times(tof));
-  //   }
+    Translation2d CompensatedHub = hubVec;
+    for (int i = 0; i < 15; i++) {
+      double distance = CompensatedHub.minus(robotVec).getNorm();
+      double tof = Constants.ShooterConstants.TOF.get(distance);
+      CompensatedHub = hubVec.minus(robotVel.times(tof));
+    }
 
-  //   Rotation2d aimRotation = CompensatedHub.minus(robotVec).getAngle();
+    Rotation2d aimRotation = CompensatedHub.minus(robotVec).getAngle();
 
-  //   return new Pose2d(CompensatedHub, aimRotation);
-  // }
+    return new Pose2d(CompensatedHub, aimRotation);
+  }
 
   /**
    * Computes a virtual ferry location that compensates for robot velocity,
@@ -1202,41 +1202,41 @@ public class SwerveSubsystem extends SubsystemBase {
    *
    * @return A Pose2d representing the compensated aim point.
    */
-  // public Pose2d getDynamicFerryLocation() {
-  //   Translation2d ferryVec = Constants.DrivebaseConstants.getFerryPose(getPose().getTranslation()).getTranslation();
-  //   Translation2d robotVec = getPose().getTranslation();
-  //   ChassisSpeeds vel = getFieldVelocity();
-  //   Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
+  public Pose2d getDynamicFerryLocation() {
+    Translation2d ferryVec = Constants.DrivebaseConstants.getFerryPose(getPose().getTranslation()).getTranslation();
+    Translation2d robotVec = getPose().getTranslation();
+    ChassisSpeeds vel = getFieldVelocity();
+    Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
 
-  //   Translation2d CompensatedFerry = ferryVec;
-  //   for (int i = 0; i < 4; i++) {
-  //     double distance = CompensatedFerry.minus(robotVec).getNorm();
-  //     double tof = Constants.ShooterConstants.TOF.get(distance);
-  //     CompensatedFerry = ferryVec.minus(robotVel.times(tof));
-  //   }
+    Translation2d CompensatedFerry = ferryVec;
+    for (int i = 0; i < 4; i++) {
+      double distance = CompensatedFerry.minus(robotVec).getNorm();
+      double tof = Constants.ShooterConstants.TOF.get(distance);
+      CompensatedFerry = ferryVec.minus(robotVel.times(tof));
+    }
 
-  //   return new Pose2d(CompensatedFerry, new Rotation2d());
-  // }
+    return new Pose2d(CompensatedFerry, new Rotation2d());
+  }
 
   private boolean IsOnLeftSide()
   {
       return getPose().getY() > 4;
   }
 
-  // public void setAimLocations()
-  // {
-  //   // Live-compute (not the cached getters — those just return the stale field
-  //   // and make this a self-assignment, which is what caused the "no target" error
-  //   // on first trigger press).
-  //   cachedDynamicHub = getDynamicHubLocation();
-  //   cachedDynamicFerry = getDynamicFerryLocation();
-  // }
+  public void setAimLocations()
+  {
+    // Live-compute (not the cached getters — those just return the stale field
+    // and make this a self-assignment, which is what caused the "no target" error
+    // on first trigger press).
+    cachedDynamicHub = getDynamicHubLocation();
+    cachedDynamicFerry = getDynamicFerryLocation();
+  }
 
   private Alliance getAlliance() {
     return DriverStation.getAlliance().orElse(Alliance.Red);
   }
 
-  private boolean isInAllianceZone() {
+  public boolean isInAllianceZone() {
     Alliance alliance = getAlliance();
     Distance blueZone = Inches.of(182);
     Distance redZone = Inches.of(469);
@@ -1260,12 +1260,12 @@ public class SwerveSubsystem extends SubsystemBase {
           if(IsOnLeftSide)
           {
             return new Pose2d(new Translation2d(3.478, 7.432),
-              Rotation2d.fromDegrees(108.773));
+              Rotation2d.fromDegrees(0));
           }
           else
           {
-            return new Pose2d(new Translation2d(3.478, 0.432),
-              Rotation2d.fromDegrees(-108.773));
+            return new Pose2d(new Translation2d(3.478, 0.67),
+              Rotation2d.fromDegrees(0));
           }
       }
 
@@ -1274,12 +1274,12 @@ public class SwerveSubsystem extends SubsystemBase {
         if(IsOnLeftSide)
         {
           return new Pose2d(new Translation2d(5.789, 7.432),
-              new Rotation2d());
+              Rotation2d.fromDegrees(180));
         }
         else
         {
-          return new Pose2d(new Translation2d(5.789, 0.432),
-              new Rotation2d());
+          return new Pose2d(new Translation2d(5.789, 0.67),
+              Rotation2d.fromDegrees(180));
         }
       }
   }

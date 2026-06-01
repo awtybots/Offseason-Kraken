@@ -132,6 +132,7 @@ public final class Constants {
 
     // Port
     public static final int kDriverControllerPort = 0;
+    public static final int kOperatorControllerPort = 1;
 
   }
 
@@ -180,11 +181,11 @@ public final class Constants {
     public static final int SHOOTER_R_ID = 9;
     public static final int SHOOTER_L_ID = 10;
 
-    public static final double SHOOTER_SPEED = -100;                  // RPM 3 meters 1900 4 meters 2200
+    public static final double SHOOTER_SPEED = -100;                
     public static final double SHOOTER_PASSING_SPEED = -200;  
-    public static final double ERROR_MARGIN = 50; // RPM         
+    public static final double ERROR_MARGIN = 5; // RPS         
     public static final double STOP = 0;
-    public static final double IDLE = 0.1; // % voltage -1 --> 1
+    public static final double IDLE = 0.1; 
 
     public static final double ALLIANCE_IDLE_RPS = -50;
     public static final double ALLIANCE_AUTO_RPS = -50;
@@ -234,7 +235,6 @@ public final class Constants {
     public static final double MIN_CONTINUOUS_DEGREES = -160.0; // set this to the lower end of the turret's range for example: -160
     public static final double MAX_CONTINUOUS_DEGREES = 160.0;// higher end for example: 160 meaning total range is 320 degrees
 
-    // PID — tune on robot
     public static final double p = 0.05;
     public static final double i = 0.0;
     public static final double d = 0.0;
@@ -243,7 +243,29 @@ public final class Constants {
     public static final double v = 0.004;
     public static final double a = 0.0003;
 
+    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
+
     public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning
+  }
+
+  public static final class HoodConstants {
+    public static final int HOOD_ID = 0; // set ts
+
+    public static final double HOOD_MIN_DEGREES = 20.0;  // down pos (starting pos)
+    public static final double HOOD_MAX_DEGREES = 45.0;  // up position
+
+    public static final double GEAR_RATIO = 10.0;       
+    public static final double ANGLE_TOLERANCE_DEGREES = 0.5; 
+
+    public static final double TRENCH_X_BLUE = 4.6;      // blue side trench x coordinate
+    public static final double TRENCH_X_RED = 11.9;       // red side trench x coordinate
+    public static final double TRENCH_THRESHOLD = 0.6;    // meters — tuck if within this distance
+
+    // PID — tune on robot
+    public static final double p = 0.1;
+    public static final double i = 0.0;
+    public static final double d = 0.0;
+    public static final double MAX_OUTPUT = 0.5; // limit speed for safety while tuning
   }
 
   public static class KickerConstants {
