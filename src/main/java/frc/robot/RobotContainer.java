@@ -68,9 +68,6 @@ public class RobotContainer {
     private LoggedDashboardChooser<Command> loggedAutoChooser;
     private SendableChooser<Boolean> flipChooser = new SendableChooser<>();
 
-    // driver chooser: "David" = port 0 drives, "Asier" = port 1 drives
-    private final SendableChooser<String> driverChooser = new SendableChooser<>();
-
     /**
      * Converts driver input into a field-relative ChassisSpeeds that is controlled
      * by angular velocity.
@@ -95,69 +92,17 @@ public class RobotContainer {
 
     private PathConstraints autoConstraints;
 
-    // ========= DRIVER TRIGGERS ===========
-    private Trigger RTScore; // shoot / ferry depending on position
-    private Trigger RBUnjam; // unjam
-    private Trigger LBretract_and_stop; // retract and stop intake
-    private Trigger PLDriveToPose; // drive to pose
-
-    private Trigger LT_Intake; // intake
-
-    private Trigger A_runOuttake;
-
-
-    // ========= OPERATOR TRIGGERS ===========
-    private Trigger LT_OP_1900Shot; // fixed speed shot
-    private Trigger RT_OP_VariableShoot; // variable shoot
-
-    private Trigger RB_OP_Pass; // pass
-    private Trigger LB_OP_unjam; // unjam
-
-    private Trigger X_OP_intake;
-    private Trigger A_OP_outtake;
-
-    private Trigger Y_OP_extendIntake;
-    private Trigger B_OP_retractIntake;
-    private Trigger POVLEFT_OP_agitate;
-
-    private Trigger POVUP_OP_FrontLimelight;
-    private Trigger POVLEFT_OP_LeftLimelight;
-    private Trigger POVRIGHT_OP_VisionToggle;
-    private Trigger POVDown_OP_BackLimelight;
-
-    // -----------------------------------------------------------------------
-    // Helpers: resolve which physical controller acts as "driver" vs "operator"
-    // based on the SmartDashboard chooser selection.
-    // -----------------------------------------------------------------------
-    private boolean isAsierSelected() {
-        String selected = driverChooser.getSelected();
-        return selected != null && selected.equals("Asier");
-    }
-
-    /** Returns the controller that should be treated as the driving controller. */
-    private CommandXboxController dc() {
-        return isAsierSelected() ? operatorXbox : driverXbox;
-    }
-
-    /** Returns the controller that should be treated as the operator controller. */
-    private CommandXboxController oc() {
-        return isAsierSelected() ? driverXbox : operatorXbox;
-    }
-
     public void warmupCommands() {
-    @SuppressWarnings("unused")
-    ControlAllShooting shootWarm = new ControlAllShooting(
-        m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-    AimTurret aimTurretWarm = new AimTurret(m_turret, drivebase);
-    AimHood aimHoodWarm = new AimHood(m_hood, drivebase);
+        @SuppressWarnings("unused")
+        ControlAllShooting shootWarm = new ControlAllShooting(
+            m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+        @SuppressWarnings("unused")
+        AimTurret turretWarm = new AimTurret(m_turret, drivebase);
+        @SuppressWarnings("unused")
+        AimHood hoodWarm = new AimHood(m_hood, drivebase);
     }
 
     public RobotContainer() {
-
-        // driver chooser
-        driverChooser.setDefaultOption("David", "David");
-        driverChooser.addOption("Asier", "Asier");
-        SmartDashboard.putData("Driver:", driverChooser);
 
         configureBindings();
 
@@ -223,15 +168,15 @@ public class RobotContainer {
     private void configureBindings() {
 
         driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-                () -> dc().getLeftY() * -1,
-                () -> dc().getLeftX() * -1)
-                .withControllerRotationAxis(() -> dc().getRightX() * -1)
+                () -> driverXbox.getLeftY() * -1,
+                () -> driverXbox.getLeftX() * -1)
+                .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
                 .deadband(OperatorConstants.DEADBAND)
                 .scaleTranslation(1.0)
                 .allianceRelativeControl(true);
 
         driveDirectAngle = driveAngularVelocity.copy()
-                .withControllerHeadingAxis(dc()::getRightX, dc()::getRightY)
+                .withControllerHeadingAxis(driverXbox::getRightX, driverXbox::getRightY)
                 .headingWhile(true);
 
         driveRobotOriented = driveAngularVelocity.copy()
@@ -239,51 +184,20 @@ public class RobotContainer {
                 .allianceRelativeControl(false);
 
         driveAngularVelocityKeyboard = SwerveInputStream.of(drivebase.getSwerveDrive(),
-                () -> -dc().getLeftY(),
-                () -> -dc().getLeftX())
-                .withControllerRotationAxis(() -> dc().getRawAxis(2))
+                () -> -driverXbox.getLeftY(),
+                () -> -driverXbox.getLeftX())
+                .withControllerRotationAxis(() -> driverXbox.getRawAxis(2))
                 .deadband(OperatorConstants.DEADBAND)
                 .scaleTranslation(0.8)
                 .allianceRelativeControl(true);
 
         driveDirectAngleKeyboard = driveAngularVelocityKeyboard.copy()
                 .withControllerHeadingAxis(
-                        () -> Math.sin(dc().getRawAxis(2) * Math.PI) * (Math.PI * 2),
-                        () -> Math.cos(dc().getRawAxis(2) * Math.PI) * (Math.PI * 2))
+                        () -> Math.sin(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2),
+                        () -> Math.cos(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2))
                 .headingWhile(true)
                 .translationHeadingOffset(true)
                 .translationHeadingOffset(Rotation2d.fromDegrees(0));
-
-        // ========= DRIVER TRIGGERS ===========
-        RTScore = dc().rightTrigger(); // shoot / ferry depending on position
-        RBUnjam = dc().rightBumper(); // unjam
-        LBretract_and_stop = dc().leftBumper(); // retract and stop intake
-        PLDriveToPose = dc().povLeft(); // drive to pose
-
-        LT_Intake = dc().leftTrigger(); // intake
-
-        A_runOuttake = dc().a();
-
-        // ========= OPERATOR TRIGGERS ===========
-        LT_OP_1900Shot = oc().leftTrigger(); // fixed speed shot
-        RT_OP_VariableShoot = oc().rightTrigger(); // variable shoot
-
-        Trigger ResetEncoder = oc().start();
-
-        RB_OP_Pass = oc().rightBumper(); // pass
-        LB_OP_unjam = oc().leftBumper(); // unjam
-
-        X_OP_intake = oc().x();
-        A_OP_outtake = oc().a();
-
-        Y_OP_extendIntake = oc().y();
-        B_OP_retractIntake = oc().b();
-        POVLEFT_OP_agitate = oc().povLeft();
-
-        POVUP_OP_FrontLimelight = oc().povUp();
-        POVLEFT_OP_LeftLimelight = oc().povLeft();
-        POVRIGHT_OP_VisionToggle = oc().povRight();
-        POVDown_OP_BackLimelight = oc().povDown();
 
         // ==================== DRIVE COMMANDS ====================
 
@@ -318,7 +232,7 @@ public class RobotContainer {
         // ==================== DRIVER BINDINGS ====================
 
         // RT shoots
-        RTScore.whileTrue(
+        driverXbox.rightTrigger().whileTrue(
             Commands.defer(() -> {
                 ControlAllShooting shootCmd = new ControlAllShooting(
                   m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
@@ -331,20 +245,20 @@ public class RobotContainer {
                     shootCmd,
                     m_pushout.AgitateCommand(),
                     drivebase.lockCommand( // lock wheels while shooting
-                      dc()::getLeftX,
-                      dc()::getLeftY,
-                      dc()::getRightX,
+                      driverXbox::getLeftX,
+                      driverXbox::getLeftY,
+                      driverXbox::getRightX,
                       driveAngularVelocity::get)
-                  ).onlyWhile(() -> !LT_Intake.getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
+                  ).onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
                 ).finallyDo(() -> {
                   drivebase.isAiming = false;
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0); // keep flywheel spun up briefly after shot
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0).schedule(); // keep flywheel spun up briefly after shot
                 });
             }, java.util.Collections.emptySet())
         );
 
         // LT intakes
-        LT_Intake.whileTrue(
+        driverXbox.leftTrigger().whileTrue(
           Commands.parallel(
             m_pushout.PushCommand(),
             m_intake.runIntakeCommand()
@@ -352,7 +266,7 @@ public class RobotContainer {
         );
 
         // LB retracts and stops intake
-        LBretract_and_stop.whileTrue(
+        driverXbox.leftBumper().whileTrue(
           Commands.parallel(
             m_pushout.RetractCommand(),
             m_intake.stopIntakeCommand()
@@ -360,7 +274,7 @@ public class RobotContainer {
         );
 
         // RB unjams
-        RBUnjam.whileTrue(
+        driverXbox.rightBumper().whileTrue(
           Commands.parallel(
             m_kicker.ReverseKickerCommand(),
             m_conveyor.ReverseConveyorCommand(),
@@ -368,8 +282,8 @@ public class RobotContainer {
           )
         );
 
-        // B — agitate manually
-        A_runOuttake.whileTrue(
+        // A — outtake
+        driverXbox.a().whileTrue(
           Commands.parallel(
             m_intake.runOuttakeCommand(),
             m_rollers.runReverseRollersCommand()
@@ -377,19 +291,21 @@ public class RobotContainer {
         );
 
         // POV left — drive to pose
-        PLDriveToPose.whileTrue(drivebase.driveToPoseDeffered());
+        driverXbox.povLeft().whileTrue(drivebase.driveToPoseDeffered());
 
         // start zero gyro
-        dc().start().onTrue(Commands.runOnce(drivebase::zeroGyro));
+        driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
 
         // ==================== OPERATOR BINDINGS ====================
+
+        Trigger ResetEncoder = operatorXbox.start();
 
         // reset encoder
         ResetEncoder.onTrue(m_pushout.ResetEncoderCommand());
 
         // intake
-        X_OP_intake.whileTrue(m_intake.runIntakeCommand());
-        A_OP_outtake.whileTrue(
+        operatorXbox.x().whileTrue(m_intake.runIntakeCommand());
+        operatorXbox.a().whileTrue(
           Commands.parallel(
             m_intake.runOuttakeCommand(),
             m_rollers.runReverseRollersCommand()
@@ -397,14 +313,14 @@ public class RobotContainer {
         );
 
         // pushout
-        Y_OP_extendIntake.whileTrue(m_pushout.PushoutDutyCycleCommand());
-        B_OP_retractIntake.whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
+        operatorXbox.y().whileTrue(m_pushout.PushoutDutyCycleCommand());
+        operatorXbox.b().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
 
         // vision
-        POVUP_OP_FrontLimelight.onTrue(drivebase.FrontToggle());
-        POVLEFT_OP_LeftLimelight.onTrue(drivebase.LeftToggle());
-        POVRIGHT_OP_VisionToggle.onTrue(drivebase.VisionToggle());
-        POVDown_OP_BackLimelight.onTrue(drivebase.BackToggle());
+        operatorXbox.povUp().onTrue(drivebase.FrontToggle());
+        operatorXbox.povLeft().onTrue(drivebase.LeftToggle());
+        operatorXbox.povRight().onTrue(drivebase.VisionToggle());
+        operatorXbox.povDown().onTrue(drivebase.BackToggle());
 
         // ==================== SIMULATION ====================
 
@@ -414,9 +330,9 @@ public class RobotContainer {
                     new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
                     new ProfiledPIDController(5, 0, 0,
                             new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
-            dc().start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
-            dc().button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
-            dc().button(2).whileTrue(Commands.runEnd(
+            driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
+            driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
+            driverXbox.button(2).whileTrue(Commands.runEnd(
                     () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
                     () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
         }
@@ -511,7 +427,7 @@ public class RobotContainer {
         Logger.recordOutput("Input/Operator/LeftTrigger", operatorXbox.getLeftTriggerAxis());
         Logger.recordOutput("Input/Operator/RightTrigger", operatorXbox.getRightTriggerAxis());
 
-        Logger.recordOutput("Shooting/RTHeld", dc().rightTrigger().getAsBoolean());
+        Logger.recordOutput("Shooting/RTHeld", driverXbox.rightTrigger().getAsBoolean());
         Logger.recordOutput("Shooting/InAllianceZone", isInAllianceZone());
     }
 
