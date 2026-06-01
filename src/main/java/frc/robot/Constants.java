@@ -17,13 +17,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
-// import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import swervelib.math.Matter;
-// import edu.wpi.first.math.geometry.Translation3d;
-// import edu.wpi.first.math.util.Units;
-// import swervelib.math.Matter;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -38,32 +34,10 @@ import swervelib.math.Matter;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static final boolean USE_ROBOT_RELATIVE = false;
-  public static final boolean USE_DRIVE_ONLY = false;
-  public static final boolean USE_SHOOTER_ONLY = false;
   public static final boolean SIM_REPLAY_MODE = false;
-  // not used
-  public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
-  public static final Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
-  public static final double LOOP_TIME = 0.13; // s, 20ms + 110ms sprk max velocity lag
-  // used
+  
   public static final double MAX_SPEED = Units.feetToMeters(16.5);
 
-  // RobotContainer or a constants class
-  public static final double LOOKAHEAD_BASE_SEC = 0.03; // minimum lead
-  public static final double LOOKAHEAD_K_OMEGA = 0.4; // 0.012 // seconds per (rad/s)
-  public static final double LOOKAHEAD_K_V = 0.015; // seconds per (m/s)
-  public static final double LOOKAHEAD_MIN_SEC = 0.0;
-  public static final double LOOKAHEAD_MAX_SEC = 1.5;
-  // Maximum speed of the robot in meters per second, used to limit acceleration.
-
-  // public static final class AutonConstants
-  // {
-  //
-  // public static final PIDConstants TRANSLATION_PID = new PIDConstants(0.7, 0,
-  // 0);
-  // public static final PIDConstants ANGLE_PID = new PIDConstants(0.4, 0, 0.01);
-  // }
 
   public static final class DrivebaseConstants {
 
@@ -79,17 +53,13 @@ public final class Constants {
 
     public static final Pose2d LT_ENTER_POS = new Pose2d(5.848, 7.241, Rotation2d.fromDegrees(90));
     public static final Pose2d RT_ENTER_POS = new Pose2d(5.839, 0.823, Rotation2d.fromDegrees(-90));
-    // public static final Angle epsilonAngleToGoal = Degrees.of(1.0);
 
     public static final Pose2d getHubPose2D() {
       Pose3d pose = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? redHubPose : blueHubPose;
-      Pose2d Tdpose = pose.toPose2d();
-      return Tdpose;
+      return pose.toPose2d();
     }
 
-    // should i add <Supplier> to the method signature? it compiles without it but
-    // im not sure if its correct
-    public static final <Supplier> Pose3d getHubPose3D() {
+    public static final Pose3d getHubPose3D() {
       Pose3d pose = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? redHubPose : blueHubPose;
       return pose;
     }
@@ -205,7 +175,7 @@ public final class Constants {
 
     public final static InterpolatingDoubleTreeMap TOF = new InterpolatingDoubleTreeMap();
 
-    static { // 7-12 are estimates - Aditya
+    static {
       for (var entry : List.of(
           Pair.of(Meters.of(2), Seconds.of(0.85)),
           Pair.of(Meters.of(3), Seconds.of(0.95)),
@@ -222,7 +192,6 @@ public final class Constants {
       }
     }
   }
-
 
   public static final class TurretConstants {
     public static final int TURRET_ID = 0; // set ts
@@ -273,11 +242,11 @@ public final class Constants {
     public static final int KICKER_ID = 13;
     public static final int VERT_ROLLER_ID = 14;
 
-    public static final double KICKER_REVERSE_RPS = -270; // RPM
-    public static final double KICKER_RPS = 270; // RPM
+    public static final double KICKER_REVERSE_RPS = -270;
+    public static final double KICKER_RPS = 270;
 
-    public static final double VERT_ROLLER_REVERSE_RPS = -270; // RPM
-    public static final double VERT_ROLLER_RPS = 270; // RPM
+    public static final double VERT_ROLLER_REVERSE_RPS = -270;
+    public static final double VERT_ROLLER_RPS = 270;
 
     // PID Constants
     public static final double p = 0.000236;
@@ -297,8 +266,8 @@ public final class Constants {
     public static final int CONVEYOR_TOP_ID = 13;
     public static final int CONVEYOR_BOTTOM_ID = 14;
 
-    public static final double CONVEYOR_REVERSE_RPS = -270; // RPM
-    public static final double CONVEYOR_RPS = 270; // RPM
+    public static final double CONVEYOR_REVERSE_RPS = -270;
+    public static final double CONVEYOR_RPS = 270;
 
     // PID Constants
     public static final double p = 0.000236;
@@ -316,7 +285,6 @@ public final class Constants {
 
 
   public static class RollersConstants {
-    // IDEAL mapping from motor_can_ids.csv: left=18, right=19
     public static final int ROLLERS_ID = 15;
 
     public static final double ROLLERS_RPS = -270;
@@ -332,8 +300,6 @@ public final class Constants {
     public static final double v = 0.00177;
     public static final double a = 0.00017;
 
-    public static final int six_seven = 67; // <---------- HISTORICAL MONUMENT
-
   }
 
   // Object Detection
@@ -343,13 +309,5 @@ public final class Constants {
   public static final double X_FUEL_TOLERANCE = 0.1;
   public static final double Y_FUEL_TOLERANCE = 0.1;
 
-  public static class Dimensions {
-    public static final Distance BUMPER_THICKNESS = Inches.of(3); // frame to edge of bumper
-    public static final Distance BUMPER_HEIGHT = Inches.of(7); // height from floor to top of bumper
-    public static final Distance FRAME_SIZE_Y = Inches.of(26.25); // left to right (y-axis)
-    public static final Distance FRAME_SIZE_X = Inches.of(28.75); // front to back (x-axis)
 
-    public static final Distance FULL_WIDTH = FRAME_SIZE_Y.plus(BUMPER_THICKNESS.times(2));
-    public static final Distance FULL_LENGTH = FRAME_SIZE_X.plus(BUMPER_THICKNESS.times(2));
-  }
 }
