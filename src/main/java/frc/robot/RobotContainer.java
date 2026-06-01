@@ -148,6 +148,8 @@ public class RobotContainer {
     @SuppressWarnings("unused")
     ControlAllShooting shootWarm = new ControlAllShooting(
         m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+    AimTurret aimTurretWarm = new AimTurret(m_turret, drivebase);
+    AimHood aimHoodWarm = new AimHood(m_hood, drivebase);
     }
 
     public RobotContainer() {
