@@ -1160,70 +1160,22 @@ public class SwerveSubsystem extends SubsystemBase {
  */
     public Pose2d getDynamicHubLocation() {
 
-        Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
-        Translation2d robotVec = getPose().getTranslation();
-        ChassisSpeeds vel = getFieldVelocity();
-        Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
+    Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
+    Translation2d robotVec = getPose().getTranslation();
+    ChassisSpeeds vel = getFieldVelocity();
+    Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
 
-        // velocity compensation — iterative TOF convergence
-        Translation2d CompensatedHub = hubVec;
-        for (int i = 0; i < 15; i++) {
-            double distance = CompensatedHub.minus(robotVec).getNorm();
-            double tof = Constants.ShooterConstants.TOF.get(distance);
-            CompensatedHub = hubVec.minus(robotVel.times(tof));
-        }
-
-        // tilt compensation
-        double pitchRad = swerveDrive.getPitch().getRadians(); // tilt forward/back
-        double rollRad = swerveDrive.getRoll().getRadians();   // tilt left/right
-
-        if (Math.abs(pitchRad) > Math.toRadians(1.0) || Math.abs(rollRad) > Math.toRadians(1.0)) {
-
-            // hub target height is fixed, shooter height changes with tilt
-            // based on shooter position: back left corner, 3" in from each edge
-            // robot 29.5" long x 24.5" wide → offsets from center:
-            // fwd = -(29.5/2 - 3) = -11.75", left = (24.5/2 - 3) = 9.25"
-            double actualShooterHeight = Constants.DrivebaseConstants.SHOOTER_HEIGHT_M
-                    + Constants.DrivebaseConstants.SHOOTER_OFFSET_FWD_M * Math.sin(pitchRad)
-                    + Constants.DrivebaseConstants.SHOOTER_OFFSET_LEFT_M * Math.sin(rollRad);
-
-            // height difference between shooter exit and hub target
-            double dz = Constants.DrivebaseConstants.getHubPose3D().getZ() - actualShooterHeight;
-
-            // vector from robot to compensated hub in field space
-            Translation2d robotToHub = CompensatedHub.minus(robotVec);
-            double dx = robotToHub.getX();
-            double dy = robotToHub.getY();
-
-            // robot heading so we can decompose into forward/side components
-            double yaw = getHeading().getRadians();
-
-            // project dx/dy into robot-relative forward and left components
-            double fwd  =  dx * Math.cos(yaw) + dy * Math.sin(yaw); // forward in robot frame
-            double left = -dx * Math.sin(yaw) + dy * Math.cos(yaw); // left in robot frame
-
-            // pitch forward → shooter tilts down → hub appears further → correct fwd
-            // roll left → shooter tilts left → hub appears shifted → correct left
-            double correctedFwd  = fwd  + dz * Math.tan(pitchRad);
-            double correctedLeft = left - dz * Math.tan(rollRad);
-
-            // convert back to field coordinates
-            double correctedDx = correctedFwd * Math.cos(yaw) - correctedLeft * Math.sin(yaw);
-            double correctedDy = correctedFwd * Math.sin(yaw) + correctedLeft * Math.cos(yaw);
-
-            CompensatedHub = robotVec.plus(new Translation2d(correctedDx, correctedDy));
-
-            Logger.recordOutput("Drive/Tilt/PitchDeg", Math.toDegrees(pitchRad));
-            Logger.recordOutput("Drive/Tilt/RollDeg", Math.toDegrees(rollRad));
-            Logger.recordOutput("Drive/Tilt/ActualShooterHeightM", actualShooterHeight);
-            Logger.recordOutput("Drive/Tilt/DzM", dz);
-            Logger.recordOutput("Drive/Tilt/CorrectedFwd", correctedFwd);
-            Logger.recordOutput("Drive/Tilt/CorrectedLeft", correctedLeft);
-        }
-
-        Rotation2d aimRotation = CompensatedHub.minus(robotVec).getAngle();
-        return new Pose2d(CompensatedHub, aimRotation);
+    // velocity compensation — iterative TOF convergence
+    Translation2d CompensatedHub = hubVec;
+    for (int i = 0; i < 15; i++) {
+        double distance = CompensatedHub.minus(robotVec).getNorm();
+        double tof = Constants.ShooterConstants.TOF.get(distance);
+        CompensatedHub = hubVec.minus(robotVel.times(tof));
     }
+
+    Rotation2d aimRotation = CompensatedHub.minus(robotVec).getAngle();
+    return new Pose2d(CompensatedHub, aimRotation);
+  }
 
   /**
    * Computes a virtual ferry location that compensates for robot velocity,
