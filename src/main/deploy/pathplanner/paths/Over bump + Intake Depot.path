@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.4716774193513062,
-        "y": 5.519846774193549
+        "x": 5.6434791666596515,
+        "y": 5.4093438223433035
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.441634492523474,
-        "y": 5.690711500381145
+        "x": 4.613436239831819,
+        "y": 5.5802085485309
       },
       "isLocked": false,
       "linkedName": "LowTide"
@@ -36,12 +36,12 @@
         "y": 7.004693548387097
       },
       "prevControl": {
-        "x": 0.5970725806451621,
+        "x": 0.5970725806451622,
         "y": 6.638967741935484
       },
       "nextControl": {
-        "x": 1.2537093225368563,
-        "y": 7.160108013278099
+        "x": 1.2537093225368572,
+        "y": 7.1601080132781
       },
       "isLocked": false,
       "linkedName": null
@@ -122,8 +122,8 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 3.75,
+    "maxAcceleration": 3.75,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
