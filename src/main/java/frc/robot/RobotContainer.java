@@ -247,18 +247,20 @@ public class RobotContainer {
                  
                   Commands.parallel(
                     shootCmd,
-                    m_pushout.AgitateCommand(),
                     drivebase.lockCommand( // lock wheels while shooting
                       driverXbox::getLeftX,
                       driverXbox::getLeftY,
                       driverXbox::getRightX,
                       driveAngularVelocity::get)
-                  ).onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean() && m_turret.isAtAngle() && m_hood.isAtAngle())
+                  ).onlyWhile(() -> m_turret.isAtAngle() && m_hood.isAtAngle())
                 ).finallyDo(() -> {
                   m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
                   });
             }, java.util.Collections.emptySet())
         );
+
+
+        driverXbox.rightTrigger().whileTrue(m_pushout.AgitateCommand().onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean()));
 
         // LT intakes
         driverXbox.leftTrigger().whileTrue(

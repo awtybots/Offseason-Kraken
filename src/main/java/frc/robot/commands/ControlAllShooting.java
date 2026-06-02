@@ -143,7 +143,7 @@ public class ControlAllShooting extends Command {
                 m_conveyor.HopperToShooter();
                 m_rollers.RollersToConveyor();
                 m_intake.runIntake();
-                m_pushout.PushIntake();
+                // m_pushout.PushIntake();
             } else {
                 // turret is wrapping stop feeding but dont jam
                 isFiring = false;
@@ -151,7 +151,7 @@ public class ControlAllShooting extends Command {
                 m_conveyor.stopConveyor();
                 m_intake.stopIntake();
                 m_rollers.stopRollers();
-                m_pushout.PushIntake();
+                // m_pushout.PushIntake();
             }
         } else {
             isFiring = false;
@@ -159,7 +159,7 @@ public class ControlAllShooting extends Command {
             m_kicker.stopKicker();
             m_intake.stopIntake();
             m_rollers.stopRollers();
-            m_pushout.PushIntake();
+            // m_pushout.PushIntake();
         }
 
         Logger.recordOutput("Shooting/TargetRPS", recordedTargetRPS);
