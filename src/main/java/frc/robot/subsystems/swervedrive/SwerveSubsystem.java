@@ -1160,10 +1160,6 @@ public class SwerveSubsystem extends SubsystemBase {
  */
     public Pose2d getDynamicHubLocation() {
 
-        if(locked) {
-            return new Pose2d(Constants.DrivebaseConstants.getHubPose2D().getTranslation(), new Rotation2d(0));
-        }
-
         Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
         Translation2d robotVec = getPose().getTranslation();
         ChassisSpeeds vel = getFieldVelocity();
