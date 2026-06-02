@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -58,45 +57,31 @@ public class AimHood extends Command {
     public void initialize() {
     }
 
-    private Translation2d getTurretFieldPosition() { // gets the actual turret's field position 
-        Pose2d robotPose = swerveSubsystem.getPose();
-
-        // da robot is 24.5 x 29.5 and da turret is about 3 inches from the back left corner
-        double xOffset = (-29.5 / 2.0 + 3.0) * 0.0254; // convert ts to meters
-        double yOffset = (24.5 / 2.0 - 3.0) * 0.0254;  
-
-        // get the field relative offset
-        Translation2d offset = new Translation2d(xOffset, yOffset).rotateBy(robotPose.getRotation());
-
-        return robotPose.getTranslation().plus(offset);
-    }
-
-    private boolean isUnderTrench() { // checks if turret is under the trench by looking at the field x pos
-        double x = getTurretFieldPosition().getX();
-        return Math.abs(x - HoodConstants.TRENCH_X_BLUE) <= HoodConstants.TRENCH_THRESHOLD
-                || Math.abs(x - HoodConstants.TRENCH_X_RED) <= HoodConstants.TRENCH_THRESHOLD;
+    private boolean isUnderTrench() {// checks if turret is under the trench by looking at the field x pos
+    double x = swerveSubsystem.getTurretFieldPosition().getX();
+    return Math.abs(x - HoodConstants.TRENCH_X_BLUE) <= HoodConstants.TRENCH_THRESHOLD
+            || Math.abs(x - HoodConstants.TRENCH_X_RED) <= HoodConstants.TRENCH_THRESHOLD;
     }
 
     @Override
     public void execute() {
-        // tuck hood down if turret is near trench so it doesnd decapitate itself
+        Translation2d turretPos = swerveSubsystem.getTurretFieldPosition();
+
         if (isUnderTrench()) {
             hood.setAngle(HoodConstants.HOOD_MIN_DEGREES);
             Logger.recordOutput("Hood/IsUnderTrench", true);
-            Logger.recordOutput("Hood/TurretFieldX", getTurretFieldPosition().getX());
-            Logger.recordOutput("Hood/TurretFieldY", getTurretFieldPosition().getY());
+            Logger.recordOutput("Hood/TurretFieldX", turretPos.getX());
+            Logger.recordOutput("Hood/TurretFieldY", turretPos.getY());
             return;
         }
 
         Logger.recordOutput("Hood/IsUnderTrench", false);
-        Logger.recordOutput("Hood/TurretFieldX", getTurretFieldPosition().getX());
-        Logger.recordOutput("Hood/TurretFieldY", getTurretFieldPosition().getY());
-
-        // Pose2d robotPose = swerveSubsystem.getPose();
+        Logger.recordOutput("Hood/TurretFieldX", turretPos.getX());
+        Logger.recordOutput("Hood/TurretFieldY", turretPos.getY());
 
         if (swerveSubsystem.isInAllianceZone()) {
             Translation2d turretToHub = swerveSubsystem.getDynamicHubLocation()
-                    .getTranslation().minus(getTurretFieldPosition()); // use turret pos
+                    .getTranslation().minus(turretPos);
             double distToHub = turretToHub.getNorm();
             distance = distToHub;
 
@@ -106,11 +91,9 @@ public class AimHood extends Command {
             Logger.recordOutput("Hood/Mode", "Hub");
             Logger.recordOutput("Hood/DistanceToHub", distToHub);
             Logger.recordOutput("Hood/TargetAngle", targetAngle);
-        } 
-        else {
-            // out of alliance zone — interpolate hood angle from turret position to ferry
+        } else {
             Translation2d turretToFerry = swerveSubsystem.getDynamicFerryLocation()
-                    .getTranslation().minus(getTurretFieldPosition()); // use turret pos
+                    .getTranslation().minus(turretPos);
             double distToFerry = turretToFerry.getNorm();
             distance = distToFerry;
 

@@ -32,26 +32,28 @@ public class AimTurret extends Command {
 
     @Override
     public void execute() {
-        // pick hub or ferry based on robot position
         Pose2d target = getTargetPose();
         Pose2d robotPose = swerveSubsystem.getPose();
 
-        // vector from robot to target
-        Translation2d robotToTarget = target.getTranslation().minus(robotPose.getTranslation());
+        // use turret's field position instead of robot center
+        Translation2d turretPos = swerveSubsystem.getTurretFieldPosition();
 
-        // angle from robot to target in field space
-        Rotation2d fieldAngleToTarget = robotToTarget.getAngle();
+        // vector from turret to target
+        Translation2d turretToTarget = target.getTranslation().minus(turretPos);
+
+        // angle from turret to target in field space
+        Rotation2d fieldAngleToTarget = turretToTarget.getAngle();
 
         // get the robot relative angle that the turret needs to go to
         double turretTargetDegrees = fieldAngleToTarget.minus(robotPose.getRotation()).getDegrees();
 
         // convert to setpoint and send to turret
         double setpoint = turret.angleToSetpoint(turretTargetDegrees);
-        if (!Double.isNaN(setpoint)) { // only move if theres a valid position to go to
+        if (!Double.isNaN(setpoint)) {
             turret.setAngle(setpoint);
         }
     }
-
+    
     @Override
     public boolean isFinished() {
         return false;

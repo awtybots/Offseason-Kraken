@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,7 +18,8 @@ public class ControlAllShooting extends Command {
     private final Shooter m_shooter;
     private final Conveyor m_conveyor;
     private final Kicker m_kicker;
-    private final Pushout m_pushout;
+    @SuppressWarnings("unused")
+    private final Pushout m_pushout; 
     private final Intake m_intake;
     private final Hood m_hood;
     private final Rollers m_rollers;
@@ -99,15 +99,15 @@ public class ControlAllShooting extends Command {
 
     @Override
     public void execute() {
-        Pose2d robotPose = drivebase.getPose();
+        Translation2d turretPos = drivebase.getTurretFieldPosition();
 
         if (drivebase.isInAllianceZone()) { // shoot at hub
             Translation2d turretToHub = drivebase.getDynamicHubLocation()
-                    .getTranslation().minus(robotPose.getTranslation());
+                    .getTranslation().minus(turretPos);
             double dist = turretToHub.getNorm();
             distance = dist;
 
-            double targetRPS = hubShooterTable.get(dist); // look up RPS from distance
+            double targetRPS = hubShooterTable.get(dist);
             recordedTargetRPS = targetRPS;
 
             m_shooter.setTargetRPS(targetRPS);
@@ -118,11 +118,11 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         } else { // ferry
             Translation2d turretToFerry = drivebase.getDynamicFerryLocation()
-                    .getTranslation().minus(robotPose.getTranslation());
+                    .getTranslation().minus(turretPos);
             double dist = turretToFerry.getNorm();
             distance = dist;
 
-            double targetRPS = ferryShooterTable.get(dist); // look up RPS from distance
+            double targetRPS = ferryShooterTable.get(dist);
             recordedTargetRPS = targetRPS;
 
             m_shooter.setTargetRPS(targetRPS);
@@ -132,8 +132,6 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/DistanceToFerry", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         }
-        
-
 
         if (isReadyToFire()) {
             if (!m_turret.isAtCableLimit()) { // only feed balls if turret is not wrapping
