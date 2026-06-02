@@ -116,8 +116,6 @@ public class RobotContainer {
 
         // ==================== NAMED COMMANDS ====================
 
-        NamedCommands.registerCommand("test", Commands.print("I EXIST"));
-
         // pushout
         NamedCommands.registerCommand("extend intake", m_pushout.PushCommand());
         NamedCommands.registerCommand("retract intake", m_pushout.RetractCommand());
@@ -135,6 +133,22 @@ public class RobotContainer {
                   Commands.parallel(
                     shootCmd,
                     m_pushout.AgitateCommand()
+                  ).onlyWhile(() -> m_turret.isAtAngle() && m_hood.isAtAngle())
+                ).finallyDo(() -> {
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
+            }, java.util.Collections.emptySet())
+        );
+
+        NamedCommands.registerCommand("Shoot and Intake",             
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                return Commands.sequence(
+                 
+                  Commands.parallel(
+                    shootCmd,
+                    m_pushout.PushCommand()
                   ).onlyWhile(() -> m_turret.isAtAngle() && m_hood.isAtAngle())
                 ).finallyDo(() -> {
                   m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
