@@ -230,7 +230,7 @@ public final class Constants {
 
     public static final double TRENCH_X_BLUE = 4.6;      // blue side trench x coordinate
     public static final double TRENCH_X_RED = 11.9;       // red side trench x coordinate
-    public static final double TRENCH_THRESHOLD = 0.6;    // meters — tuck if within this distance
+    public static final double TRENCH_THRESHOLD = 0.6;    // tuck when within this many meters of the trench (prolly needs to be lower)
 
     // PID — tune on robot
     public static final double p = 0.1;
