@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.7088790322580651,
-        "y": 5.62225
+        "x": 2.441634492523474,
+        "y": 5.690711500381145
       },
       "isLocked": false,
       "linkedName": "LowTide"
@@ -20,12 +20,12 @@
         "y": 5.71733870967742
       },
       "prevControl": {
-        "x": 0.6321840815577677,
-        "y": 5.450248212736336
+        "x": 0.5672058405555789,
+        "y": 5.467732160086997
       },
       "nextControl": {
-        "x": 0.3995806451612911,
-        "y": 6.2366693548387095
+        "x": 0.5391651271863581,
+        "y": 5.966945259267843
       },
       "isLocked": false,
       "linkedName": null
@@ -36,24 +36,24 @@
         "y": 7.004693548387097
       },
       "prevControl": {
-        "x": 0.5700114814567334,
-        "y": 6.532907258064517
+        "x": 0.5970725806451621,
+        "y": 6.638967741935484
       },
       "nextControl": {
-        "x": 1.545762712091655,
-        "y": 7.476479838709677
+        "x": 1.2537093225368563,
+        "y": 7.160108013278099
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.41525,
-        "y": 7.509395161290323
+        "x": 4.320161290322581,
+        "y": 7.524024193548387
       },
       "prevControl": {
-        "x": 3.4152500000000003,
-        "y": 7.509395161290323
+        "x": 3.79403307611579,
+        "y": 7.477154235206256
       },
       "nextControl": null,
       "isLocked": false,
@@ -86,7 +86,41 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Shoot",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": 0.66,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Control All Shooting"
+        }
+      }
+    },
+    {
+      "name": "Shoot + Intake",
+      "waypointRelativePos": 0.66,
+      "endWaypointRelativePos": 1.7121771217712112,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Shoot and Intake"
+        }
+      }
+    },
+    {
+      "name": "Shoot",
+      "waypointRelativePos": 1.71,
+      "endWaypointRelativePos": 3.0,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Control All Shooting"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
