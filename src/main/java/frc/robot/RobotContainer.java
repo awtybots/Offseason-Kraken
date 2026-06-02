@@ -128,12 +128,13 @@ public class RobotContainer {
             Commands.defer(() -> {
                 ControlAllShooting shootCmd = new ControlAllShooting(
                   m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
+
                 return Commands.sequence(
-                 
                   Commands.parallel(
                     shootCmd,
-                    m_pushout.AgitateCommand()
-                  ).onlyWhile(() -> m_turret.isAtAngle() && m_hood.isAtAngle())
+                    aimHoodCmd,
+                    m_pushout.AgitateCommand())
                 ).finallyDo(() -> {
                   m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
                   });
@@ -144,12 +145,13 @@ public class RobotContainer {
             Commands.defer(() -> {
                 ControlAllShooting shootCmd = new ControlAllShooting(
                   m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-                return Commands.sequence(
-                 
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
+                
+                return Commands.sequence(                 
                   Commands.parallel(
                     shootCmd,
-                    m_pushout.PushCommand()
-                  ).onlyWhile(() -> m_turret.isAtAngle() && m_hood.isAtAngle())
+                    aimHoodCmd,
+                    m_pushout.PushCommand())
                 ).finallyDo(() -> {
                   m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
                   });
@@ -259,7 +261,6 @@ public class RobotContainer {
                   m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
                 AimHood aimHoodCmd = new AimHood(m_hood, drivebase);                  
                 return Commands.sequence(
-                 
                   Commands.parallel(
                     shootCmd,
                     aimHoodCmd,
@@ -267,8 +268,7 @@ public class RobotContainer {
                       driverXbox::getLeftX,
                       driverXbox::getLeftY,
                       driverXbox::getRightX,
-                      driveAngularVelocity::get)
-                  ).onlyWhile(() -> m_turret.isAtAngle() && m_hood.isAtAngle())
+                      driveAngularVelocity::get))
                 ).finallyDo(() -> {
                   m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
                   });
