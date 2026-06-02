@@ -1225,6 +1225,14 @@ public class SwerveSubsystem extends SubsystemBase {
         return new Pose2d(CompensatedHub, aimRotation);
     }
 
+    public Translation2d getTurretFieldPosition() {
+      Pose2d robotPose = getPose();
+      double xOffset = (-29.5 / 2.0 + 3.0) * 0.0254;
+      double yOffset = (24.5 / 2.0 - 3.0) * 0.0254;
+      Translation2d offset = new Translation2d(xOffset, yOffset).rotateBy(robotPose.getRotation());
+      return robotPose.getTranslation().plus(offset);
+    }
+
   /**
    * Computes a virtual ferry location that compensates for robot velocity,
    * so the robot aims ahead of the actual ferry target when moving (pass-on-the-move).
