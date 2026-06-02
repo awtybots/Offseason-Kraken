@@ -240,7 +240,7 @@ public class RobotContainer {
 
         // turret and hood always aim at hub/ferry the whole match
         m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase));
-        m_hood.setDefaultCommand(new AimHood(m_hood, drivebase));
+        m_hood.setDefaultCommand(m_hood.tuckCommand());
 
         if (RobotBase.isSimulation()) {
             drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
@@ -257,10 +257,12 @@ public class RobotContainer {
             Commands.defer(() -> {
                 ControlAllShooting shootCmd = new ControlAllShooting(
                   m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);                  
                 return Commands.sequence(
                  
                   Commands.parallel(
                     shootCmd,
+                    aimHoodCmd,
                     drivebase.lockCommand( // lock wheels while shooting
                       driverXbox::getLeftX,
                       driverXbox::getLeftY,
@@ -272,7 +274,6 @@ public class RobotContainer {
                   });
             }, java.util.Collections.emptySet())
         );
-
 
         driverXbox.rightTrigger().whileTrue(m_pushout.AgitateCommand().onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean()));
 

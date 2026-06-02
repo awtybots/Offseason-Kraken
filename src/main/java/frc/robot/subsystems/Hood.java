@@ -83,7 +83,7 @@ public class Hood extends SubsystemBase {
         }).finallyDo(interrupted -> stopHood());
     }
 
-    public Command runDefaultCommand() {
+    public Command tuckCommand() {
         return this.run(() -> {
             goToMin(); // hold down position by default
         });
