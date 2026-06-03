@@ -19,13 +19,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Over bump + Intake Depot"
+            "pathName": "Shoot Over Bump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Second Swipe Under Trench"
+            "pathName": "Second Swipe Over Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Over Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot Over Bump"
           }
         }
       ]

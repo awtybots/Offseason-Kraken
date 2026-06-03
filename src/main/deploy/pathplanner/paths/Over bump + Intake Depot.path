@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.6911129032258065,
-        "y": 5.527161290322581
+        "x": 3.296129032258065,
+        "y": 5.505
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6610699763979744,
-        "y": 5.698026016510177
+        "x": 2.118491935483872,
+        "y": 5.395532258064516
       },
       "isLocked": false,
-      "linkedName": "LowTide"
+      "linkedName": "Over Bump End"
     },
     {
       "anchor": {
@@ -48,16 +48,16 @@
     },
     {
       "anchor": {
-        "x": 4.320161290322581,
-        "y": 7.524024193548387
+        "x": 4.334790322580646,
+        "y": 7.509395161290323
       },
       "prevControl": {
-        "x": 3.79403307611579,
-        "y": 7.477154235206256
+        "x": 3.8086621083738548,
+        "y": 7.462525202948192
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Under Trench Forward"
     }
   ],
   "rotationTargets": [
@@ -134,10 +134,10 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "TRI Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 136.565
   },
   "useDefaultConstraints": true
 }

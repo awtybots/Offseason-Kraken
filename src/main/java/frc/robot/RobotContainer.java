@@ -141,6 +141,23 @@ public class RobotContainer {
             }, java.util.Collections.emptySet())
         );
 
+        NamedCommands.registerCommand("Shoot With Timeout",             
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
+
+                return Commands.sequence(
+                  Commands.parallel(
+                    shootCmd,
+                    aimHoodCmd,
+                    m_pushout.AgitateCommand())
+                ).finallyDo(() -> {
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
+            }, java.util.Collections.emptySet()).withTimeout(4.0)
+        );
+
         NamedCommands.registerCommand("Shoot and Intake",             
             Commands.defer(() -> {
                 ControlAllShooting shootCmd = new ControlAllShooting(
