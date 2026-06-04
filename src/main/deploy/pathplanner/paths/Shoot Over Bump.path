@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 3.296129032258065,
-        "y": 5.505
+        "y": 5.235
       },
       "prevControl": null,
       "nextControl": {
         "x": 2.623193548387097,
-        "y": 6.682854838709677
+        "y": 6.412854838709677
       },
       "isLocked": false,
       "linkedName": "Over Bump End"
