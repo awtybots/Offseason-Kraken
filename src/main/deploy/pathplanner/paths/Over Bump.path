@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.965927419354839,
-        "y": 5.505
+        "x": 6.199991935483871,
+        "y": 5.468645161290323
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.457884731220519,
-        "y": 5.546861991220121
+        "x": 4.691949247349551,
+        "y": 5.510507152510444
       },
       "isLocked": false,
       "linkedName": "Over Bump"
@@ -20,8 +20,8 @@
         "y": 5.505
       },
       "prevControl": {
-        "x": 4.459137096774194,
-        "y": 5.5344758064516135
+        "x": 4.429879032258064,
+        "y": 5.527161290322581
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,13 +41,13 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 3.5,
     "rotation": 136.565
   },
   "reversed": false,
   "folder": "TRI Paths",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 3.5,
     "rotation": 136.565
   },
   "useDefaultConstraints": true
