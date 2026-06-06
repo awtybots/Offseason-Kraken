@@ -33,7 +33,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.io.File;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 
 import org.littletonrobotics.junction.Logger;
@@ -82,7 +81,9 @@ public class RobotContainer {
     private PathConstraints autoConstraints;
 
 
-    
+    public void warmupCommands() {
+        
+    }
 
     public RobotContainer() {
 
@@ -96,7 +97,7 @@ public class RobotContainer {
         // ==================== NAMED COMMANDS ====================
 
         // pushout
-        
+       
 
         
 
@@ -180,13 +181,12 @@ public class RobotContainer {
 
         // ==================== DEFAULT COMMANDS ====================
 
-        // turret and hood always aim at hub/ferry the whole match
-        
+       
 
         // ==================== DRIVER BINDINGS ====================
 
         // RT shoots
-        
+       
 
         // POV left — drive to pose
         // driverXbox.povLeft().whileTrue(drivebase.driveToPoseDeffered());
@@ -196,13 +196,10 @@ public class RobotContainer {
 
         // ==================== OPERATOR BINDINGS ====================
 
-       
+        Trigger ResetEncoder = operatorXbox.start();
 
-        // vision
-        operatorXbox.povUp().onTrue(drivebase.FrontToggle());
-        operatorXbox.povLeft().onTrue(drivebase.LeftToggle());
-        operatorXbox.povRight().onTrue(drivebase.VisionToggle());
-        operatorXbox.povDown().onTrue(drivebase.BackToggle());
+        // reset encoder
+        
 
         // ==================== SIMULATION ====================
 
