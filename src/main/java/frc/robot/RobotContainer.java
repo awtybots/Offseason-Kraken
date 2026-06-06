@@ -33,9 +33,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.io.File;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.AimTurret;
-import frc.robot.commands.AimHood;
-import frc.robot.commands.ControlAllShooting;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 
@@ -52,16 +49,7 @@ public class RobotContainer {
 
     // subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
-    private final Intake m_intake = new Intake();
-    private final Hood m_hood = new Hood();
-    private final Shooter m_shooter = new Shooter();
-    private final Turret m_turret = new Turret();
-    private final Conveyor m_conveyor = new Conveyor();
-    private final Rollers m_rollers = new Rollers();
-    private final Pushout m_pushout = new Pushout();
-    private final Kicker m_kicker = new Kicker();
-    @SuppressWarnings("unused")
-    private final HubTrackerSubsystem m_hubtracker = new HubTrackerSubsystem(drivebase, driverXbox);
+    
 
     // auto choosers
     private SendableChooser<Command> autoChooser;
@@ -94,15 +82,7 @@ public class RobotContainer {
     private PathConstraints autoConstraints;
 
 
-    public void warmupCommands() {
-        @SuppressWarnings("unused")
-        ControlAllShooting shootWarm = new ControlAllShooting(
-            m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-        @SuppressWarnings("unused")
-        AimTurret turretWarm = new AimTurret(m_turret, drivebase);
-        @SuppressWarnings("unused")
-        AimHood hoodWarm = new AimHood(m_hood, drivebase);
-    }
+    
 
     public RobotContainer() {
 
@@ -116,63 +96,7 @@ public class RobotContainer {
         // ==================== NAMED COMMANDS ====================
 
         // pushout
-        NamedCommands.registerCommand("extend intake", m_pushout.PushCommand());
-        NamedCommands.registerCommand("retract intake", m_pushout.RetractCommand());
-
-        // intake
-        NamedCommands.registerCommand("intake", m_intake.runIntakeCommand());
-
-        // control all shooting
-        NamedCommands.registerCommand("Control All Shooting",             
-            Commands.defer(() -> {
-                ControlAllShooting shootCmd = new ControlAllShooting(
-                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
-
-                return Commands.sequence(
-                  Commands.parallel(
-                    shootCmd,
-                    aimHoodCmd,
-                    m_pushout.AgitateCommand())
-                ).finallyDo(() -> {
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
-                  });
-            }, java.util.Collections.emptySet())
-        );
-
-        NamedCommands.registerCommand("Shoot With Timeout",             
-            Commands.defer(() -> {
-                ControlAllShooting shootCmd = new ControlAllShooting(
-                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
-
-                return Commands.sequence(
-                  Commands.parallel(
-                    shootCmd,
-                    aimHoodCmd,
-                    m_pushout.AgitateCommand())
-                ).finallyDo(() -> {
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
-                  });
-            }, java.util.Collections.emptySet()).withTimeout(4.0)
-        );
-
-        NamedCommands.registerCommand("Shoot and Intake",             
-            Commands.defer(() -> {
-                ControlAllShooting shootCmd = new ControlAllShooting(
-                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
-                
-                return Commands.sequence(                 
-                  Commands.parallel(
-                    shootCmd,
-                    aimHoodCmd,
-                    m_pushout.PushCommand())
-                ).finallyDo(() -> {
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
-                  });
-            }, java.util.Collections.emptySet())
-        );
+        
 
         
 
@@ -257,100 +181,22 @@ public class RobotContainer {
         // ==================== DEFAULT COMMANDS ====================
 
         // turret and hood always aim at hub/ferry the whole match
-        m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase));
-        m_hood.setDefaultCommand(m_hood.tuckCommand());
-
-        if (RobotBase.isSimulation()) {
-            drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
-        } else {
-           
-                drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
-            
-        }
+        
 
         // ==================== DRIVER BINDINGS ====================
 
         // RT shoots
-        driverXbox.rightTrigger().whileTrue(
-            Commands.defer(() -> {
-                ControlAllShooting shootCmd = new ControlAllShooting(
-                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
-                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);                  
-                return Commands.sequence(
-                  Commands.parallel(
-                    shootCmd,
-                    aimHoodCmd,
-                    drivebase.lockCommand( // lock wheels while shooting
-                      driverXbox::getLeftX,
-                      driverXbox::getLeftY,
-                      driverXbox::getRightX,
-                      driveAngularVelocity::get))
-                ).finallyDo(() -> {
-                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
-                  });
-            }, java.util.Collections.emptySet())
-        );
-
-        driverXbox.rightTrigger().whileTrue(m_pushout.AgitateCommand().onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean()));
-
-        // LT intakes
-        driverXbox.leftTrigger().whileTrue(
-          Commands.parallel(
-            m_pushout.PushCommand(),
-            m_intake.runIntakeCommand()
-          )
-        );
-
-        // LB retracts and stops intake
-        driverXbox.leftBumper().whileTrue(
-          Commands.parallel(
-            m_pushout.RetractCommand(),
-            m_intake.stopIntakeCommand()
-          )
-        );
-
-        // RB unjams
-        driverXbox.rightBumper().whileTrue(
-          Commands.parallel(
-            m_kicker.ReverseKickerCommand(),
-            m_conveyor.ReverseConveyorCommand(),
-            m_rollers.runReverseRollersCommand()
-          )
-        );
-
-        // A — outtake
-        driverXbox.a().whileTrue(
-          Commands.parallel(
-            m_intake.runOuttakeCommand(),
-            m_rollers.runReverseRollersCommand()
-          )
-        );
+        
 
         // POV left — drive to pose
-        driverXbox.povLeft().whileTrue(drivebase.driveToPoseDeffered());
+        // driverXbox.povLeft().whileTrue(drivebase.driveToPoseDeffered());
 
         // start zero gyro
         driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
 
         // ==================== OPERATOR BINDINGS ====================
 
-        Trigger ResetEncoder = operatorXbox.start();
-
-        // reset encoder
-        ResetEncoder.onTrue(m_pushout.ResetEncoderCommand());
-
-        // intake
-        operatorXbox.x().whileTrue(m_intake.runIntakeCommand());
-        operatorXbox.a().whileTrue(
-          Commands.parallel(
-            m_intake.runOuttakeCommand(),
-            m_rollers.runReverseRollersCommand()
-          )
-        );
-
-        // pushout
-        operatorXbox.y().whileTrue(m_pushout.PushoutDutyCycleCommand());
-        operatorXbox.b().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
+       
 
         // vision
         operatorXbox.povUp().onTrue(drivebase.FrontToggle());
