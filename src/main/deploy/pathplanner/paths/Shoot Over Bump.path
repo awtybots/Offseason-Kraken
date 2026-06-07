@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.623193548387097,
-        "y": 6.412854838709677
+        "x": 1.8039508101851855,
+        "y": 6.864651041666666
       },
       "isLocked": false,
       "linkedName": "Over Bump End"
@@ -20,8 +20,8 @@
         "y": 7.509395161290323
       },
       "prevControl": {
-        "x": 3.3347903225806457,
-        "y": 7.509395161290323
+        "x": 3.24659519675926,
+        "y": 7.632556712962963
       },
       "nextControl": null,
       "isLocked": false,
@@ -55,7 +55,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 0.0
   },
   "reversed": false,

@@ -131,7 +131,7 @@
   "reversed": false,
   "folder": "TRI Paths",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 0.0
   },
   "useDefaultConstraints": true
