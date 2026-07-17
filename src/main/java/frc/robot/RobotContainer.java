@@ -6,7 +6,15 @@ package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.Kraken;
+import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import swervelib.SwerveInputStream;
+
+import java.io.File;
+import java.util.Set;
+
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -18,7 +26,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final Kraken m_kraken = new Kraken();
+
+  private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
+      "swerve"));
+
+  // private final Kraken m_kraken = new Kraken();
+    
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -44,11 +57,46 @@ public class RobotContainer {
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.rightTrigger().whileTrue(m_kraken.runMotorCommand());
-    m_driverController.leftTrigger().whileTrue(m_kraken.runMotorFastCommand());
 
-    m_driverController.start().whileTrue(m_kraken.runAwayCommand());
-    m_driverController.back().whileTrue(m_kraken.stopRunaway());
+    SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
+        () -> m_driverController.getLeftY() * -1,
+        () -> m_driverController.getLeftX() * -1)
+        .withControllerRotationAxis(() -> m_driverController.getRightX() * -1)
+        .deadband(OperatorConstants.DEADBAND)
+        .scaleTranslation(1.0)
+        .allianceRelativeControl(true);
+
+
+    SwerveInputStream driveDirectAngle = driveAngularVelocity.copy()
+        .withControllerHeadingAxis(m_driverController::getRightX, m_driverController::getRightY)
+        .headingWhile(true);
+
+    SwerveInputStream driveRobotOriented = driveAngularVelocity.copy()
+        .robotRelative(true)
+        .allianceRelativeControl(false);
+
+    // m_driverController.rightTrigger().whileTrue(m_kraken.runMotorCommand());
+    // m_driverController.leftTrigger().whileTrue(m_kraken.runMotorFastCommand());
+
+    m_driverController.start().onTrue(Commands.runOnce(() -> drivebase.zeroGyro()));
+    // m_driverController.back().whileTrue(m_kraken.stopRunaway());
+    
+    Command driveFieldOrientedDirectAngle = drivebase
+        .driveFieldOriented(driveDirectAngle);
+    Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(
+  (driveAngularVelocity));
+    Command driveRobotOrientedAngularVelocity = drivebase.driveFieldOriented(driveRobotOriented);
+    Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(
+        driveDirectAngle);
+
+    
+    if (Constants.USE_ROBOT_RELATIVE) {
+        drivebase.setDefaultCommand(
+            drivebase.run(() -> drivebase.drive(driveRobotOriented.get())));
+      } else {
+        drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+        // m_shooter.setDefaultCommand(m_shooter.SpeedUpShooterCommand());
+      }
   }
 
   /**

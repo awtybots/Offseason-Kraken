@@ -57,7 +57,7 @@ public static final boolean USE_ROBOT_RELATIVE = false;
 
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
-    public static final double DEADBAND = 0.1;
+    public static final double DEADBAND = 0.3;
   }
 
   public static final class DrivebaseConstants {
