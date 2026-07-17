@@ -1,0 +1,154 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.407935483869379,
+        "y": 7.436249999996473
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.438553955143804,
+        "y": 7.412529606488176
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.360911290322581,
+        "y": 7.326532258064516
+      },
+      "prevControl": {
+        "x": 5.8954279445483495,
+        "y": 7.357564481116131
+      },
+      "nextControl": {
+        "x": 7.238653225806452,
+        "y": 7.268016129032258
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.619008064514539,
+        "y": 6.558508064512603
+      },
+      "prevControl": {
+        "x": 7.289854838709678,
+        "y": 7.37041935483871
+      },
+      "nextControl": {
+        "x": 7.7921384324027185,
+        "y": 6.1314531570511726
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.787241935483872,
+        "y": 5.044403225806452
+      },
+      "prevControl": {
+        "x": 7.820443122795623,
+        "y": 5.535042993857879
+      },
+      "nextControl": {
+        "x": 7.72141129032258,
+        "y": 4.071572580645162
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.434056451612903,
+        "y": 4.481185483870968
+      },
+      "prevControl": {
+        "x": 6.6578931904183225,
+        "y": 3.7201405719325304
+      },
+      "nextControl": {
+        "x": 6.32433870967742,
+        "y": 4.8542258064516135
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.334790322580646,
+        "y": 7.509395161290323
+      },
+      "prevControl": {
+        "x": 6.997274193548387,
+        "y": 7.677629032258064
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Under Trench Forward"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 2.115470852017939,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 3.057174887892381,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 4.05,
+      "rotationDegrees": 112.21155583292055
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "extend",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "extend intake"
+        }
+      }
+    },
+    {
+      "name": "intake",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": 4.47970479704795,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.75,
+    "maxAcceleration": 3.75,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "TRI Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -90.0
+  },
+  "useDefaultConstraints": true
+}

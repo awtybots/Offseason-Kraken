@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Contesting First Swipe Over Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Over Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot Over Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Second Swipe Over Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Over Bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Over bump + Intake Depot"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "TRI Autons",
+  "choreoAuto": false
+}

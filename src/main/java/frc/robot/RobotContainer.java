@@ -4,104 +4,477 @@
 
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.Kraken;
-import frc.robot.subsystems.swervedrive.SwerveSubsystem;
-import swervelib.SwerveInputStream;
-
-import java.io.File;
-import java.util.Set;
-
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and trigger mappings) should be declared here.
- */
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Seconds;
+
+import java.io.File;
+
+import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.AimTurret;
+import frc.robot.commands.AimHood;
+import frc.robot.commands.ControlAllShooting;
+import frc.robot.subsystems.*;
+import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
+import swervelib.SwerveInputStream;
+
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
 
-  private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
-      "swerve"));
+    // controllers
+    final CommandXboxController driverXbox = new CommandXboxController(0);
+    final CommandXboxController operatorXbox = new CommandXboxController(1);
 
-  // private final Kraken m_kraken = new Kraken();
-    
+    // subsystems
+    private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
+    private final Intake m_intake = new Intake();
+    private final Hood m_hood = new Hood();
+    private final Shooter m_shooter = new Shooter();
+    private final Turret m_turret = new Turret();
+    private final Conveyor m_conveyor = new Conveyor();
+    private final Rollers m_rollers = new Rollers();
+    private final Pushout m_pushout = new Pushout();
+    private final Kicker m_kicker = new Kicker();
+    @SuppressWarnings("unused")
+    private final HubTrackerSubsystem m_hubtracker = new HubTrackerSubsystem(drivebase, driverXbox);
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+    // auto choosers
+    private SendableChooser<Command> autoChooser;
+    private LoggedDashboardChooser<Command> loggedAutoChooser;
+    private SendableChooser<Boolean> flipChooser = new SendableChooser<>();
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
-    // Configure the trigger bindings
-    configureBindings();
-  }
+    /**
+     * Converts driver input into a field-relative ChassisSpeeds that is controlled
+     * by angular velocity.
+     */
+    SwerveInputStream driveAngularVelocity;
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
-   */
-  private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
+    /**
+     * Clone's the angular velocity input stream and converts it to a fieldRelative
+     * input stream.
+     */
+    SwerveInputStream driveDirectAngle;
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
+    /**
+     * Clone's the angular velocity input stream and converts it to a robotRelative
+     * input stream.
+     */
+    SwerveInputStream driveRobotOriented;
 
-    SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-        () -> m_driverController.getLeftY() * -1,
-        () -> m_driverController.getLeftX() * -1)
-        .withControllerRotationAxis(() -> m_driverController.getRightX() * -1)
-        .deadband(OperatorConstants.DEADBAND)
-        .scaleTranslation(1.0)
-        .allianceRelativeControl(true);
+    SwerveInputStream driveAngularVelocityKeyboard;
+    // Derive the heading axis with math!
+    SwerveInputStream driveDirectAngleKeyboard;
+
+    @SuppressWarnings("unused")
+    private PathConstraints autoConstraints;
 
 
-    SwerveInputStream driveDirectAngle = driveAngularVelocity.copy()
-        .withControllerHeadingAxis(m_driverController::getRightX, m_driverController::getRightY)
-        .headingWhile(true);
+    public void warmupCommands() {
+        @SuppressWarnings("unused")
+        ControlAllShooting shootWarm = new ControlAllShooting(
+            m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+        @SuppressWarnings("unused")
+        AimTurret turretWarm = new AimTurret(m_turret, drivebase);
+        @SuppressWarnings("unused")
+        AimHood hoodWarm = new AimHood(m_hood, drivebase);
+    }
 
-    SwerveInputStream driveRobotOriented = driveAngularVelocity.copy()
-        .robotRelative(true)
-        .allianceRelativeControl(false);
+    public RobotContainer() {
 
-    // m_driverController.rightTrigger().whileTrue(m_kraken.runMotorCommand());
-    // m_driverController.leftTrigger().whileTrue(m_kraken.runMotorFastCommand());
+        configureBindings();
 
-    m_driverController.start().onTrue(Commands.runOnce(() -> drivebase.zeroGyro()));
-    // m_driverController.back().whileTrue(m_kraken.stopRunaway());
-    
-    Command driveFieldOrientedDirectAngle = drivebase
-        .driveFieldOriented(driveDirectAngle);
-    Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(
-  (driveAngularVelocity));
-    Command driveRobotOrientedAngularVelocity = drivebase.driveFieldOriented(driveRobotOriented);
-    Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(
-        driveDirectAngle);
+        DriverStation.silenceJoystickConnectionWarning(true);
 
-    
-    if (Constants.USE_ROBOT_RELATIVE) {
-        drivebase.setDefaultCommand(
-            drivebase.run(() -> drivebase.drive(driveRobotOriented.get())));
-      } else {
-        drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
-        // m_shooter.setDefaultCommand(m_shooter.SpeedUpShooterCommand());
-      }
-  }
+      
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
+
+        // ==================== NAMED COMMANDS ====================
+
+        // pushout
+        NamedCommands.registerCommand("extend intake", m_pushout.PushCommand());
+        NamedCommands.registerCommand("retract intake", m_pushout.RetractCommand());
+
+        // intake
+        NamedCommands.registerCommand("intake", m_intake.runIntakeCommand());
+
+        // control all shooting
+        NamedCommands.registerCommand("Control All Shooting",             
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
+
+                return Commands.sequence(
+                  Commands.parallel(
+                    shootCmd,
+                    aimHoodCmd,
+                    m_pushout.AgitateCommand())
+                ).finallyDo(() -> {
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
+            }, java.util.Collections.emptySet())
+        );
+
+        NamedCommands.registerCommand("Shoot With Timeout",             
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
+
+                return Commands.sequence(
+                  Commands.parallel(
+                    shootCmd,
+                    aimHoodCmd,
+                    m_pushout.AgitateCommand())
+                ).finallyDo(() -> {
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
+            }, java.util.Collections.emptySet()).withTimeout(4.0)
+        );
+
+        NamedCommands.registerCommand("Shoot and Intake",             
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
+                
+                return Commands.sequence(                 
+                  Commands.parallel(
+                    shootCmd,
+                    aimHoodCmd,
+                    m_pushout.PushCommand())
+                ).finallyDo(() -> {
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
+            }, java.util.Collections.emptySet())
+        );
+
+        
+
+        // ==================== AUTO CHOOSER ====================
+
+        flipChooser.setDefaultOption("Not Flipped", false);
+        flipChooser.addOption("Flipped", true);
+        SmartDashboard.putData("Flip Auto", flipChooser);
+
+        flipChooser.onChange((Boolean flip) -> {
+            autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
+                    autoStream -> autoStream.map(auto -> {
+                        auto = new PathPlannerAuto(auto.getName(), flip);
+                        return auto;
+                    }));
+            autoChooser.setDefaultOption("Do Nothing", Commands.none());
+            SmartDashboard.putData("Auto Chooser", autoChooser);
+            loggedAutoChooser = new LoggedDashboardChooser<>("Auto Routine", autoChooser);
+        });
+
+        autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
+                autoStream -> autoStream.map(auto -> {
+                    auto = new PathPlannerAuto(auto.getName(), flipChooser.getSelected());
+                    return auto;
+                }));
+        autoChooser.setDefaultOption("Do Nothing", Commands.none());
+        SmartDashboard.putData("Auto Chooser", autoChooser);
+        loggedAutoChooser = new LoggedDashboardChooser<>("Auto Routine", autoChooser);
+    }
+
+    private void configureBindings() {
+
+        driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
+                () -> driverXbox.getLeftY() * -1,
+                () -> driverXbox.getLeftX() * -1)
+                .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
+                .deadband(OperatorConstants.DEADBAND)
+                .scaleTranslation(1.0)
+                .allianceRelativeControl(true);
+
+        driveDirectAngle = driveAngularVelocity.copy()
+                .withControllerHeadingAxis(driverXbox::getRightX, driverXbox::getRightY)
+                .headingWhile(true);
+
+        driveRobotOriented = driveAngularVelocity.copy()
+                .robotRelative(true)
+                .allianceRelativeControl(false);
+
+        driveAngularVelocityKeyboard = SwerveInputStream.of(drivebase.getSwerveDrive(),
+                () -> -driverXbox.getLeftY(),
+                () -> -driverXbox.getLeftX())
+                .withControllerRotationAxis(() -> driverXbox.getRawAxis(2))
+                .deadband(OperatorConstants.DEADBAND)
+                .scaleTranslation(0.8)
+                .allianceRelativeControl(true);
+
+        driveDirectAngleKeyboard = driveAngularVelocityKeyboard.copy()
+                .withControllerHeadingAxis(
+                        () -> Math.sin(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2),
+                        () -> Math.cos(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2))
+                .headingWhile(true)
+                .translationHeadingOffset(true)
+                .translationHeadingOffset(Rotation2d.fromDegrees(0));
+
+        // ==================== DRIVE COMMANDS ====================
+        Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+        Command driveFieldOrientedDirectAngleKeyboard = drivebase.driveFieldOriented(driveDirectAngleKeyboard);
+       
+        @SuppressWarnings("unused")
+        Command driveFieldOrientedDirectAngle = drivebase.driveFieldOriented(driveDirectAngle);
+
+        @SuppressWarnings("unused")
+        Command driveRobotOrientedAngularVelocity = drivebase.driveFieldOriented(driveRobotOriented);
+        @SuppressWarnings("unused")
+        Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngle);
+
+        @SuppressWarnings("unused")
+        Command driveFieldOrientedAngularVelocityKeyboard = drivebase.driveFieldOriented(driveAngularVelocityKeyboard);
+        @SuppressWarnings("unused")
+        Command driveSetpointGenKeyboard = drivebase.driveWithSetpointGeneratorFieldRelative(driveDirectAngleKeyboard);
+
+        // ==================== DEFAULT COMMANDS ====================
+
+        // turret and hood always aim at hub/ferry the whole match
+        m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase));
+        m_hood.setDefaultCommand(m_hood.tuckCommand());
+
+        if (RobotBase.isSimulation()) {
+            drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
+        } else {
+           
+                drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+            
+        }
+
+        // ==================== DRIVER BINDINGS ====================
+
+        // RT shoots
+        driverXbox.rightTrigger().whileTrue(
+            Commands.defer(() -> {
+                ControlAllShooting shootCmd = new ControlAllShooting(
+                  m_shooter, m_conveyor, m_kicker, m_pushout, m_intake, m_hood, m_rollers, m_turret, drivebase);
+                AimHood aimHoodCmd = new AimHood(m_hood, drivebase);                  
+                return Commands.sequence(
+                  Commands.parallel(
+                    shootCmd,
+                    aimHoodCmd,
+                    drivebase.lockCommand( // lock wheels while shooting
+                      driverXbox::getLeftX,
+                      driverXbox::getLeftY,
+                      driverXbox::getRightX,
+                      driveAngularVelocity::get))
+                ).finallyDo(() -> {
+                  m_shooter.setTargetRPSCommand(shootCmd.recordedTargetRPS).withTimeout(1.0);
+                  });
+            }, java.util.Collections.emptySet())
+        );
+
+        driverXbox.rightTrigger().whileTrue(m_pushout.AgitateCommand().onlyWhile(() -> !driverXbox.leftTrigger().getAsBoolean()));
+
+        // LT intakes
+        driverXbox.leftTrigger().whileTrue(
+          Commands.parallel(
+            m_pushout.PushCommand(),
+            m_intake.runIntakeCommand()
+          )
+        );
+
+        // LB retracts and stops intake
+        driverXbox.leftBumper().whileTrue(
+          Commands.parallel(
+            m_pushout.RetractCommand(),
+            m_intake.stopIntakeCommand()
+          )
+        );
+
+        // RB unjams
+        driverXbox.rightBumper().whileTrue(
+          Commands.parallel(
+            m_kicker.ReverseKickerCommand(),
+            m_conveyor.ReverseConveyorCommand(),
+            m_rollers.runReverseRollersCommand()
+          )
+        );
+
+        // A — outtake
+        driverXbox.a().whileTrue(
+          Commands.parallel(
+            m_intake.runOuttakeCommand(),
+            m_rollers.runReverseRollersCommand()
+          )
+        );
+
+        // POV left — drive to pose
+        driverXbox.povLeft().whileTrue(drivebase.driveToPoseDeffered());
+
+        // start zero gyro
+        driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
+
+        // ==================== OPERATOR BINDINGS ====================
+
+        Trigger ResetEncoder = operatorXbox.start();
+
+        // reset encoder
+        ResetEncoder.onTrue(m_pushout.ResetEncoderCommand());
+
+        // intake
+        operatorXbox.x().whileTrue(m_intake.runIntakeCommand());
+        operatorXbox.a().whileTrue(
+          Commands.parallel(
+            m_intake.runOuttakeCommand(),
+            m_rollers.runReverseRollersCommand()
+          )
+        );
+
+        // pushout
+        operatorXbox.y().whileTrue(m_pushout.PushoutDutyCycleCommand());
+        operatorXbox.b().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
+
+        // vision
+        operatorXbox.povUp().onTrue(drivebase.FrontToggle());
+        operatorXbox.povLeft().onTrue(drivebase.LeftToggle());
+        operatorXbox.povRight().onTrue(drivebase.VisionToggle());
+        operatorXbox.povDown().onTrue(drivebase.BackToggle());
+
+        // ==================== SIMULATION ====================
+
+        if (Robot.isSimulation()) {
+            Pose2d target = new Pose2d(new Translation2d(1, 4), Rotation2d.fromDegrees(90));
+            driveDirectAngleKeyboard.driveToPose(() -> target,
+                    new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
+                    new ProfiledPIDController(5, 0, 0,
+                            new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
+            driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
+            driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
+            driverXbox.button(2).whileTrue(Commands.runEnd(
+                    () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
+                    () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
+        }
+
+        if (DriverStation.isTest()) {
+            
+                drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+            
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private double aimTolerance(double distance) {
+        if (distance < 2)
+            return 5.0;
+        else if (distance < 3.5)
+            return 2.0;
+        return 1.0;
+    }
+
+
+    private Alliance getAlliance() {
+        return DriverStation.getAlliance().orElse(Alliance.Red);
+    }
+
+    private boolean isInAllianceZone() {
+        Alliance alliance = getAlliance();
+        Distance blueZone = Inches.of(182);
+        Distance redZone = Inches.of(469);
+
+        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().lt(blueZone))
+            return true;
+        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().gt(redZone))
+            return true;
+        return false;
+    }
+
+    @SuppressWarnings("unused")
+    private boolean isInOpponentZone() {
+        Alliance alliance = getAlliance();
+        Distance blueZone = Inches.of(182);
+        Distance redZone = Inches.of(469);
+
+        if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().lt(blueZone))
+            return true;
+        else if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().gt(redZone))
+            return true;
+        return false;
+    }
+
+    @SuppressWarnings("unused")
+    private boolean isOnAllianceOutpostSide() {
+        Alliance alliance = getAlliance();
+        Distance midLine = Inches.of(158.84375);
+
+        if (alliance == Alliance.Blue && drivebase.getPose().getMeasureY().lt(midLine))
+            return true;
+        else if (alliance == Alliance.Red && drivebase.getPose().getMeasureY().gt(midLine))
+            return true;
+        return false;
+    }
+
+    @SuppressWarnings("unused")
+    private boolean isAimedAt(Pose2d target, double toleranceDegrees) {
+        Pose2d robot = drivebase.getPose();
+        double targetAngle = Math.toDegrees(Math.atan2(
+                target.getY() - robot.getY(),
+                target.getX() - robot.getX()));
+        double currentAngle = robot.getRotation().getDegrees();
+        double error = Math.abs(currentAngle - targetAngle) % 360;
+        if (error > 180)
+            error = 360 - error;
+        return error <= toleranceDegrees;
+    }
+
+    public void logControllerInputs() {
+        Logger.recordOutput("Input/Driver/LeftX", driverXbox.getLeftX());
+        Logger.recordOutput("Input/Driver/LeftY", driverXbox.getLeftY());
+        Logger.recordOutput("Input/Driver/RightX", driverXbox.getRightX());
+        Logger.recordOutput("Input/Driver/RightY", driverXbox.getRightY());
+        Logger.recordOutput("Input/Driver/LeftTrigger", driverXbox.getLeftTriggerAxis());
+        Logger.recordOutput("Input/Driver/RightTrigger", driverXbox.getRightTriggerAxis());
+
+        Logger.recordOutput("Input/Operator/LeftX", operatorXbox.getLeftX());
+        Logger.recordOutput("Input/Operator/LeftY", operatorXbox.getLeftY());
+        Logger.recordOutput("Input/Operator/RightX", operatorXbox.getRightX());
+        Logger.recordOutput("Input/Operator/RightY", operatorXbox.getRightY());
+        Logger.recordOutput("Input/Operator/LeftTrigger", operatorXbox.getLeftTriggerAxis());
+        Logger.recordOutput("Input/Operator/RightTrigger", operatorXbox.getRightTriggerAxis());
+
+        Logger.recordOutput("Shooting/RTHeld", driverXbox.rightTrigger().getAsBoolean());
+        Logger.recordOutput("Shooting/InAllianceZone", isInAllianceZone());
+    }
+
+    public Command getAutonomousCommand() {
+        Command selected = loggedAutoChooser.get();
+        if (selected == null)
+            return Commands.none();
+        return selected;
+    }
+
+    public void setMotorBrake(boolean brake) {
+        drivebase.setMotorBrake(brake);
+    }
+
+    public void setUseMegaTag2(boolean use) {
+        drivebase.useMegaTag2 = use;
+    }
 }

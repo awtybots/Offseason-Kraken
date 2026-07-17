@@ -1,0 +1,143 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.296129032258065,
+        "y": 5.235
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.118491935483872,
+        "y": 5.125532258064516
+      },
+      "isLocked": false,
+      "linkedName": "Over Bump End"
+    },
+    {
+      "anchor": {
+        "x": 0.5531854838709684,
+        "y": 5.71733870967742
+      },
+      "prevControl": {
+        "x": 0.5672058405555789,
+        "y": 5.467732160086997
+      },
+      "nextControl": {
+        "x": 0.5391651271863581,
+        "y": 5.966945259267843
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.0578870967741942,
+        "y": 7.004693548387097
+      },
+      "prevControl": {
+        "x": 0.5970725806451622,
+        "y": 6.638967741935484
+      },
+      "nextControl": {
+        "x": 1.2537093225368572,
+        "y": 7.1601080132781
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.334790322580646,
+        "y": 7.509395161290323
+      },
+      "prevControl": {
+        "x": 3.8086621083738548,
+        "y": 7.462525202948192
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Under Trench Forward"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.8049327354260096,
+      "rotationDegrees": 163.175
+    },
+    {
+      "waypointRelativePos": 1.6446188340807137,
+      "rotationDegrees": 163.175
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Slow Shoot",
+      "minWaypointRelativePos": 0,
+      "maxWaypointRelativePos": 3.0,
+      "constraints": {
+        "maxVelocity": 1.0,
+        "maxAcceleration": 1.0,
+        "maxAngularVelocity": 90.0,
+        "maxAngularAcceleration": 270.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "Shoot",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": 0.66,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Control All Shooting"
+        }
+      }
+    },
+    {
+      "name": "Shoot + Intake",
+      "waypointRelativePos": 0.66,
+      "endWaypointRelativePos": 1.7121771217712112,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Shoot and Intake"
+        }
+      }
+    },
+    {
+      "name": "Shoot",
+      "waypointRelativePos": 1.71,
+      "endWaypointRelativePos": 3.0,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Control All Shooting"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.75,
+    "maxAcceleration": 3.75,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "TRI Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 136.565
+  },
+  "useDefaultConstraints": true
+}
