@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -14,17 +15,20 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.robot.Constants.ConveyorConstants;
 import org.littletonrobotics.junction.Logger;
 
+import frc.robot.utils.utils;
+
 public class Conveyor extends SubsystemBase {
 
     private TalonFX ConveyorTopMotor = new TalonFX(ConveyorConstants.CONVEYOR_TOP_ID);
     private TalonFX ConveyorBottomMotor = new TalonFX(ConveyorConstants.CONVEYOR_BOTTOM_ID);
 
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+    private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
     public Conveyor() {
         TalonFXConfiguration ConveyorConfig = new TalonFXConfiguration();
-        ConveyorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        ConveyorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
+        ConveyorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        ConveyorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust if needed
         ConveyorConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         ConveyorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         ConveyorConfig.Slot0.kP = ConveyorConstants.p;
@@ -38,7 +42,7 @@ public class Conveyor extends SubsystemBase {
         ConveyorBottomMotor.getConfigurator().apply(ConveyorConfig);
 
         // Right follows Left, inverted
-        ConveyorBottomMotor.setControl(new Follower(ConveyorTopMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        ConveyorBottomMotor.setControl(new Follower(ConveyorTopMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     public void ReverseConveyor() {
@@ -51,7 +55,7 @@ public class Conveyor extends SubsystemBase {
 
 
     public void stopConveyor() {
-        ConveyorTopMotor.setControl(velocityRequest.withVelocity(0));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0.0));
         // bottom follows for all the voids
     }
     

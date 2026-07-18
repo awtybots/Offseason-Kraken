@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -17,10 +18,11 @@ public class Rollers extends SubsystemBase {
     private TalonFX RollersMotor = new TalonFX(RollersConstants.ROLLERS_ID);
 
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+    private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
     public Rollers() {
         TalonFXConfiguration RollersConfig = new TalonFXConfiguration();
-        RollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        RollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         RollersConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust we have to
         RollersConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         RollersConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -44,7 +46,7 @@ public class Rollers extends SubsystemBase {
     
 
     public void stopRollers() {
-        RollersMotor.setControl(velocityRequest.withVelocity(0));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));
     }
 
 

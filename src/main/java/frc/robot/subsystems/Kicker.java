@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -19,10 +20,11 @@ public class Kicker extends SubsystemBase {
     private TalonFX VerticalRollerMotor = new TalonFX(KickerConstants.VERT_ROLLER_ID);
 
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+    private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
     public Kicker() {
         TalonFXConfiguration KickerConfig = new TalonFXConfiguration();
-        KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         KickerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust if needed
         KickerConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         KickerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -66,7 +68,7 @@ public class Kicker extends SubsystemBase {
 
     public void stopKicker() {
         KickerMotor.setControl(velocityRequest.withVelocity(0));
-        VerticalRollerMotor.setControl(velocityRequest.withVelocity(0));
+        VerticalRollerMotor.setControl(dutyCycleRequest.withOutput(0.0));
     }
 
     public Command runDefaultCommand() {

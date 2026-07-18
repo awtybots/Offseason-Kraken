@@ -7,6 +7,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -24,6 +25,7 @@ public class Shooter extends SubsystemBase {
     private TalonFX ShooterLeftMotor = new TalonFX(ShooterConstants.SHOOTER_L_ID);
 
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+    private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
     private double targetRPS = 0.0;
 
@@ -97,8 +99,8 @@ public class Shooter extends SubsystemBase {
 
     public void stopShooting() {
         targetRPS = 0.0;
-        ShooterRightMotor.setControl(velocityRequest.withVelocity(0).withSlot(0));
-        ShooterLeftMotor.setControl(velocityRequest.withVelocity(0).withSlot(0));
+        ShooterRightMotor.setControl(dutyCycleRequest.withOutput(0.0));
+        ShooterLeftMotor.setControl(dutyCycleRequest.withOutput(0.0));
     }
 
     public void SpeedUpShooter() {
