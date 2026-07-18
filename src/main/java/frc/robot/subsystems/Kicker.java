@@ -22,7 +22,7 @@ public class Kicker extends SubsystemBase {
 
     public Kicker() {
         TalonFXConfiguration KickerConfig = new TalonFXConfiguration();
-        KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         KickerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust if needed
         KickerConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         KickerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -30,7 +30,7 @@ public class Kicker extends SubsystemBase {
 
 
         TalonFXConfiguration VerticalRollerConfig = new TalonFXConfiguration();
-        VerticalRollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        VerticalRollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         VerticalRollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
         VerticalRollerConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         VerticalRollerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
