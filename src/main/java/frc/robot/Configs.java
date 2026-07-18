@@ -16,7 +16,7 @@ public final class Configs
                 public static final SparkMaxConfig HoodMotorConfig = new SparkMaxConfig();
 
                 static {
-                        HoodMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12);
+                        HoodMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(20).voltageCompensation(12);
 
                         HoodMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)

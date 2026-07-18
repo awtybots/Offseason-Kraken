@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -19,6 +20,7 @@ public class Intake extends SubsystemBase {
     private TalonFX intakeLeftMotor = new TalonFX(IntakeConstants.INTAKE_LEFT_ID);
 
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+    private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
     public Intake() {
         TalonFXConfiguration intakeConfig = new TalonFXConfiguration();
@@ -47,7 +49,7 @@ public class Intake extends SubsystemBase {
 
     public void stopIntake() {
         desiredPercent = 0.0;
-        intakeLeftMotor.setControl(velocityRequest.withVelocity(0));
+        intakeLeftMotor.setControl(dutyCycleRequest.withOutput(0));
     }
   
     public Command runIntakeCommand() {
