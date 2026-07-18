@@ -199,9 +199,9 @@ public final class Constants {
     public static final int TURRET_CANCODER_ID = 0;  // set ts too
 
     public static final double CANCODER_OFFSET = 0.0; // tune so 0 is the center of turret range
-    public static final double GEAR_RATIO = 10.0; // tune to correct reduction
+    public static final double GEAR_RATIO = 5.0; // tune to correct reduction
 
-    public static final double RELATIVE_DEGREES_PER_ROTATION = 36.0; // set it to however many rotations of the motor it takes to spin the turret 360 degs
+    public static final double RELATIVE_DEGREES_PER_ROTATION = 50; // set it to however many rotations of the motor it takes to spin the turret 360 degs
 
     public static final double MIN_CONTINUOUS_DEGREES = -160.0; // set this to the lower end of the turret's range for example: -160
     public static final double MAX_CONTINUOUS_DEGREES = 160.0;// higher end for example: 160 meaning total range is 320 degrees
@@ -222,10 +222,10 @@ public final class Constants {
   public static final class HoodConstants {
     public static final int HOOD_ID = 0; // set ts
 
-    public static final double HOOD_MIN_DEGREES = 20.0;  // down pos (starting pos)
-    public static final double HOOD_MAX_DEGREES = 45.0;  // up position
+    public static final double HOOD_MIN_DEGREES = 21.0;  // down pos (starting pos)
+    public static final double HOOD_MAX_DEGREES = 47.0;  // up position
 
-    public static final double GEAR_RATIO = 10.0;       
+    public static final double GEAR_RATIO = 5.0;       
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5; 
 
     public static final double TRENCH_X_BLUE = 4.6;      // blue side trench x coordinate
@@ -243,12 +243,11 @@ public final class Constants {
     public static final int KICKER_ID = 13;
     public static final int VERT_ROLLER_ID = 14;
 
-    public static final double KICKER_REVERSE_RPS = -270;
-    public static final double KICKER_RPS = 270;
+    public static final double KICKER_REVERSE_SPEED = -0.85; // adjust speeds
+    public static final double KICKER_SPEED = 0.85;
 
-    public static final double VERT_ROLLER_REVERSE_RPS = -270;
-    public static final double VERT_ROLLER_RPS = 270;
-
+    public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
+    public static final double VERT_ROLLER_SPEED = 0.85;
     // PID Constants
     public static final double p = 0.000236;
     public static final double i = 0.000;
@@ -267,8 +266,8 @@ public final class Constants {
     public static final int CONVEYOR_TOP_ID = 13;
     public static final int CONVEYOR_BOTTOM_ID = 14;
 
-    public static final double CONVEYOR_REVERSE_RPS = -270;
-    public static final double CONVEYOR_RPS = 270;
+    public static final double CONVEYOR_REVERSE_SPEED = -0.85;
+    public static final double CONVEYOR_SPEED = 0.85;
 
     // PID Constants
     public static final double p = 0.000236;
