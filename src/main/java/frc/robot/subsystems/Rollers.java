@@ -36,11 +36,13 @@ public class Rollers extends SubsystemBase {
     }
 
     public void ReverseRollers() {
-        RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.REVERSE_ROLLERS_RPS).withSlot(0));
+        // RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.REVERSE_ROLLERS_RPS).withSlot(0));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.REVERSE_ROLLERS_SPEED));
     }
 
     public void RollersToConveyor() {
-        RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.ROLLERS_RPS).withSlot(0));
+        // RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.ROLLERS_RPS).withSlot(0));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED));
     }
 
     

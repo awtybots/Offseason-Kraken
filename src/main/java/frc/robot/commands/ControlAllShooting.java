@@ -32,8 +32,8 @@ public class ControlAllShooting extends Command {
     private boolean isAtSpeed = false;
 
     // maps distance to shooter RPS
-    private final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
-    private final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap hubShooterTable = ShooterConstants.hubShooterTable;
+    private final InterpolatingDoubleTreeMap ferryShooterTable = ShooterConstants.ferryShooterTable;
 
     public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Pushout pushout, Intake intake, Hood hood, Rollers rollers, Turret turret, SwerveSubsystem swerve)
     {

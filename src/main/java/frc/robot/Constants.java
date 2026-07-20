@@ -2,6 +2,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.RPM;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +18,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -192,6 +195,34 @@ public final class Constants {
         TOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
+    public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
+    public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
+    static{
+
+    for (var entry : List.of(
+                Pair.of(Meters.of(2.0), RPM.of(1700)),
+                Pair.of(Meters.of(2.5), RPM.of(1935)),
+                Pair.of(Meters.of(3.0), RPM.of(2010)),
+                Pair.of(Meters.of(3.5), RPM.of(2150)),
+                Pair.of(Meters.of(4.0), RPM.of(2280)),
+                Pair.of(Meters.of(5.2), RPM.of(2517)),
+                Pair.of(Meters.of(6.0), RPM.of(3060))
+        )) {
+            hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+        }
+
+        // ferry table is gonna be diff angles and rpms so tune
+        for (var entry : List.of(
+                Pair.of(Meters.of(2.0), RPM.of(1500)),
+                Pair.of(Meters.of(3.0), RPM.of(1800)),
+                Pair.of(Meters.of(4.0), RPM.of(2100)),
+                Pair.of(Meters.of(5.0), RPM.of(2400)),
+                Pair.of(Meters.of(6.0), RPM.of(2700))
+        )) {
+            ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+        }
+    }
+
   }
 
   public static final class TurretConstants {
@@ -297,8 +328,11 @@ public final class Constants {
   public static class RollersConstants {
     public static final int ROLLERS_ID = 15;
 
-    public static final double ROLLERS_RPS = -270;
-    public static final double REVERSE_ROLLERS_RPS = 270;
+    public static final double ROLLERS_RPS = -100;
+    public static final double REVERSE_ROLLERS_RPS = 100;
+
+    public static final double ROLLERS_SPEED = -1;
+    public static final double REVERSE_ROLLERS_SPEED = 1;
 
     // PID Constants
     public static final double p = 0.0002;
