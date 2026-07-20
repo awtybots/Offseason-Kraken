@@ -258,6 +258,16 @@ public final class Constants {
     public static final double v = 0.004;
     public static final double a = 0.0003;
 
+    // PID Constants
+    public static final double VRp = 0.000236;
+    public static final double VRi = 0.000;
+    public static final double VRd = 0.000;
+
+    // Feed-Forward Constants
+    public static final double VRs = 0.100;
+    public static final double VRv = 0.004;
+    public static final double VRa = 0.0003;
+
     public static final double STOP = 0;
     public static final double IDLE = 0; // % voltage -1 --> 1
   }

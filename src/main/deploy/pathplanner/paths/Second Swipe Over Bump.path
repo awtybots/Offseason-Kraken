@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.334790322580646,
-        "y": 7.509395161290323
+        "x": 3.7019373821390094,
+        "y": 4.05057684536638
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.726637096774193,
-        "y": 7.589854838709677
+        "x": 6.093784156332557,
+        "y": 4.131036522785734
       },
       "isLocked": false,
       "linkedName": "Under Trench Forward"
@@ -132,7 +132,7 @@
   "folder": "TRI Paths",
   "idealStartingState": {
     "velocity": 1.0,
-    "rotation": 0.0
+    "rotation": -179.8370740519016
   },
   "useDefaultConstraints": true
 }

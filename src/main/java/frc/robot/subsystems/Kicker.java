@@ -9,14 +9,24 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 
+import frc.robot.Configs;
 import frc.robot.Constants.KickerConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Kicker extends SubsystemBase {
 
     private TalonFX KickerMotor = new TalonFX(KickerConstants.KICKER_ID);
-    private TalonFX VerticalRollerMotor = new TalonFX(KickerConstants.VERT_ROLLER_ID);
+    private SparkMax VerticalRollerMotor = new SparkMax(KickerConstants.VERT_ROLLER_ID, MotorType.kBrushless);
+    private RelativeEncoder VertRollerEncoder = VerticalRollerMotor.getEncoder();
+    private SparkClosedLoopController VerticalRollerController = VerticalRollerMotor.getClosedLoopController(); 
 
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
@@ -28,22 +38,17 @@ public class Kicker extends SubsystemBase {
         KickerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         KickerMotor.getConfigurator().apply(KickerConfig);
 
-
-        TalonFXConfiguration VerticalRollerConfig = new TalonFXConfiguration();
-        VerticalRollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        VerticalRollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
-        VerticalRollerConfig.CurrentLimits.StatorCurrentLimit = 40.0;
-        VerticalRollerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        VerticalRollerMotor.getConfigurator().apply(VerticalRollerConfig);
+        VerticalRollerMotor.configure(Configs.KickerSubsystem.VertivalMotorConfig, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
     }
 
     public void ReverseKicker() {
-        VerticalRollerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.VERT_ROLLER_REVERSE_SPEED));
+        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_REVERSE_SPEED, ControlType.kMAXMotionVelocityControl);
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
     }
 
     public void ConveyorToShooter() {
-        VerticalRollerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.VERT_ROLLER_SPEED));
+        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_SPEED, ControlType.kMAXMotionVelocityControl);
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
     }
 
@@ -54,7 +59,7 @@ public class Kicker extends SubsystemBase {
 
     public void stopKicker() {
         KickerMotor.setControl(dutyCycleRequest.withOutput(0));
-        VerticalRollerMotor.setControl(dutyCycleRequest.withOutput(0));
+        VerticalRollerMotor.set(0.0);
     }
 
     public Command runDefaultCommand() {
@@ -82,10 +87,9 @@ public class Kicker extends SubsystemBase {
     @Override
     public void periodic() {
         Logger.recordOutput("Kicker/TopDutyCycle", KickerMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerDutyCycle", VerticalRollerMotor.getDutyCycle().getValueAsDouble());
         Logger.recordOutput("Kicker/TopVolts", KickerMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerVolts", VerticalRollerMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Kicker/VerticalRollerVolts", VerticalRollerMotor.getBusVoltage());
         Logger.recordOutput("Kicker/TopRPS", KickerMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerRPS", VerticalRollerMotor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Kicker/VerticalRollerRPS", VertRollerEncoder.getVelocity());
     }
 }

@@ -1,0 +1,77 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.7019373821390094,
+        "y": 4.05057684536638
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.06823936725485,
+        "y": 3.9694092638739225
+      },
+      "isLocked": false,
+      "linkedName": "Under Trench Forward"
+    },
+    {
+      "anchor": {
+        "x": 1.5954362961341602,
+        "y": 4.022935580549569
+      },
+      "prevControl": {
+        "x": 2.6428264328529094,
+        "y": 3.9775412934401944
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "extend intake",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "extend intake"
+        }
+      }
+    },
+    {
+      "name": "intake",
+      "waypointRelativePos": 0.1,
+      "endWaypointRelativePos": 3.615255079505304,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.75,
+    "maxAcceleration": 3.75,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "reversed": false,
+  "folder": "TRI Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -179.8370740519016
+  },
+  "useDefaultConstraints": true
+}

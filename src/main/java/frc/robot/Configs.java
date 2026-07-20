@@ -30,5 +30,24 @@ public final class Configs
                         .kA(KickerConstants.a);
                 }
         }
+
+        public static final class KickerSubsystem {
+
+                public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
+
+                static {
+                        VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(20).voltageCompensation(12);
+
+                        VertivalMotorConfig.closedLoop
+                        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                        .p(KickerConstants.VRp)
+                        .i(KickerConstants.VRi)
+                        .d(KickerConstants.VRd)
+                        .feedForward
+                        .kS(KickerConstants.VRs)
+                        .kV(KickerConstants.VRv)
+                        .kA(KickerConstants.VRa);
+                }
+        }
         
 }
