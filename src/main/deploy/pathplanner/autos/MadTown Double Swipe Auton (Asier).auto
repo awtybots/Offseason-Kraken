@@ -39,6 +39,12 @@
           "data": {
             "pathName": "Over bump + Intake Depot"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "End of Auto"
+          }
         }
       ]
     }
