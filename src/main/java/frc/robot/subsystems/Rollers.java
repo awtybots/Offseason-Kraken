@@ -17,7 +17,7 @@ public class Rollers extends SubsystemBase {
 
     private TalonFX RollersMotor = new TalonFX(RollersConstants.ROLLERS_ID);
 
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+   
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
     public Rollers() {
