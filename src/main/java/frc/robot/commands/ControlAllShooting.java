@@ -32,23 +32,10 @@ public class ControlAllShooting extends Command {
     private boolean isAtSpeed = false;
 
     // maps distance to shooter RPS
-    private final InterpolatingDoubleTreeMap hubShooterTable = ShooterConstants.hubShooterTable;
-    private final InterpolatingDoubleTreeMap ferryShooterTable = ShooterConstants.ferryShooterTable;
+    private static final InterpolatingDoubleTreeMap hubShooterTable = ShooterConstants.hubShooterTable;
+    private static final InterpolatingDoubleTreeMap ferryShooterTable = ShooterConstants.ferryShooterTable;
 
-    public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Pushout pushout, Intake intake, Hood hood, Rollers rollers, Turret turret, SwerveSubsystem swerve)
-    {
-        this.m_shooter = shooter;
-        this.m_conveyor = conveyor;
-        this.m_kicker = kicker;
-        this.m_pushout = pushout;
-        this.m_rollers = rollers;
-        this.m_intake = intake;
-        this.m_hood = hood;
-        this.m_turret = turret;
-        this.drivebase = swerve;
-
-        addRequirements(shooter, conveyor, kicker, pushout, intake, rollers); // AimTurret and AimHood do their own things so we dont need them here
-
+    static {
         for (var entry : List.of(
                 Pair.of(Meters.of(2.0), RPM.of(1700)),
                 Pair.of(Meters.of(2.5), RPM.of(1935)),
@@ -71,6 +58,21 @@ public class ControlAllShooting extends Command {
         )) {
             ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
         }
+    }
+
+    public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Pushout pushout, Intake intake, Hood hood, Rollers rollers, Turret turret, SwerveSubsystem swerve)
+    {
+        this.m_shooter = shooter;
+        this.m_conveyor = conveyor;
+        this.m_kicker = kicker;
+        this.m_pushout = pushout;
+        this.m_rollers = rollers;
+        this.m_intake = intake;
+        this.m_hood = hood;
+        this.m_turret = turret;
+        this.drivebase = swerve;
+
+        addRequirements(shooter, conveyor, kicker, pushout, intake, rollers); // AimTurret and AimHood do their own things so we dont need them here
     }
 
     public boolean isAtSpeed() {

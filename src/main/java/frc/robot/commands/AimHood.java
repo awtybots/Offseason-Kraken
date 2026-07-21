@@ -20,14 +20,10 @@ public class AimHood extends Command {
 
     public double distance = 0.0;
 
-    private final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
-    private final InterpolatingDoubleTreeMap ferryHoodTable = new InterpolatingDoubleTreeMap();
+    private static final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
+    private static final InterpolatingDoubleTreeMap ferryHoodTable = new InterpolatingDoubleTreeMap();
 
-    public AimHood(Hood hood, SwerveSubsystem swerveSubsystem) {
-        this.hood = hood;
-        this.swerveSubsystem = swerveSubsystem;
-        addRequirements(hood); 
-
+    static {
         // aim at hub LUT
         for (var entry : List.of(
                 Pair.of(Meters.of(2.0), Degrees.of(20.0)),
@@ -51,6 +47,12 @@ public class AimHood extends Command {
         )) {
             ferryHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
         }
+    }
+
+    public AimHood(Hood hood, SwerveSubsystem swerveSubsystem) {
+        this.hood = hood;
+        this.swerveSubsystem = swerveSubsystem;
+        addRequirements(hood);
     }
 
     @Override
