@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LowTide First swipe Over Bump"
+            "pathName": "Regular First Swipe Over Bump"
           }
         },
         {
@@ -20,6 +20,18 @@
           "type": "path",
           "data": {
             "pathName": "Over bump + Intake Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Second Swipe Under Trench"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot With Timeout"
           }
         },
         {
