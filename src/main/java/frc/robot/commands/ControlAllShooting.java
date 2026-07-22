@@ -35,31 +35,6 @@ public class ControlAllShooting extends Command {
     private static final InterpolatingDoubleTreeMap hubShooterTable = ShooterConstants.hubShooterTable;
     private static final InterpolatingDoubleTreeMap ferryShooterTable = ShooterConstants.ferryShooterTable;
 
-    static {
-        for (var entry : List.of(
-                Pair.of(Meters.of(2.0), RPM.of(1700)),
-                Pair.of(Meters.of(2.5), RPM.of(1935)),
-                Pair.of(Meters.of(3.0), RPM.of(2010)),
-                Pair.of(Meters.of(3.5), RPM.of(2150)),
-                Pair.of(Meters.of(4.0), RPM.of(2280)),
-                Pair.of(Meters.of(5.2), RPM.of(2517)),
-                Pair.of(Meters.of(6.0), RPM.of(3060))
-        )) {
-            hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
-        }
-
-        // ferry table is gonna be diff angles and rpms so tune
-        for (var entry : List.of(
-                Pair.of(Meters.of(2.0), RPM.of(1500)),
-                Pair.of(Meters.of(3.0), RPM.of(1800)),
-                Pair.of(Meters.of(4.0), RPM.of(2100)),
-                Pair.of(Meters.of(5.0), RPM.of(2400)),
-                Pair.of(Meters.of(6.0), RPM.of(2700))
-        )) {
-            ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
-        }
-    }
-
     public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Pushout pushout, Intake intake, Hood hood, Rollers rollers, Turret turret, SwerveSubsystem swerve)
     {
         this.m_shooter = shooter;
