@@ -65,9 +65,9 @@ public class Shooter extends SubsystemBase {
 
         TalonFXConfiguration leftConfig = new TalonFXConfiguration();
         leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        leftConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // facing into eachother
         leftConfig.CurrentLimits.StatorCurrentLimit = 80.0;
         leftConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        ShooterLeftMotor.getConfigurator().apply(leftConfig);
 
         // Follow the right motor
         ShooterLeftMotor.setControl(new Follower(ShooterRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -100,23 +100,23 @@ public class Shooter extends SubsystemBase {
     public void stopShooting() {
         targetRPS = 0.0;
         ShooterRightMotor.setControl(dutyCycleRequest.withOutput(0.0));
-        ShooterLeftMotor.setControl(dutyCycleRequest.withOutput(0.0));
+        // ShooterLeftMotor.setControl(dutyCycleRequest.withOutput(0.0));
     }
 
     public void SpeedUpShooter() {
         ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
-        ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
+        // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
     }
 
     public void setTargetRPS(double rps) {
         targetRPS = rps;
         ShooterRightMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
-        ShooterLeftMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
+        // ShooterLeftMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
     }
 
     public void ShooterPassing() {
         ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
-        ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
+        // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
     }
 
     public Command setAllianceIdle() {
