@@ -1,17 +1,11 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
-
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.HoodConstants;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import org.littletonrobotics.junction.Logger;
-import java.util.List;
 
 public class AimHood extends Command {
 
@@ -19,35 +13,6 @@ public class AimHood extends Command {
     private final SwerveSubsystem swerveSubsystem;
 
     public double distance = 0.0;
-
-    private static final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
-    private static final InterpolatingDoubleTreeMap ferryHoodTable = new InterpolatingDoubleTreeMap();
-
-    static {
-        // aim at hub LUT
-        for (var entry : List.of(
-                Pair.of(Meters.of(2.0), Degrees.of(20.0)),
-                Pair.of(Meters.of(2.5), Degrees.of(23.0)),
-                Pair.of(Meters.of(3.0), Degrees.of(26.0)),
-                Pair.of(Meters.of(3.5), Degrees.of(30.0)),
-                Pair.of(Meters.of(4.0), Degrees.of(34.0)),
-                Pair.of(Meters.of(5.0), Degrees.of(40.0)),
-                Pair.of(Meters.of(6.0), Degrees.of(45.0))
-        )) {
-            hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
-        }
-
-        // aim at ferry LUT
-        for (var entry : List.of(
-                Pair.of(Meters.of(2.0), Degrees.of(20.0)),
-                Pair.of(Meters.of(3.0), Degrees.of(25.0)),
-                Pair.of(Meters.of(4.0), Degrees.of(30.0)),
-                Pair.of(Meters.of(5.0), Degrees.of(35.0)),
-                Pair.of(Meters.of(6.0), Degrees.of(40.0))
-        )) {
-            ferryHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
-        }
-    }
 
     public AimHood(Hood hood, SwerveSubsystem swerveSubsystem) {
         this.hood = hood;
@@ -87,7 +52,7 @@ public class AimHood extends Command {
             double distToHub = turretToHub.getNorm();
             distance = distToHub;
 
-            double targetAngle = hubHoodTable.get(distToHub);
+            double targetAngle = HoodConstants.hubHoodTable.get(distToHub);
             hood.setAngle(targetAngle);
 
             Logger.recordOutput("Hood/Mode", "Hub");
@@ -99,7 +64,7 @@ public class AimHood extends Command {
             double distToFerry = turretToFerry.getNorm();
             distance = distToFerry;
 
-            double targetAngle = ferryHoodTable.get(distToFerry);
+            double targetAngle = HoodConstants.ferryHoodTable.get(distToFerry);
             hood.setAngle(targetAngle);
 
             Logger.recordOutput("Hood/Mode", "Ferry");

@@ -1,17 +1,11 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.RPM;
-
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import org.littletonrobotics.junction.Logger;
-import java.util.List;
 
 public class ControlAllShooting extends Command {
 
@@ -30,10 +24,6 @@ public class ControlAllShooting extends Command {
     public double recordedTargetRPS = 0.0;
     private boolean isFiring = false;
     private boolean isAtSpeed = false;
-
-    // maps distance to shooter RPS
-    private static final InterpolatingDoubleTreeMap hubShooterTable = ShooterConstants.hubShooterTable;
-    private static final InterpolatingDoubleTreeMap ferryShooterTable = ShooterConstants.ferryShooterTable;
 
     public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Pushout pushout, Intake intake, Hood hood, Rollers rollers, Turret turret, SwerveSubsystem swerve)
     {
@@ -84,7 +74,7 @@ public class ControlAllShooting extends Command {
             double dist = turretToHub.getNorm();
             distance = dist;
 
-            double targetRPS = hubShooterTable.get(dist);
+            double targetRPS = ShooterConstants.hubShooterTable.get(dist);
             recordedTargetRPS = targetRPS;
 
             m_shooter.setTargetRPS(targetRPS);
@@ -99,7 +89,7 @@ public class ControlAllShooting extends Command {
             double dist = turretToFerry.getNorm();
             distance = dist;
 
-            double targetRPS = ferryShooterTable.get(dist);
+            double targetRPS = ShooterConstants.ferryShooterTable.get(dist);
             recordedTargetRPS = targetRPS;
 
             m_shooter.setTargetRPS(targetRPS);

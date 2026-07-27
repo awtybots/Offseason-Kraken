@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.RPM;
@@ -268,6 +269,33 @@ public final class Constants {
     public static final double i = 0.0;
     public static final double d = 0.0;
     public static final double MAX_OUTPUT = 0.5; // limit speed for safety while tuning
+
+    public static final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
+    public static final InterpolatingDoubleTreeMap ferryHoodTable = new InterpolatingDoubleTreeMap();
+
+    static {
+      // aim at hub LUT
+      for (var entry : List.of(
+          Pair.of(Meters.of(2.0), Degrees.of(20.0)),
+          Pair.of(Meters.of(2.5), Degrees.of(23.0)),
+          Pair.of(Meters.of(3.0), Degrees.of(26.0)),
+          Pair.of(Meters.of(3.5), Degrees.of(30.0)),
+          Pair.of(Meters.of(4.0), Degrees.of(34.0)),
+          Pair.of(Meters.of(5.0), Degrees.of(40.0)),
+          Pair.of(Meters.of(6.0), Degrees.of(45.0)))) {
+        hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
+      }
+
+      // aim at ferry LUT
+      for (var entry : List.of(
+          Pair.of(Meters.of(2.0), Degrees.of(20.0)),
+          Pair.of(Meters.of(3.0), Degrees.of(25.0)),
+          Pair.of(Meters.of(4.0), Degrees.of(30.0)),
+          Pair.of(Meters.of(5.0), Degrees.of(35.0)),
+          Pair.of(Meters.of(6.0), Degrees.of(40.0)))) {
+        ferryHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
+      }
+    }
   }
 
   public static class KickerConstants {
