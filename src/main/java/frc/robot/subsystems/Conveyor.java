@@ -2,16 +2,24 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import org.littletonrobotics.junction.Logger;
+
 import frc.robot.Constants.ConveyorConstants;
+import frc.robot.Constants.ShooterConstants;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Conveyor extends SubsystemBase {
@@ -20,6 +28,7 @@ public class Conveyor extends SubsystemBase {
     private TalonFX ConveyorBottomMotor = new TalonFX(ConveyorConstants.CONVEYOR_BOTTOM_ID);
 
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
+    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
     public Conveyor() {
         TalonFXConfiguration ConveyorConfig = new TalonFXConfiguration();
@@ -27,20 +36,26 @@ public class Conveyor extends SubsystemBase {
         ConveyorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
         ConveyorConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         ConveyorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        ConveyorTopMotor.getConfigurator().apply(ConveyorConfig);
+        ConveyorConfig.Slot0.kP = ConveyorConstants.p;
+        ConveyorConfig.Slot0.kI = ConveyorConstants.i;
+        ConveyorConfig.Slot0.kD = ConveyorConstants.d;  
+        ConveyorConfig.Slot0.kS = ConveyorConstants.s;
+        ConveyorConfig.Slot0.kV = ConveyorConstants.v;
+        ConveyorConfig.Slot0.kA = ConveyorConstants.a;
 
+        ConveyorTopMotor.getConfigurator().apply(ConveyorConfig);
         ConveyorBottomMotor.getConfigurator().apply(ConveyorConfig);
 
-        // Right follows Left, inverted
-        ConveyorBottomMotor.setControl(new Follower(ConveyorTopMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        // Bottom follows top inverted
+        ConveyorBottomMotor.setControl(new Follower(ConveyorTopMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     public void ReverseConveyor() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED));
+        ConveyorTopMotor.setControl(velocityRequest.withVelocity(ConveyorConstants.CONVEYOR_REVERSE_RPS).withSlot(0));
     }
 
     public void HopperToShooter() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
+        ConveyorTopMotor.setControl(velocityRequest.withVelocity(ConveyorConstants.CONVEYOR_RPS).withSlot(0));
     }
 
 

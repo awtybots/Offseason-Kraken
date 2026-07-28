@@ -338,6 +338,9 @@ public final class Constants {
     public static final double CONVEYOR_REVERSE_SPEED = -0.85;
     public static final double CONVEYOR_SPEED = 0.85;
 
+    public static final double CONVEYOR_RPS = 75;
+    public static final double CONVEYOR_REVERSE_RPS = -75;
+
     // PID Constants
     public static final double p = 0.000236;
     public static final double i = 0.000;
