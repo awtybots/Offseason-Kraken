@@ -331,11 +331,18 @@ public class RobotContainer {
         driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
 
         // ==================== OPERATOR BINDINGS ====================
-
-        Trigger ResetEncoder = operatorXbox.start();
+        
+        // Testing
+        operatorXbox.rightTrigger().whileTrue(
+          Commands.parallel(
+            m_conveyor.HopperToShooterCommand(),
+            m_kicker.KickerCommand(),
+            m_rollers.runRollersToConveyorCommand()
+          )
+        );
 
         // reset encoder
-        ResetEncoder.onTrue(m_pushout.ResetEncoderCommand());
+        operatorXbox.start().onTrue(m_pushout.ResetEncoderCommand());
 
         // intake
         operatorXbox.x().whileTrue(m_intake.runIntakeCommand());
