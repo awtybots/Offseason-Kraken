@@ -70,7 +70,7 @@ public class Conveyor extends SubsystemBase {
         }).finallyDo(interrupted -> stopConveyor());
     }
 
-    public Command ConveyorCommand() {
+    public Command HopperToShooterCommand() {
         return this.run(() -> {
             HopperToShooter();
         }).finallyDo(interrupted -> stopConveyor());
