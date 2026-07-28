@@ -48,7 +48,7 @@ public class Kicker extends SubsystemBase {
     }
 
     public void ConveyorToShooter() {
-        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_SPEED, ControlType.kMAXMotionVelocityControl);
+        VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
     }
 
