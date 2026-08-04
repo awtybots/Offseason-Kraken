@@ -39,7 +39,8 @@ public class Turret extends SubsystemBase {
         TalonFXConfiguration motorConfig = new TalonFXConfiguration();
         motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // hopefully correct
-        motorConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+        motorConfig.CurrentLimits.StatorCurrentLimit = 70.0;
+        motorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         motorConfig.Slot0.kP = TurretConstants.p;
         motorConfig.Slot0.kI = TurretConstants.i;
