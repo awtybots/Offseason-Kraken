@@ -7,6 +7,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HoodConstants;
 import frc.robot.Constants.KickerConstants;
+import frc.robot.Constants.TurretConstants;
 
 public final class Configs 
 {
@@ -47,6 +48,26 @@ public final class Configs
                         .kS(KickerConstants.VRs)
                         .kV(KickerConstants.VRv)
                         .kA(KickerConstants.VRa);
+                }
+        }
+
+        public static final class TurretSubsystem {
+
+                public static final SparkMaxConfig TurretMotorConfig = new SparkMaxConfig();
+
+                static {
+                        TurretMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12);
+
+                        TurretMotorConfig.closedLoop
+                        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                        .p(TurretConstants.p)
+                        .i(TurretConstants.i)
+                        .d(TurretConstants.d)
+                        .outputRange(-TurretConstants.MAX_OUTPUT, TurretConstants.MAX_OUTPUT)
+                        .feedForward
+                        .kS(TurretConstants.s)
+                        .kV(TurretConstants.v)
+                        .kA(TurretConstants.a);
                 }
         }
         

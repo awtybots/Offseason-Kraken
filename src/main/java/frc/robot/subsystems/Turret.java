@@ -3,54 +3,72 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
+// import com.ctre.phoenix6.configs.TalonFXConfiguration;
+// import com.ctre.phoenix6.configs.CANcoderConfiguration;
+// import com.ctre.phoenix6.controls.PositionVoltage;
+// import com.ctre.phoenix6.controls.VoltageOut;
+// import com.ctre.phoenix6.hardware.TalonFX;
+// import com.ctre.phoenix6.signals.InvertedValue;
+// import com.ctre.phoenix6.signals.NeutralModeValue;
+// import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 
 import org.littletonrobotics.junction.Logger;
 
+import frc.robot.Configs;
 import frc.robot.Constants.TurretConstants;
 
 public class Turret extends SubsystemBase {
 
-    private TalonFX TurretMotor = new TalonFX(TurretConstants.TURRET_ID);
+    // private TalonFX TurretMotor = new TalonFX(TurretConstants.TURRET_ID);
     private CANcoder absoluteEncoder = new CANcoder(TurretConstants.TURRET_CANCODER_ID); // always knows true angle even after power cycle
 
-    private final PositionVoltage positionRequest = new PositionVoltage(0); // position control
-    private final VoltageOut voltageRequest = new VoltageOut(0); // open loop for manual + stop
+    // private final PositionVoltage positionRequest = new PositionVoltage(0); // position control
+    // private final VoltageOut voltageRequest = new VoltageOut(0); // open loop for manual + stop
+
+    private SparkMax TurretMotor = new SparkMax(TurretConstants.TURRET_ID, MotorType.kBrushless);
+    private SparkClosedLoopController turretController = TurretMotor.getClosedLoopController();
+    private RelativeEncoder turretRelativeEncoder = TurretMotor.getEncoder();
+
 
     private int wrapCount = 0; // # of times its wrapped
     private double lastAbsolutePosition = 0.0; // last abs encoder reading in degrees, used for tracking wraps
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
 
     public Turret() {
-        CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
-        cancoderConfig.MagnetSensor.MagnetOffset = TurretConstants.CANCODER_OFFSET; // tune so 0 is the center of the turret range
-        cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive; // correct i think
-        cancoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5; // makes range -0.5 to 0.5 rotations so basically just -180 to 180 degrees
-        absoluteEncoder.getConfigurator().apply(cancoderConfig);
+        // CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
+        // cancoderConfig.MagnetSensor.MagnetOffset = TurretConstants.CANCODER_OFFSET; // tune so 0 is the center of the turret range
+        // cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive; // correct i think
+        // cancoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5; // makes range -0.5 to 0.5 rotations so basically just -180 to 180 degrees
+        // absoluteEncoder.getConfigurator().apply(cancoderConfig);
 
-        TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-        motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // hopefully correct
-        motorConfig.CurrentLimits.StatorCurrentLimit = 70.0;
-        motorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
-        motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        motorConfig.Slot0.kP = TurretConstants.p;
-        motorConfig.Slot0.kI = TurretConstants.i;
-        motorConfig.Slot0.kD = TurretConstants.d;
-        motorConfig.Slot0.kS = TurretConstants.s;
-        motorConfig.Slot0.kV = TurretConstants.v;
-        motorConfig.Slot0.kA = TurretConstants.a;
-        TurretMotor.getConfigurator().apply(motorConfig);
+        // TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+        // motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        // motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // hopefully correct
+        // motorConfig.CurrentLimits.StatorCurrentLimit = 70.0;
+        // motorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        // motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        // motorConfig.Slot0.kP = TurretConstants.p;
+        // motorConfig.Slot0.kI = TurretConstants.i;
+        // motorConfig.Slot0.kD = TurretConstants.d;
+        // motorConfig.Slot0.kS = TurretConstants.s;
+        // motorConfig.Slot0.kV = TurretConstants.v;
+        // motorConfig.Slot0.kA = TurretConstants.a;
+        // TurretMotor.getConfigurator().apply(motorConfig);
 
-        TurretMotor.setPosition(degreesToRotations(getAbsoluteDegrees())); // makes relative equal to abs at beginning
+        // TurretMotor.setPosition(degreesToRotations(getAbsoluteDegrees())); // makes relative equal to abs at beginning
+        // lastAbsolutePosition = getAbsoluteDegrees();
+        TurretMotor.configure(Configs.TurretSubsystem.TurretMotorConfig, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
+
+        turretRelativeEncoder.setPosition(degreesToRotations(getAbsoluteDegrees())); // makes relative equal to abs at beginning
         lastAbsolutePosition = getAbsoluteDegrees();
     }
 
@@ -61,7 +79,7 @@ public class Turret extends SubsystemBase {
     }
 
     public double getRelativeDegrees() {
-        return rotationsToDegrees(TurretMotor.getPosition().getValueAsDouble());
+        return rotationsToDegrees(turretRelativeEncoder.getPosition());
     }
 
     public double getContinuousDegrees() {
@@ -100,7 +118,7 @@ public class Turret extends SubsystemBase {
     }
 
     public void zeroEncoder() { // call when turret is at center
-        TurretMotor.setPosition(0);
+        turretRelativeEncoder.setPosition(0);
         wrapCount = 0;
         lastAbsolutePosition = 0;
     }
@@ -124,19 +142,19 @@ public class Turret extends SubsystemBase {
 
     public void setAngle(double degrees) { // send turret to angle in degrees using position control
         currentTargetDegrees = degrees; // track target so isAtAngle can check it
-        TurretMotor.setControl(positionRequest.withPosition(degreesToRotations(degrees)).withSlot(0));
+        turretController.setSetpoint(degreesToRotations(degrees), ControlType.kMAXMotionPositionControl);
     }
 
     public void stopTurret() {
-        TurretMotor.setControl(voltageRequest.withOutput(0));
+        TurretMotor.set(0);
     }
 
     public void manualDrive(double speed) {
         if (isAtCableLimit()) { // dont let it pull its leash more than possible
-            TurretMotor.setControl(voltageRequest.withOutput(0));
+            stopTurret();
             return;
         }
-        TurretMotor.setControl(voltageRequest.withOutput(speed * 12.0)); // scale -1 to 1 → volts
+        TurretMotor.set(speed); // scale -1 to 1 → volts
     }
 
     public Command goToAngleCommand(double degrees) { // full go to angle cmd
@@ -177,8 +195,8 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/IsAtAngle", isAtAngle());
         Logger.recordOutput("Turret/IsAtCableLimit", isAtCableLimit());
         Logger.recordOutput("Turret/TargetDegrees", currentTargetDegrees);
-        Logger.recordOutput("Turret/AppliedVolts", TurretMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Turret/StatorCurrent", TurretMotor.getStatorCurrent().getValueAsDouble());
-        Logger.recordOutput("Turret/MotorRotations", TurretMotor.getPosition().getValueAsDouble());
+        Logger.recordOutput("Turret/AppliedVolts", TurretMotor.getBusVoltage());
+        Logger.recordOutput("Turret/Current", TurretMotor.getOutputCurrent());
+        Logger.recordOutput("Turret/MotorRotations", turretRelativeEncoder.getPosition());
     }
 }
