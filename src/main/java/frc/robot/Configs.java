@@ -17,7 +17,7 @@ public final class Configs
                 public static final SparkMaxConfig HoodMotorConfig = new SparkMaxConfig();
 
                 static {
-                        HoodMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(20).voltageCompensation(12);
+                        HoodMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(30).voltageCompensation(12);
 
                         HoodMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
@@ -32,31 +32,31 @@ public final class Configs
                 }
         }
 
-        public static final class KickerSubsystem {
+        // public static final class KickerSubsystem {
 
-                public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
+        //         public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
 
-                static {
-                        VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(20).voltageCompensation(12);
+        //         static {
+        //                 VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12);
 
-                        VertivalMotorConfig.closedLoop
-                        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                        .p(KickerConstants.VRp)
-                        .i(KickerConstants.VRi)
-                        .d(KickerConstants.VRd)
-                        .feedForward
-                        .kS(KickerConstants.VRs)
-                        .kV(KickerConstants.VRv)
-                        .kA(KickerConstants.VRa);
-                }
-        }
+        //                 VertivalMotorConfig.closedLoop
+        //                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        //                 .p(KickerConstants.VRp)
+        //                 .i(KickerConstants.VRi)
+        //                 .d(KickerConstants.VRd)
+        //                 .feedForward
+        //                 .kS(KickerConstants.VRs)
+        //                 .kV(KickerConstants.VRv)
+        //                 .kA(KickerConstants.VRa);
+        //         }
+        // }
 
         public static final class TurretSubsystem {
 
                 public static final SparkMaxConfig TurretMotorConfig = new SparkMaxConfig();
 
                 static {
-                        TurretMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12);
+                        TurretMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12);
 
                         TurretMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
