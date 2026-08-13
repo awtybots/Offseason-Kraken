@@ -124,19 +124,19 @@ public class Shooter extends SubsystemBase {
     public Command setAllianceIdle() {
         return this.run(() -> {
             setTargetRPS(ShooterConstants.ALLIANCE_IDLE_RPS);
-        }).finallyDo(interrupted -> setTargetRPS(0.0));
+        }).finallyDo(interrupted -> stopShooting());
     }
 
     public Command setNeutralIdle() {
         return this.run(() -> {
             setTargetRPS(ShooterConstants.NEUTRAL_IDLE_RPS);
-        }).finallyDo(interrupted -> setTargetRPS(0.0));
+        }).finallyDo(interrupted -> stopShooting());
     }
 
     public Command setTargetRPSCommand(double rps) {
         return this.run(() -> {
             setTargetRPS(rps);
-        }).finallyDo(interrupted -> setTargetRPS(0.0));
+        }).finallyDo(interrupted -> stopShooting());
     }
 
     public Command stopShootingCommand() {
@@ -144,6 +144,14 @@ public class Shooter extends SubsystemBase {
             stopShooting();
         });
     }
+
+    public Command shootingTestCommad() {
+        return this.run(() -> {
+            shootFuel();
+        }).finallyDo(interrupted -> stopShooting());
+    }
+
+
 
     public Command sysIdQuasistaticForward() {
         return sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward);
