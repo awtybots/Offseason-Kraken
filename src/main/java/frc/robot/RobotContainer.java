@@ -336,7 +336,8 @@ public class RobotContainer {
           Commands.parallel(
             m_conveyor.HopperToShooterCommand(),
             m_kicker.KickerCommand(),
-            m_rollers.runRollersToConveyorCommand()
+            m_rollers.runRollersToConveyorCommand(),
+            m_shooter.shootingTestCommad()
           )
         );
 
