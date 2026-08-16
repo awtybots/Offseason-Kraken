@@ -17,7 +17,7 @@ public class Intake extends SubsystemBase {
 
     private double desiredPercent = 0.0;
 
-    private TalonFX intakeLeftMotor = new TalonFX(IntakeConstants.INTAKE_LEFT_ID);
+    private TalonFX intakeMotor = new TalonFX(IntakeConstants.INTAKE_ID);
 
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
@@ -35,22 +35,22 @@ public class Intake extends SubsystemBase {
         intakeConfig.Slot0.kS = IntakeConstants.s;
         intakeConfig.Slot0.kV = IntakeConstants.v; 
         intakeConfig.Slot0.kA = IntakeConstants.a;
-        intakeLeftMotor.getConfigurator().apply(intakeConfig);
+        intakeMotor.getConfigurator().apply(intakeConfig);
     }
 
     public void runOuttake() {
         double rps = IntakeConstants.OUTTAKE_RPS; 
-        intakeLeftMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
+        intakeMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
     }
 
     public void runIntake() {
         double rps = IntakeConstants.INTAKE_RPS; 
-        intakeLeftMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
+        intakeMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
     }
 
     public void stopIntake() {
         desiredPercent = 0.0;
-        intakeLeftMotor.setControl(dutyCycleRequest.withOutput(0));
+        intakeMotor.setControl(dutyCycleRequest.withOutput(0));
     }
   
     public Command runIntakeCommand() {
@@ -77,10 +77,10 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        double leftRPS = intakeLeftMotor.getVelocity().getValueAsDouble();
+        double leftRPS = intakeMotor.getVelocity().getValueAsDouble();
 
         Logger.recordOutput("Intake/DesiredPercent", desiredPercent);
-        Logger.recordOutput("Intake/AppliedVolts", intakeLeftMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Intake/AppliedVolts", intakeMotor.getMotorVoltage().getValueAsDouble());
         Logger.recordOutput("Intake/LeftRPS", leftRPS);
         Logger.recordOutput("Intake/TargetRPS", IntakeConstants.INTAKE_RPS);
     }

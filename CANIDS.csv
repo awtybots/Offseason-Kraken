@@ -1,0 +1,20 @@
+Subsystem, Type of Motor, Motor Name,           Can ID
+Swerve, Neo 2.0, FL Drive,                       1
+Swerve, Neo 2.0, FL Angle,                       2
+Swerve, Neo 2.0, FR Drive,                       3
+Swerve, Neo 2.0, FR Angle,                       4
+Swerve, Neo 2.0, BL Drive,                       5
+Swerve, Neo 2.0, BL Angle,                       6
+Swerve, Neo 2.0, BR Drive,                       7
+Swerve, Neo 2.0, BR Angle,                       8
+Intake, Kraken x60, Intake Motor,                9
+Rollers, Kraken x60, Rollers Motor,              10
+Kicker, Neo 2.0, Vertical Roller,                11
+118 Dexer, Kraken x60, Top Belts,                12
+118 Dexer, Kraken x60, Bottom Belts,             13
+Kicker, Kraken x60, Kicker Motor,                14
+Turret, Neo 2.0, Turret Motor,                   15
+Shooter, Kraken x60, Shooter Motor Left,         16
+Shooter, Kraken x60, Shooter Motor Right,        17
+Hood, Neo 550, Hood Motor,                       18
+Pushout, Kraken x60, Pushout Motor,              19

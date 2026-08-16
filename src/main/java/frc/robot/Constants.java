@@ -113,8 +113,7 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int INTAKE_LEFT_ID = 18; // unknown
-    public static final int INTAKE_RIGHT_ID = 19; // unknown
+    public static final int INTAKE_ID = 9; // unknown
 
     // PID Constants
     public static final double p = 0.006155;
@@ -134,7 +133,7 @@ public final class Constants {
   }
 
   public static final class PushoutConstants {
-      public static final int PUSHOUT_ID = 0; // set CAN ID
+      public static final int PUSHOUT_ID = 19; // set CAN ID
 
       // Positions in rotations (tune these to match your old encoder values)
       public static final double PUSHOUT_EXTENDED_POS = 15.0;
@@ -154,8 +153,8 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final int SHOOTER_R_ID = 9;
-    public static final int SHOOTER_L_ID = 10;
+    public static final int SHOOTER_L_ID = 16;
+    public static final int SHOOTER_R_ID = 17;
 
     public static final double SHOOTER_SPEED = -100;                
     public static final double SHOOTER_PASSING_SPEED = -200;  
@@ -227,16 +226,21 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final int TURRET_ID = 0; // set ts
-    public static final int TURRET_CANCODER_ID = 0;  // set ts too
-
-    public static final double CANCODER_OFFSET = 0.0; // tune so 0 is the center of turret range
+    public static final int TURRET_ID = 15; // set ts
     public static final double GEAR_RATIO = 5.0; // tune to correct reduction
 
-    public static final double RELATIVE_DEGREES_PER_ROTATION = 50; // set it to however many rotations of the motor it takes to spin the turret 360 degs
 
-    public static final double MIN_CONTINUOUS_DEGREES = -160.0; // set this to the lower end of the turret's range for example: -160
-    public static final double MAX_CONTINUOUS_DEGREES = 160.0;// higher end for example: 160 meaning total range is 320 degrees
+    // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
+    public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions per one full turret revolution
+    public static final double ABSOLUTE_ENCODER_OFFSET = 0.0; 
+    public static final boolean ABSOLUTE_ENCODER_INVERTED = false; // flip if the encoder counts down when the turret goes counterclockwise
+
+    public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
+    public static final double RELATIVE_DEGREES_PER_ROTATION = 50; // how many times the motor must spin for the turret to rotate once
+
+    // how much they can spin each way (shouldnt be the same just is as a placeholder for now)
+    public static final double MIN_CONTINUOUS_DEGREES = -160.0; // TODO measure: how far CW it goes from forward
+    public static final double MAX_CONTINUOUS_DEGREES = 160.0; // TODO measure: how far CCW it goes from forward
 
     public static final double p = 0.05;
     public static final double i = 0.0;
@@ -252,7 +256,7 @@ public final class Constants {
   }
 
   public static final class HoodConstants {
-    public static final int HOOD_ID = 0; // set ts
+    public static final int HOOD_ID = 18; // set ts
 
     public static final double HOOD_MIN_DEGREES = 21.0;  // down pos (starting pos)
     public static final double HOOD_MAX_DEGREES = 47.0;  // up position
@@ -299,8 +303,8 @@ public final class Constants {
   }
 
   public static class KickerConstants {
-    public static final int KICKER_ID = 13;
-    public static final int VERT_ROLLER_ID = 14;
+    public static final int KICKER_ID = 14;
+    public static final int VERT_ROLLER_ID = 11;
 
     public static final double KICKER_REVERSE_SPEED = -0.85; // adjust speeds
     public static final double KICKER_SPEED = 0.85;
@@ -332,8 +336,8 @@ public final class Constants {
   }
 
   public static class ConveyorConstants {
-    public static final int CONVEYOR_TOP_ID = 13;
-    public static final int CONVEYOR_BOTTOM_ID = 14;
+    public static final int CONVEYOR_TOP_ID = 12;
+    public static final int CONVEYOR_BOTTOM_ID = 13;
 
     public static final double CONVEYOR_REVERSE_SPEED = -0.85;
     public static final double CONVEYOR_SPEED = 0.85;
@@ -357,7 +361,7 @@ public final class Constants {
 
 
   public static class RollersConstants {
-    public static final int ROLLERS_ID = 15;
+    public static final int ROLLERS_ID = 10;
 
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;
