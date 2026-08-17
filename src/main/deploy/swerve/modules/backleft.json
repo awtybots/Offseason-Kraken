@@ -10,8 +10,8 @@
     "canbus": null
   },
   "inverted": {
-    "drive": false,
-    "angle": false
+    "drive": true,
+    "angle": true
   },
   "angle": {
     "type": "sparkmax_neo",
@@ -24,6 +24,6 @@
     "canbus": null
   },
   
-  "absoluteEncoderInverted": true
+  "absoluteEncoderInverted": false
 }
 
