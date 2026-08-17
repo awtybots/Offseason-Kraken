@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import org.littletonrobotics.junction.Logger;
 
 import frc.robot.Constants.ConveyorConstants;
+import frc.robot.Constants.KickerConstants;
 public class Conveyor extends SubsystemBase {
 
     private TalonFX ConveyorTopMotor = new TalonFX(ConveyorConstants.CONVEYOR_TOP_ID);
@@ -44,7 +45,7 @@ public class Conveyor extends SubsystemBase {
     }
 
     public void ReverseConveyor() {
-        ConveyorTopMotor.setControl(velocityRequest.withVelocity(ConveyorConstants.CONVEYOR_REVERSE_RPS).withSlot(0));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
     }
 
     public void HopperToShooter() {
