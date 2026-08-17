@@ -366,8 +366,8 @@ public final class Constants {
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;
 
-    public static final double ROLLERS_SPEED = -1;
-    public static final double REVERSE_ROLLERS_SPEED = 1;
+    public static final double ROLLERS_SPEED = -0.75;
+    public static final double REVERSE_ROLLERS_SPEED = 0.75;
 
     // PID Constants
     public static final double p = 0.0002;

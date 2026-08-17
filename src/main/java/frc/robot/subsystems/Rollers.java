@@ -23,7 +23,7 @@ public class Rollers extends SubsystemBase {
     public Rollers() {
         TalonFXConfiguration RollersConfig = new TalonFXConfiguration();
         RollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        RollersConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust we have to
+        RollersConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust we have to
         RollersConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         RollersConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         RollersConfig.Slot0.kP = RollersConstants.p;
