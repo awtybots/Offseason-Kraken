@@ -52,7 +52,7 @@ public class Shooter extends SubsystemBase {
     public Shooter() {
         TalonFXConfiguration rightConfig = new TalonFXConfiguration();
         rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        rightConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
+        rightConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust if needed
         rightConfig.CurrentLimits.StatorCurrentLimit = 100.0;
         rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         rightConfig.CurrentLimits.StatorCurrentLimitEnable = true;

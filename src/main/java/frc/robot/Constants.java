@@ -156,8 +156,8 @@ public final class Constants {
     public static final int SHOOTER_L_ID = 16;
     public static final int SHOOTER_R_ID = 17;
 
-    public static final double SHOOTER_SPEED = -250;                
-    public static final double SHOOTER_PASSING_SPEED = -200;  
+    public static final double SHOOTER_SPEED = 20;                
+    public static final double SHOOTER_PASSING_SPEED = -20;  
     public static final double ERROR_MARGIN = 5; // RPS         
     public static final double STOP = 0;
     public static final double IDLE = 0.1; 
