@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.RPM;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +18,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -35,9 +33,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
  */
 public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
-  
-  public static final double MAX_SPEED = Units.feetToMeters(16.5);
 
+  public static final double MAX_SPEED = Units.feetToMeters(16.5);
 
   public static final class DrivebaseConstants {
 
@@ -48,8 +45,12 @@ public final class Constants {
 
     // shooter position: back left corner, 3" in from each edge, 21" above ground
     public static final double SHOOTER_HEIGHT_M = Units.inchesToMeters(21.0);
-    public static final double SHOOTER_OFFSET_FWD_M = Units.inchesToMeters(-(29.5 / 2.0 - 3.0)); // -11.75" behind center
-    public static final double SHOOTER_OFFSET_LEFT_M = Units.inchesToMeters(24.5 / 2.0 - 3.0);   // 9.25" left of center    
+
+    public static final Translation2d TURRET_OFFSET = new Translation2d(
+        (-29.5 / 2.0 + 3.0) * 0.0254,
+        (24.5 / 2.0 - 3.0) * 0.0254);
+    public static final double SHOOTER_OFFSET_FWD_M = TURRET_OFFSET.getX(); // -11.75" behind center
+    public static final double SHOOTER_OFFSET_LEFT_M = TURRET_OFFSET.getY(); // 9.25" left of center
 
     public static final Pose3d redFerryPoseDepot = new Pose3d(14.3, 6, 0, Rotation3d.kZero);
     public static final Pose3d redFerryPoseOutpost = new Pose3d(14.3, 2, 0, Rotation3d.kZero);
@@ -68,7 +69,6 @@ public final class Constants {
       Pose3d pose = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? redHubPose : blueHubPose;
       return pose;
     }
-    
 
     public static final Pose2d getFerryPose(Translation2d robotPose) {
       if (DriverStation.getAlliance().equals(Optional.of(Alliance.Red))) {
@@ -133,37 +133,37 @@ public final class Constants {
   }
 
   public static final class PushoutConstants {
-      public static final int PUSHOUT_ID = 19; // set CAN ID
+    public static final int PUSHOUT_ID = 19; // set CAN ID
 
-      // Positions in rotations (tune these to match your old encoder values)
-      public static final double PUSHOUT_EXTENDED_POS = 15.0;
-      public static final double PUSHOUT_RETRACTED_POS = 5.0;
-      public static final double FULLY_RETRACTED_POS = 0.0;
+    // Positions in rotations (tune these to match your old encoder values)
+    public static final double PUSHOUT_EXTENDED_POS = 15.0;
+    public static final double PUSHOUT_RETRACTED_POS = 5.0;
+    public static final double FULLY_RETRACTED_POS = 0.0;
 
-      // PID/FF
-      public static final double p = 1.0;
-      public static final double i = 0.0;
-      public static final double d = 0.0;
-      public static final double s = 0.1;
-      public static final double v = 0.12;
-      public static final double a = 0.0;
+    // PID/FF
+    public static final double p = 1.0;
+    public static final double i = 0.0;
+    public static final double d = 0.0;
+    public static final double s = 0.1;
+    public static final double v = 0.12;
+    public static final double a = 0.0;
 
-      public static final double PUSHOUT_AGITATE_WAIT = 0.2; // seconds
-      public static final double PUSHOUT_BETWEEN = 0.5; // seconds between in and out
+    public static final double PUSHOUT_AGITATE_WAIT = 0.2; // seconds
+    public static final double PUSHOUT_BETWEEN = 0.5; // seconds between in and out
   }
 
   public static class ShooterConstants {
     public static final int SHOOTER_L_ID = 16;
     public static final int SHOOTER_R_ID = 17;
 
-    public static final double SHOOTER_SPEED = -100;                
-    public static final double SHOOTER_PASSING_SPEED = -200;  
-    public static final double ERROR_MARGIN = 5; // RPS         
+    public static final double SHOOTER_SPEED = 20;
+    public static final double SHOOTER_PASSING_SPEED = 20;
+    public static final double ERROR_MARGIN = 5; // RPS
     public static final double STOP = 0;
-    public static final double IDLE = 0.1; 
+    public static final double IDLE = 0.1;
 
-    public static final double ALLIANCE_IDLE_RPS = -50;
-    public static final double ALLIANCE_AUTO_RPS = -50;
+    public static final double ALLIANCE_IDLE_RPS = 30;
+    public static final double ALLIANCE_AUTO_RPS = 30;
     public static final double NEUTRAL_IDLE_RPS = 0;
 
     // PID Constants For Shooter
@@ -175,7 +175,6 @@ public final class Constants {
     public static final double s = 0.0;
     public static final double v = 0.00169;
     public static final double a = 0.0;
-
 
     public final static InterpolatingDoubleTreeMap TOF = new InterpolatingDoubleTreeMap();
 
@@ -197,30 +196,28 @@ public final class Constants {
     }
     public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
-    static{
+    static {
 
-    for (var entry : List.of(
-                Pair.of(Meters.of(2.0), RPM.of(1700)),
-                Pair.of(Meters.of(2.5), RPM.of(1935)),
-                Pair.of(Meters.of(3.0), RPM.of(2010)),
-                Pair.of(Meters.of(3.5), RPM.of(2150)),
-                Pair.of(Meters.of(4.0), RPM.of(2280)),
-                Pair.of(Meters.of(5.2), RPM.of(2517)),
-                Pair.of(Meters.of(6.0), RPM.of(3060))
-        )) {
-            hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
-        }
+      for (var entry : List.of(
+          Pair.of(Meters.of(2.0), RPM.of(1700)),
+          Pair.of(Meters.of(2.5), RPM.of(1935)),
+          Pair.of(Meters.of(3.0), RPM.of(2010)),
+          Pair.of(Meters.of(3.5), RPM.of(2150)),
+          Pair.of(Meters.of(4.0), RPM.of(2280)),
+          Pair.of(Meters.of(5.2), RPM.of(2517)),
+          Pair.of(Meters.of(6.0), RPM.of(3060)))) {
+        hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+      }
 
-        // ferry table is gonna be diff angles and rpms so tune
-        for (var entry : List.of(
-                Pair.of(Meters.of(2.0), RPM.of(1500)),
-                Pair.of(Meters.of(3.0), RPM.of(1800)),
-                Pair.of(Meters.of(4.0), RPM.of(2100)),
-                Pair.of(Meters.of(5.0), RPM.of(2400)),
-                Pair.of(Meters.of(6.0), RPM.of(2700))
-        )) {
-            ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
-        }
+      // ferry table is gonna be diff angles and rpms so tune
+      for (var entry : List.of(
+          Pair.of(Meters.of(2.0), RPM.of(1500)),
+          Pair.of(Meters.of(3.0), RPM.of(1800)),
+          Pair.of(Meters.of(4.0), RPM.of(2100)),
+          Pair.of(Meters.of(5.0), RPM.of(2400)),
+          Pair.of(Meters.of(6.0), RPM.of(2700)))) {
+        ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+      }
     }
 
   }
@@ -229,23 +226,25 @@ public final class Constants {
     public static final int TURRET_ID = 15; // set ts
     public static final double GEAR_RATIO = 5.0; // tune to correct reduction
 
-
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
     public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions per one full turret revolution
-    public static final double ABSOLUTE_ENCODER_OFFSET = 0.0; 
-    public static final boolean ABSOLUTE_ENCODER_INVERTED = false; // flip if the encoder counts down when the turret goes counterclockwise
+    public static final double ABSOLUTE_ENCODER_OFFSET = 0.0;
+    public static final boolean ABSOLUTE_ENCODER_INVERTED = false; // flip if the encoder counts down when the turret
+                                                                   // goes counterclockwise
 
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
-    public static final double RELATIVE_DEGREES_PER_ROTATION = 50; // how many times the motor must spin for the turret to rotate once
+    public static final double RELATIVE_DEGREES_PER_ROTATION = 50; // how many times the motor must spin for the turret
+                                                                   // to rotate once
 
-    // how much they can spin each way (shouldnt be the same just is as a placeholder for now)
+    // how much they can spin each way (shouldnt be the same just is as a
+    // placeholder for now)
     public static final double MIN_CONTINUOUS_DEGREES = -160.0; // TODO measure: how far CW it goes from forward
     public static final double MAX_CONTINUOUS_DEGREES = 160.0; // TODO measure: how far CCW it goes from forward
 
     public static final double p = 0.05;
     public static final double i = 0.0;
     public static final double d = 0.0;
-      
+
     public static final double s = 0.100;
     public static final double v = 0.004;
     public static final double a = 0.0003;
@@ -258,15 +257,16 @@ public final class Constants {
   public static final class HoodConstants {
     public static final int HOOD_ID = 18; // set ts
 
-    public static final double HOOD_MIN_DEGREES = 21.0;  // down pos (starting pos)
-    public static final double HOOD_MAX_DEGREES = 47.0;  // up position
+    public static final double HOOD_MIN_DEGREES = 21.0; // down pos (starting pos)
+    public static final double HOOD_MAX_DEGREES = 47.0; // up position
 
-    public static final double GEAR_RATIO = 5.0;       
-    public static final double ANGLE_TOLERANCE_DEGREES = 0.5; 
+    public static final double GEAR_RATIO = 5.0;
+    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
 
-    public static final double TRENCH_X_BLUE = 4.6;      // blue side trench x coordinate
-    public static final double TRENCH_X_RED = 11.9;       // red side trench x coordinate
-    public static final double TRENCH_THRESHOLD = 0.6;    // tuck when within this many meters of the trench (prolly needs to be lower)
+    public static final double TRENCH_X_BLUE = 4.6; // blue side trench x coordinate
+    public static final double TRENCH_X_RED = 11.9; // red side trench x coordinate
+    public static final double TRENCH_THRESHOLD = 0.6; // tuck when within this many meters of the trench (prolly needs
+                                                       // to be lower)
 
     // PID — tune on robot
     public static final double p = 0.1;
@@ -359,7 +359,6 @@ public final class Constants {
     public static final double IDLE = 0; // % voltage -1 --> 1
   }
 
-
   public static class RollersConstants {
     public static final int ROLLERS_ID = 10;
 
@@ -387,6 +386,5 @@ public final class Constants {
 
   public static final double X_FUEL_TOLERANCE = 0.1;
   public static final double Y_FUEL_TOLERANCE = 0.1;
-
 
 }

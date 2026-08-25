@@ -48,10 +48,11 @@ public class AimTurret extends Command {
         double turretTargetDegrees = fieldAngleToTarget.minus(robotPose.getRotation()).getDegrees();
 
         // convert to setpoint and send to turret
-        double setpoint = turret.angleToSetpoint(turretTargetDegrees);
-        if (!Double.isNaN(setpoint)) {
-            turret.setAngle(setpoint);
-        }
+        // double setpoint = turret.angleToSetpoint(turretTargetDegrees);
+        // if (!Double.isNaN(setpoint)) {
+        //     turret.setAngle(setpoint);
+        // }
+        turret.setAngleClamped(turretTargetDegrees);
     }
     
     @Override

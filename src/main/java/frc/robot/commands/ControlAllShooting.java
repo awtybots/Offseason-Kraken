@@ -12,9 +12,9 @@ public class ControlAllShooting extends Command {
     private final Shooter m_shooter;
     private final Conveyor m_conveyor;
     private final Kicker m_kicker;
-    @SuppressWarnings("unused")
-    private final Pushout m_pushout; 
-    private final Intake m_intake;
+
+    // private final Pushout m_pushout;
+    // private final Intake m_intake;
     private final Hood m_hood;
     private final Rollers m_rollers;
     private final Turret m_turret;
@@ -25,19 +25,21 @@ public class ControlAllShooting extends Command {
     private boolean isFiring = false;
     private boolean isAtSpeed = false;
 
-    public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Pushout pushout, Intake intake, Hood hood, Rollers rollers, Turret turret, SwerveSubsystem swerve)
-    {
+    public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Hood hood,
+            Rollers rollers, Turret turret, SwerveSubsystem swerve) {
         this.m_shooter = shooter;
         this.m_conveyor = conveyor;
         this.m_kicker = kicker;
-        this.m_pushout = pushout;
+        // this.m_pushout = pushout; commented out because theres no commanding pushout
+        // here
         this.m_rollers = rollers;
-        this.m_intake = intake;
+        // this.m_intake = intake;
         this.m_hood = hood;
         this.m_turret = turret;
         this.drivebase = swerve;
 
-        addRequirements(shooter, conveyor, kicker, pushout, intake, rollers); // AimTurret and AimHood do their own things so we dont need them here
+        addRequirements(shooter, conveyor, kicker, rollers); // AimTurret and AimHood do their own things so we
+                                                                     // dont need them here
     }
 
     public boolean isAtSpeed() {
@@ -54,8 +56,9 @@ public class ControlAllShooting extends Command {
 
     private boolean isReadyToFire() { // must be at speed, turret at angle, and hood at angle to shoot
         return isAtSpeed
-        && m_hood.isAtAngle()
-        && m_turret.isAtAngle();
+                && m_hood.isAtAngle()
+                && m_turret.isAtAngle()
+                && m_turret.isTargetReachable();
     }
 
     @Override
@@ -99,32 +102,26 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/DistanceToFerry", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         }
+        
+        // m_intake.runIntake();
 
         if (isReadyToFire()) {
-            if (!m_turret.isAtCableLimit()) { // only feed balls if turret is not wrapping
-                // get da balls into da shooter
+            if (!m_turret.isAtCableLimit()) {
                 isFiring = true;
                 m_kicker.ConveyorToShooter();
                 m_conveyor.HopperToShooter();
                 m_rollers.RollersToConveyor();
-                m_intake.runIntake();
-                // m_pushout.PushIntake();
             } else {
-                // turret is wrapping stop feeding but dont jam
                 isFiring = false;
-                m_kicker.ClearBallCommand();
+                m_kicker.ClearBall();
                 m_conveyor.stopConveyor();
-                m_intake.stopIntake();
                 m_rollers.stopRollers();
-                // m_pushout.PushIntake();
             }
         } else {
             isFiring = false;
             m_conveyor.stopConveyor();
             m_kicker.stopKicker();
-            m_intake.stopIntake();
             m_rollers.stopRollers();
-            // m_pushout.PushIntake();
         }
 
         Logger.recordOutput("Shooting/TargetRPS", recordedTargetRPS);
@@ -145,10 +142,10 @@ public class ControlAllShooting extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        m_shooter.stopShooting();
+
         m_conveyor.stopConveyor();
         m_kicker.stopKicker();
-        m_intake.stopIntake();
+        // m_intake.stopIntake();
         m_rollers.stopRollers();
         isFiring = false;
         isAtSpeed = false;

@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+import frc.robot.Constants.DrivebaseConstants;
 import frc.robot.Constants.LimelightConstants;
 import frc.robot.LimelightHelpers;
 
@@ -1227,10 +1228,11 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public Translation2d getTurretFieldPosition() {
       Pose2d robotPose = getPose();
-      double xOffset = (-29.5 / 2.0 + 3.0) * 0.0254;
-      double yOffset = (24.5 / 2.0 - 3.0) * 0.0254;
-      Translation2d offset = new Translation2d(xOffset, yOffset).rotateBy(robotPose.getRotation());
-      return robotPose.getTranslation().plus(offset);
+      // double xOffset = (-29.5 / 2.0 + 3.0) * 0.0254;
+      // double yOffset = (24.5 / 2.0 - 3.0) * 0.0254;
+      // Translation2d offset = new Translation2d(xOffset, yOffset).rotateBy(robotPose.getRotation());
+       return robotPose.getTranslation().plus(
+            Constants.DrivebaseConstants.TURRET_OFFSET.rotateBy(robotPose.getRotation()));
     }
 
   /**

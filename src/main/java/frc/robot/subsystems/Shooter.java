@@ -56,6 +56,7 @@ public class Shooter extends SubsystemBase {
         rightConfig.CurrentLimits.StatorCurrentLimit = 100.0;
         rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         rightConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        rightConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         rightConfig.Slot0.kP = ShooterConstants.p;
         rightConfig.Slot0.kI = ShooterConstants.i;
         rightConfig.Slot0.kD = ShooterConstants.d;
@@ -67,8 +68,9 @@ public class Shooter extends SubsystemBase {
         TalonFXConfiguration leftConfig = new TalonFXConfiguration();
         leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         leftConfig.CurrentLimits.StatorCurrentLimit = 100.0;
-        rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        leftConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         leftConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        leftConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         ShooterLeftMotor.getConfigurator().apply(leftConfig);
 
         // Follow the right motor
@@ -168,6 +170,10 @@ public class Shooter extends SubsystemBase {
     public Command sysIdDynamicReverse() {
         return sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse);
     }
+
+    public Command idleCommand() {
+    return this.run(() -> setTargetRPS(ShooterConstants.ALLIANCE_IDLE_RPS));
+}
 
     @Override
     public void periodic() {
