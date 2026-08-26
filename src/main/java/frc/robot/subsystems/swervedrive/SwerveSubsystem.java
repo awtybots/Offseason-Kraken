@@ -1162,7 +1162,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public Pose2d getDynamicHubLocation() {
 
         Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
-        Translation2d robotVec = getPose().getTranslation();
+        Translation2d robotVec = getTurretFieldPosition();
         ChassisSpeeds vel = getFieldVelocity();
         Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
 
@@ -1244,7 +1244,7 @@ public class SwerveSubsystem extends SubsystemBase {
    */
   public Pose2d getDynamicFerryLocation() {
     Translation2d ferryVec = Constants.DrivebaseConstants.getFerryPose(getPose().getTranslation()).getTranslation();
-    Translation2d robotVec = getPose().getTranslation();
+    Translation2d robotVec = getTurretFieldPosition();
     ChassisSpeeds vel = getFieldVelocity();
     Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
 
