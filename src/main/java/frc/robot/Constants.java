@@ -178,19 +178,22 @@ public final class Constants {
 
     public final static InterpolatingDoubleTreeMap TOF = new InterpolatingDoubleTreeMap();
 
+    // T = sqrt(2 * (d * tan(theta) - dz) / g) with dz = 72" - 21" = 1.296 m,
+    // theta ~= 65 deg effective launch angle. Range matches hub/ferry shooter+hood tables (2-6 m);
+    // 7-8 m entries kept as a small extrapolation buffer.
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(2), Seconds.of(0.85)),
-          Pair.of(Meters.of(3), Seconds.of(0.95)),
-          Pair.of(Meters.of(4), Seconds.of(1.13)),
-          Pair.of(Meters.of(5), Seconds.of(1.31)),
-          Pair.of(Meters.of(6), Seconds.of(1.49)),
-          Pair.of(Meters.of(7), Seconds.of(1.67)),
-          Pair.of(Meters.of(8), Seconds.of(1.85)),
-          Pair.of(Meters.of(9), Seconds.of(2.03)),
-          Pair.of(Meters.of(10), Seconds.of(2.21)),
-          Pair.of(Meters.of(11), Seconds.of(2.39)),
-          Pair.of(Meters.of(12), Seconds.of(2.57)))) {
+          Pair.of(Meters.of(2.0), Seconds.of(0.78)),
+          Pair.of(Meters.of(2.5), Seconds.of(0.91)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.02)),
+          Pair.of(Meters.of(3.5), Seconds.of(1.13)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.22)),
+          Pair.of(Meters.of(4.5), Seconds.of(1.31)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.39)),
+          Pair.of(Meters.of(5.5), Seconds.of(1.46)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.54)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.67)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.80)))) {
         TOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
@@ -198,14 +201,17 @@ public final class Constants {
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
     static {
 
+      // Derived: v_ball = eff * omega * (r_bot + r_top)/2 with eff=0.90, r_bot=1.5", r_top=0.5" (both TPU, 1:1 Kraken).
+      // Launch angle at each distance = min-launch-speed angle (matches hubHoodTable). dz = 1.296 m (72" - 21").
+      // Aerodynamics treated as net-neutral (drag ~= Magnus lift for a 215 g, 15 cm foam ball at these speeds).
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), RPM.of(1700)),
-          Pair.of(Meters.of(2.5), RPM.of(1935)),
-          Pair.of(Meters.of(3.0), RPM.of(2010)),
-          Pair.of(Meters.of(3.5), RPM.of(2150)),
-          Pair.of(Meters.of(4.0), RPM.of(2280)),
-          Pair.of(Meters.of(5.2), RPM.of(2517)),
-          Pair.of(Meters.of(6.0), RPM.of(3060)))) {
+          Pair.of(Meters.of(2.0), RPM.of(2513)),
+          Pair.of(Meters.of(2.5), RPM.of(2653)),
+          Pair.of(Meters.of(3.0), RPM.of(2800)),
+          Pair.of(Meters.of(3.5), RPM.of(2933)),
+          Pair.of(Meters.of(4.0), RPM.of(3067)),
+          Pair.of(Meters.of(5.0), RPM.of(3326)),
+          Pair.of(Meters.of(6.0), RPM.of(3568)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
       }
 
@@ -279,14 +285,16 @@ public final class Constants {
 
     static {
       // aim at hub LUT
+      // Hood angle = 90 - ball_exit_angle. Exit angle chosen as the min-launch-speed
+      // angle: theta_opt = 45 + 0.5 * atan(dz/d), with dz = 1.296 m (72" hub - 21" shooter).
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), Degrees.of(20.0)),
-          Pair.of(Meters.of(2.5), Degrees.of(23.0)),
-          Pair.of(Meters.of(3.0), Degrees.of(26.0)),
-          Pair.of(Meters.of(3.5), Degrees.of(30.0)),
-          Pair.of(Meters.of(4.0), Degrees.of(34.0)),
-          Pair.of(Meters.of(5.0), Degrees.of(40.0)),
-          Pair.of(Meters.of(6.0), Degrees.of(45.0)))) {
+          Pair.of(Meters.of(2.0), Degrees.of(28.5)),
+          Pair.of(Meters.of(2.5), Degrees.of(31.3)),
+          Pair.of(Meters.of(3.0), Degrees.of(33.3)),
+          Pair.of(Meters.of(3.5), Degrees.of(34.8)),
+          Pair.of(Meters.of(4.0), Degrees.of(36.0)),
+          Pair.of(Meters.of(5.0), Degrees.of(37.7)),
+          Pair.of(Meters.of(6.0), Degrees.of(38.9)))) {
         hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
 
