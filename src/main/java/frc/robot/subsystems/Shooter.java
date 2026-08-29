@@ -93,7 +93,7 @@ public class Shooter extends SubsystemBase {
 
     public boolean isShooterRunning() {
         double setpoint = Math.abs(targetRPS);
-        boolean running = Math.abs(setpoint - getRPS()) < 1.67 // ~100 RPM in RPS
+        boolean running = Math.abs(setpoint - getRPS()) < ShooterConstants.ERROR_MARGIN
                 && setpoint != 0
                 && setpoint != ShooterConstants.ALLIANCE_IDLE_RPS;
         SmartDashboard.putBoolean("Shooter Running", running);
