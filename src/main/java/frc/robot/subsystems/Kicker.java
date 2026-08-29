@@ -9,24 +9,24 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-// import com.revrobotics.PersistMode;
-// import com.revrobotics.RelativeEncoder;
-// import com.revrobotics.ResetMode;
-// import com.revrobotics.spark.SparkClosedLoopController;
-// import com.revrobotics.spark.SparkLowLevel.MotorType;
-// import com.revrobotics.spark.SparkMax;
-// import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 
-// import frc.robot.Configs;
+import frc.robot.Configs;
 import frc.robot.Constants.KickerConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Kicker extends SubsystemBase {
 
     private TalonFX KickerMotor = new TalonFX(KickerConstants.KICKER_ID);
-    // private SparkMax VerticalRollerMotor = new SparkMax(KickerConstants.VERT_ROLLER_ID, MotorType.kBrushless);
-    // private RelativeEncoder VertRollerEncoder = VerticalRollerMotor.getEncoder();
-    // private SparkClosedLoopController VerticalRollerController = VerticalRollerMotor.getClosedLoopController(); 
+    private SparkMax VerticalRollerMotor = new SparkMax(KickerConstants.VERT_ROLLER_ID, MotorType.kBrushless);
+    private RelativeEncoder VertRollerEncoder = VerticalRollerMotor.getEncoder();
+    private SparkClosedLoopController VerticalRollerController = VerticalRollerMotor.getClosedLoopController(); 
 
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
@@ -34,22 +34,23 @@ public class Kicker extends SubsystemBase {
         TalonFXConfiguration KickerConfig = new TalonFXConfiguration();
         KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         KickerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust if needed
-        KickerConfig.CurrentLimits.StatorCurrentLimit = 80.0;
+        KickerConfig.CurrentLimits.StatorCurrentLimit = 120.0;
         KickerConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         KickerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        KickerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         KickerMotor.getConfigurator().apply(KickerConfig);
 
-        // VerticalRollerMotor.configure(Configs.KickerSubsystem.VertivalMotorConfig, ResetMode.kResetSafeParameters,
-                // PersistMode.kPersistParameters);
+        VerticalRollerMotor.configure(Configs.KickerSubsystem.VertivalMotorConfig, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
     }
 
     public void ReverseKicker() {
-        // VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_REVERSE_SPEED, ControlType.kMAXMotionVelocityControl);
+        VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_REVERSE_SPEED);
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
     }
 
     public void ConveyorToShooter() {
-        // VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
+        VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
     }
 
@@ -60,7 +61,7 @@ public class Kicker extends SubsystemBase {
 
     public void stopKicker() {
         KickerMotor.setControl(dutyCycleRequest.withOutput(0));
-        // VerticalRollerMotor.set(0.0);
+        VerticalRollerMotor.set(0.0);
     }
 
     public Command runDefaultCommand() {
@@ -89,8 +90,8 @@ public class Kicker extends SubsystemBase {
     public void periodic() {
         Logger.recordOutput("Kicker/TopDutyCycle", KickerMotor.getDutyCycle().getValueAsDouble());
         Logger.recordOutput("Kicker/TopVolts", KickerMotor.getMotorVoltage().getValueAsDouble());
-        // Logger.recordOutput("Kicker/VerticalRollerVolts", VerticalRollerMotor.getBusVoltage());
+        Logger.recordOutput("Kicker/VerticalRollerVolts", VerticalRollerMotor.getBusVoltage());
         Logger.recordOutput("Kicker/TopRPS", KickerMotor.getVelocity().getValueAsDouble());
-        // Logger.recordOutput("Kicker/VerticalRollerRPS", VertRollerEncoder.getVelocity());
+        Logger.recordOutput("Kicker/VerticalRollerRPS", VertRollerEncoder.getVelocity());
     }
 }

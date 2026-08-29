@@ -37,24 +37,24 @@ public final class Configs
                 }
         }
 
-        // public static final class KickerSubsystem {
+        public static final class KickerSubsystem {
 
-        //         public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
+                public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
 
-        //         static {
-        //                 VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12);
+                static {
+                        VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12).inverted(true);
 
-        //                 VertivalMotorConfig.closedLoop
-        //                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        //                 .p(KickerConstants.VRp)
-        //                 .i(KickerConstants.VRi)
-        //                 .d(KickerConstants.VRd)
-        //                 .feedForward
-        //                 .kS(KickerConstants.VRs)
-        //                 .kV(KickerConstants.VRv)
-        //                 .kA(KickerConstants.VRa);
-        //         }
-        // }
+                        VertivalMotorConfig.closedLoop
+                        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                        .p(KickerConstants.VRp)
+                        .i(KickerConstants.VRi)
+                        .d(KickerConstants.VRd)
+                        .feedForward
+                        .kS(KickerConstants.VRs)
+                        .kV(KickerConstants.VRv)
+                        .kA(KickerConstants.VRa);
+                }
+        }
 
         public static final class TurretSubsystem {
 

@@ -308,6 +308,18 @@ public class RobotContainer {
 
     // ==================== OPERATOR BINDINGS ====================
 
+    // Manual bring-up for shooter / hood / turret. The shooter and hood values are the
+    // hub table's 3 m entry, so holding LT + LB together sets up a real 3 m shot.
+    // LT - flywheel to 57.7 RPS (3461 RPM). Once settled, Shooter/RightAppliedVolts
+    //      divided by Shooter/AverageRPS should read about 0.12 - that is ShooterConstants.v.
+    operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPSCommand(57.7));
+    // LB - hood to 33.2 deg. Check it against a protractor, and measure the ball exit
+    //      height here and at HOOD_MIN: SHOOTER_HEIGHT_M assumes it does not move.
+    operatorXbox.leftBumper().whileTrue(m_hood.setAngleCommand(33.2));
+    // RB - turret to 45 deg. A real arc, so Turret/FrameDisagreementDeg should stay near
+    //      zero the whole way if GEAR_RATIO = 50 is right.
+    operatorXbox.rightBumper().whileTrue(m_turret.goToAngleCommand(45.0));
+
     // Testing
     operatorXbox.rightTrigger().whileTrue(
         Commands.parallel(
