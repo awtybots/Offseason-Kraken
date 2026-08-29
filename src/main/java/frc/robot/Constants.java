@@ -184,23 +184,57 @@ public final class Constants {
     public static final double v = 0.00169;
     public static final double a = 0.0;
 
+    // ---- SHOOTER MECHANISM ----
+    // Two Krakens both drive a common belt/pulley train. The rollers are locked to
+    // each other at 3:2 - the bottom turns 3 for every 2 of the top - which is what
+    // produces the backspin. The motors stay speed-matched (hence the Follower), and
+    // one motor revolution is one BOTTOM roller revolution.
+    //
+    //   v_ball  = EFF * w_motor * (R_BOTTOM + PULLEY_TOP_PER_BOTTOM * R_TOP) / 2
+    //   spin S  = (R_BOTTOM - PULLEY * R_TOP) / (R_BOTTOM + PULLEY * R_TOP)
+    //
+    // Going 1:1 -> 3:2 dropped ball speed per motor rev by 8.33% (so the RPM tables
+    // rose 9.09%) and raised backspin per unit speed from S=0.500 to S=0.636, +27%.
+    public static final double ROLLER_RADIUS_BOTTOM_M = 1.5 * 0.0254;
+    public static final double ROLLER_RADIUS_TOP_M = 0.5 * 0.0254;
+    public static final double PULLEY_TOP_PER_BOTTOM = 2.0 / 3.0;
+    public static final double SHOOTER_EFFICIENCY = 0.90; // grip/slip loss into the ball
+
+    // ---- AERO (parameters the tables below were generated with) ----
+    // Linear drag time constant. Kept at 0.45 rather than 6328's 0.375: their value
+    // is for a ball with far less spin, and a sphere at S=0.64 carries noticeably
+    // more drag than the spin-free C_d=0.63 that 5987 measured by dropping it.
+    public static final double LINEAR_DRAG_K = 0.45;
+    // Magnus lift as a fraction of drag. Both scale with v^2 about the same way, so
+    // k_magnus = LINEAR_DRAG_K * MAGNUS_LIFT_RATIO and this is just C_L / C_D.
+    // C_L ~ 0.30 at S = 0.64 (spheres saturate near 0.3-0.4). TOF is sensitive to
+    // this (+-7% over 0.30-0.60); required RPM is not (under 1%).
+    public static final double MAGNUS_LIFT_RATIO = 0.45;
+
     public final static InterpolatingDoubleTreeMap TOF = new InterpolatingDoubleTreeMap();
 
-    // T = sqrt(2 * (d * tan(theta) - dz) / g) with dz = 72" - 21" = 1.296 m,
-    // theta ~= 65 deg effective launch angle. Range matches hub/ferry shooter+hood
-    // tables (2-6 m);
-    // 7-8 m entries kept as a small extrapolation buffer.
+    // Flight time of the hubHoodTable shot, solved with linear drag AND Magnus lift
+    // (see MECHANISM/AERO block above). Domain 2-6 m; InterpolatingDoubleTreeMap
+    // clamps outside it, which is why ferry must NOT use this map - see the ferry
+    // tables below.
+    //
+    // Magnus is what moves these numbers: it changes required launch speed by under
+    // 1% but adds ~11% to flight time, because the lift vector is velocity rotated
+    // 90 deg and points up-and-backward while the ball is still climbing.
+    //
+    // MODEL OUTPUT, NOT MEASURED. Still sits ~20% under every team that measured
+    // this game piece; the residual is most likely arc choice, not aero.
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), Seconds.of(0.735)),
-          Pair.of(Meters.of(2.5), Seconds.of(0.803)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.869)),
-          Pair.of(Meters.of(3.5), Seconds.of(0.933)),
-          Pair.of(Meters.of(4.0), Seconds.of(0.995)),
-          Pair.of(Meters.of(4.5), Seconds.of(1.054)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.112)),
-          Pair.of(Meters.of(5.5), Seconds.of(1.167)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.221)))) {
+          Pair.of(Meters.of(2.0), Seconds.of(0.809)),
+          Pair.of(Meters.of(2.5), Seconds.of(0.881)),
+          Pair.of(Meters.of(3.0), Seconds.of(0.954)),
+          Pair.of(Meters.of(3.5), Seconds.of(1.025)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.094)),
+          Pair.of(Meters.of(4.5), Seconds.of(1.160)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.228)),
+          Pair.of(Meters.of(5.5), Seconds.of(1.291)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.355)))) {
         TOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
@@ -211,40 +245,46 @@ public final class Constants {
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
     static {
 
-      // Derived: v_ball = eff * omega * (r_bot + r_top)/2 with eff=0.90, r_bot=1.5",
-      // r_top=0.5" (both TPU, 1:1 Kraken).
-      // Launch angle at each distance = min-launch-speed angle (matches
-      // hubHoodTable). dz = 1.296 m (72" - 21").
-      // Aerodynamics treated as net-neutral (drag ~= Magnus lift for a 215 g, 15 cm
-      // foam ball at these speeds).
+      // BOTTOM roller RPM (= motor RPM). Solved for the launch speed that reaches
+      // dz = 1.2954 m at each distance on the hubHoodTable angle, integrating linear
+      // drag plus Magnus lift. Ball speed from the MECHANISM block above.
+      //
+      // Nearly all of the rise over the old 1:1 table is the pulley change, not aero:
+      // Magnus is worth under 1% here. 4604 RPM at 6 m is 77% of Kraken x60 free
+      // speed, so expect the far end to droop under load - if long shots land low
+      // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), RPM.of(2793)),
-          Pair.of(Meters.of(2.5), RPM.of(2982)),
-          Pair.of(Meters.of(3.0), RPM.of(3171)),
-          Pair.of(Meters.of(3.5), RPM.of(3358)),
-          Pair.of(Meters.of(4.0), RPM.of(3542)),
-          Pair.of(Meters.of(4.5), RPM.of(3724)),
-          Pair.of(Meters.of(5.0), RPM.of(3902)),
-          Pair.of(Meters.of(5.5), RPM.of(4076)),
-          Pair.of(Meters.of(6.0), RPM.of(4248)))) {
+          Pair.of(Meters.of(2.0), RPM.of(3054)),
+          Pair.of(Meters.of(2.5), RPM.of(3251)),
+          Pair.of(Meters.of(3.0), RPM.of(3452)),
+          Pair.of(Meters.of(3.5), RPM.of(3651)),
+          Pair.of(Meters.of(4.0), RPM.of(3848)),
+          Pair.of(Meters.of(4.5), RPM.of(4040)),
+          Pair.of(Meters.of(5.0), RPM.of(4232)),
+          Pair.of(Meters.of(5.5), RPM.of(4418)),
+          Pair.of(Meters.of(6.0), RPM.of(4604)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
       }
 
-      // ferry table is gonna be diff angles and rpms so tune
+      // STILL PLACEHOLDERS - these were never derived from a trajectory, so all that
+      // has been applied is the mechanical rescale: the 3:2 pulleys mean the same
+      // ball speed needs 9.09% more motor RPM. The angles they pair with
+      // (ferryHoodTable) are also invented and stop at 6 m while this runs to 10 m.
+      // 5291 RPM at 10 m is 88% of Kraken free speed and will not hold under load.
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), RPM.of(2793)),
-          Pair.of(Meters.of(2.5), RPM.of(2982)),
-          Pair.of(Meters.of(3.0), RPM.of(3171)),
-          Pair.of(Meters.of(3.5), RPM.of(3358)),
-          Pair.of(Meters.of(4.0), RPM.of(3542)),
-          Pair.of(Meters.of(4.5), RPM.of(3724)),
-          Pair.of(Meters.of(5.0), RPM.of(3902)),
-          Pair.of(Meters.of(5.5), RPM.of(4076)),
-          Pair.of(Meters.of(6.0), RPM.of(4248)),
-          Pair.of(Meters.of(7.0), RPM.of(4400)),
-          Pair.of(Meters.of(8.0), RPM.of(4550)),
-          Pair.of(Meters.of(9.0), RPM.of(4700)),
-          Pair.of(Meters.of(10.0), RPM.of(4850)))) {
+          Pair.of(Meters.of(2.0), RPM.of(3047)),
+          Pair.of(Meters.of(2.5), RPM.of(3253)),
+          Pair.of(Meters.of(3.0), RPM.of(3459)),
+          Pair.of(Meters.of(3.5), RPM.of(3663)),
+          Pair.of(Meters.of(4.0), RPM.of(3864)),
+          Pair.of(Meters.of(4.5), RPM.of(4063)),
+          Pair.of(Meters.of(5.0), RPM.of(4257)),
+          Pair.of(Meters.of(5.5), RPM.of(4447)),
+          Pair.of(Meters.of(6.0), RPM.of(4634)),
+          Pair.of(Meters.of(7.0), RPM.of(4800)),
+          Pair.of(Meters.of(8.0), RPM.of(4964)),
+          Pair.of(Meters.of(9.0), RPM.of(5127)),
+          Pair.of(Meters.of(10.0), RPM.of(5291)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
       }
     }
@@ -253,7 +293,10 @@ public final class Constants {
 
   public static final class TurretConstants {
     public static final int TURRET_ID = 15; // set ts
-    public static final double GEAR_RATIO = 5.0; // tune to correct reduction
+    // 50:1 motor -> turret. Independent of ABSOLUTE_ENCODER_RATIO below: that one is
+    // the through-bore's own gearing. Turret/FrameDisagreementDeg reads near zero
+    // when each is individually correct, not because they match.
+    public static final double GEAR_RATIO = 50.0;
 
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
     public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions per one full turret revolution
@@ -262,8 +305,6 @@ public final class Constants {
                                                                    // goes counterclockwise
 
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
-    public static final double RELATIVE_DEGREES_PER_ROTATION = 50; // how many times the motor must spin for the turret
-                                                                   // to rotate once
 
     // how much they can spin each way (shouldnt be the same just is as a
     // placeholder for now)
@@ -294,7 +335,11 @@ public final class Constants {
     public static final double HOOD_MIN_DEGREES = 21.0; // down pos (starting pos)
     public static final double HOOD_MAX_DEGREES = 47.0; // up position
 
-    public static final double GEAR_RATIO = 5.0;
+    // 60:1 motor -> hood. At the old 5:1 the NEO's 42-count encoder gave only 0.58
+    // counts per hood degree, so ANGLE_TOLERANCE_DEGREES = 0.5 was finer than the
+    // sensor could resolve and isAtAngle() was effectively noise. At 60:1 it is
+    // 7.0 counts/degree, so half a degree is a real measurement.
+    public static final double GEAR_RATIO = 60.0;
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
 
     // The TRENCH sits at the HUB's x, so these double as the trench x band.
