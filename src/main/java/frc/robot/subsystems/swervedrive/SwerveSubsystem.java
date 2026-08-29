@@ -1249,7 +1249,9 @@ public class SwerveSubsystem extends SubsystemBase {
     Translation2d CompensatedFerry = ferryVec;
     for (int i = 0; i < 4; i++) {
       double distance = CompensatedFerry.minus(robotVec).getNorm();
-      double tof = Constants.ShooterConstants.TOF.get(distance);
+      // ferryTOF, not the hub TOF map: the hub map only spans 2-6 m and clamps, so
+      // every pass past 6 m used to lead with the 6 m hub flight time.
+      double tof = Constants.ShooterConstants.ferryTOF.get(distance);
       CompensatedFerry = ferryVec.minus(robotVel.times(tof));
     }
 
@@ -1277,6 +1279,22 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     return false;
+  }
+
+  /**
+   * True when the robot is between the two alliance zones. We ferry only from here -
+   * never from the opponent's alliance zone - so this bounds ferry distance to about
+   * 1.8-10.6 m, which is the domain ferryTOF and the ferry tables are built over.
+   */
+  public boolean isInNeutralZone() {
+    double x = getPose().getX();
+    return x > Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M
+        && x < Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M;
+  }
+
+  /** True when the robot is deep in the opponent's alliance zone, where we never shoot. */
+  public boolean isInOpponentAllianceZone() {
+    return !isInAllianceZone() && !isInNeutralZone();
   }
 
   private Pose2d GetDriveToPose()

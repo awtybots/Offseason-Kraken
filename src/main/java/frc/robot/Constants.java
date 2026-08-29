@@ -38,9 +38,12 @@ public final class Constants {
 
   public static final class DrivebaseConstants {
 
-    public static final Pose3d redHubPose = new Pose3d(Units.inchesToMeters(469.09488), Units.inchesToMeters(158.6614),
+    // Hub centers for the ANDYMARK field (2026-rebuilt-andymark.json), taken as the
+    // midpoint of each hub's opposing face tags. The AndyMark field is ~14 mm shorter
+    // and ~26 mm narrower than the welded one, so these differ from the welded values.
+    public static final Pose3d redHubPose = new Pose3d(11.90150, 4.02135,
         Units.inchesToMeters(72.0), new Rotation3d());
-    public static final Pose3d blueHubPose = new Pose3d(Units.inchesToMeters(182.12598), Units.inchesToMeters(158.6614),
+    public static final Pose3d blueHubPose = new Pose3d(4.61151, 4.02135,
         Units.inchesToMeters(72.0), new Rotation3d());
 
     // shooter position: back left corner, 3" in from each edge, 21" above ground
@@ -90,11 +93,11 @@ public final class Constants {
 
     // Boundary between the ALLIANCE ZONE and the NEUTRAL ZONE: the near face of
     // each HUB, not its center. Read off the official 2026-rebuilt-welded AprilTag
-    // layout - tag 26 is the blue hub's west face, tag 10 the red hub's east face.
+    // ANDYMARK layout - tag 26 is the blue hub's west face, tag 10 the red hub's east face.
     // The old 182"/469" were the hub CENTERS, which claimed an extra 0.606 m band
     // on each side as "in zone" and flipped hub/ferry within a meter of the target.
-    public static final double BLUE_ALLIANCE_ZONE_X_M = 4.0219;
-    public static final double RED_ALLIANCE_ZONE_X_M = 12.5192;
+    public static final double BLUE_ALLIANCE_ZONE_X_M = 4.0079;
+    public static final double RED_ALLIANCE_ZONE_X_M = 12.5052;
 
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
@@ -248,6 +251,28 @@ public final class Constants {
       }
     }
 
+    // Ferry flight time. Ferry MUST NOT use the hub TOF map above: that map's domain is
+    // 2-6 m and InterpolatingDoubleTreeMap clamps, so every pass past 6 m used to lead
+    // with the 6 m hub flight time. Domain here is 1.5-11 m, which covers the 1.8-10.6 m
+    // a robot can actually be from its ferry target while inside the NEUTRAL ZONE.
+    public final static InterpolatingDoubleTreeMap ferryTOF = new InterpolatingDoubleTreeMap();
+    static {
+      for (var entry : List.of(
+          Pair.of(Meters.of(1.5), Seconds.of(0.677)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.764)),
+          Pair.of(Meters.of(3.0), Seconds.of(0.921)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.061)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.192)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.314)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.431)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.545)),
+          Pair.of(Meters.of(9.0), Seconds.of(1.660)),
+          Pair.of(Meters.of(10.0), Seconds.of(1.771)),
+          Pair.of(Meters.of(11.0), Seconds.of(1.879)))) {
+        ferryTOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
+      }
+    }
+
     public static final double TOF_SCALE = 1.0;   // tune up toward ~1.25 with real shots
     
     public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
@@ -275,25 +300,25 @@ public final class Constants {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
       }
 
-      // STILL PLACEHOLDERS - these were never derived from a trajectory, so all that
-      // has been applied is the mechanical rescale: the 3:2 pulleys mean the same
-      // ball speed needs 9.09% more motor RPM. The angles they pair with
-      // (ferryHoodTable) are also invented and stop at 6 m while this runs to 10 m.
-      // 5291 RPM at 10 m is 88% of Kraken free speed and will not hold under load.
+      // Derived, no longer placeholders: floor target (dz = -0.5334 m) on the
+      // ferryHoodTable angle, same drag + Magnus model as the hub table. Domain 1.5-11 m
+      // matches ferryTOF and covers the neutral zone.
+      //
+      // HEADROOM: 5382 RPM at 10 m is 90% of Kraken free speed and 5730 at 11 m is 95%.
+      // The far end will droop under load. Longest pass the neutral zone allows is
+      // ~10.6 m, so treat anything past ~9 m as best-effort.
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), RPM.of(3047)),
-          Pair.of(Meters.of(2.5), RPM.of(3253)),
-          Pair.of(Meters.of(3.0), RPM.of(3459)),
-          Pair.of(Meters.of(3.5), RPM.of(3663)),
-          Pair.of(Meters.of(4.0), RPM.of(3864)),
-          Pair.of(Meters.of(4.5), RPM.of(4063)),
-          Pair.of(Meters.of(5.0), RPM.of(4257)),
-          Pair.of(Meters.of(5.5), RPM.of(4447)),
-          Pair.of(Meters.of(6.0), RPM.of(4634)),
-          Pair.of(Meters.of(7.0), RPM.of(4800)),
-          Pair.of(Meters.of(8.0), RPM.of(4964)),
-          Pair.of(Meters.of(9.0), RPM.of(5127)),
-          Pair.of(Meters.of(10.0), RPM.of(5291)))) {
+          Pair.of(Meters.of(1.5), RPM.of(1610)),
+          Pair.of(Meters.of(2.0), RPM.of(1947)),
+          Pair.of(Meters.of(3.0), RPM.of(2523)),
+          Pair.of(Meters.of(4.0), RPM.of(3021)),
+          Pair.of(Meters.of(5.0), RPM.of(3470)),
+          Pair.of(Meters.of(6.0), RPM.of(3887)),
+          Pair.of(Meters.of(7.0), RPM.of(4280)),
+          Pair.of(Meters.of(8.0), RPM.of(4658)),
+          Pair.of(Meters.of(9.0), RPM.of(5026)),
+          Pair.of(Meters.of(10.0), RPM.of(5382)),
+          Pair.of(Meters.of(11.0), RPM.of(5730)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
       }
     }
@@ -352,18 +377,18 @@ public final class Constants {
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
 
     // The TRENCH sits at the HUB's x, so these double as the trench x band.
-    public static final double TRENCH_X_BLUE = 4.6; // blue side trench x coordinate
-    public static final double TRENCH_X_RED = 11.9; // red side trench x coordinate
+    public static final double TRENCH_X_BLUE = 4.611; // blue side trench x coordinate
+    public static final double TRENCH_X_RED = 11.902; // red side trench x coordinate
     public static final double TRENCH_THRESHOLD = 0.6; // tuck when within this many meters of the trench (prolly needs
                                                        // to be lower)
 
     // The trench is NOT a band across the field - it is two openings along the
     // guardrails with the HUB sitting in the gap between them. Derived from the
-    // 2026 field: width 8.069 m, hub 47" wide, bumps 73" wide, plus 12" of approach.
+    // AndyMark field: width 8.043 m, hub 47" wide, bumps 73" wide, plus 12" of approach.
     // Without this y test the hood tucks itself in front of the hub, which is where
     // most shots are taken from.
-    public static final double TRENCH_Y_RIGHT_MAX = 1.279; // opening on the y=0 guardrail
-    public static final double TRENCH_Y_LEFT_MIN = 6.790; // opening on the y=8.069 guardrail
+    public static final double TRENCH_Y_RIGHT_MAX = 1.266; // opening on the y=0 guardrail
+    public static final double TRENCH_Y_LEFT_MIN = 6.777; // opening on the y=8.043 guardrail
 
     // PID — tune on robot
     public static final double p = 0.1;
@@ -392,13 +417,23 @@ public final class Constants {
         hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
 
-      // aim at ferry LUT
+      // aim at ferry LUT. Min-launch-speed angle for a floor target, clamped to the
+      // hood's travel: exit = 90 - hood, so the hood can only produce 43-69 deg of exit
+      // angle. Min-energy ferry wants 35-44 deg, which is FLATTER than the mechanism can
+      // reach, so the hood sits pinned at its 47 deg maximum below about 7 m. If ferry
+      // shots come out too lofted, that is the hood running out of travel, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), Degrees.of(20.0)),
-          Pair.of(Meters.of(3.0), Degrees.of(25.0)),
-          Pair.of(Meters.of(4.0), Degrees.of(30.0)),
-          Pair.of(Meters.of(5.0), Degrees.of(35.0)),
-          Pair.of(Meters.of(6.0), Degrees.of(40.0)))) {
+          Pair.of(Meters.of(1.5), Degrees.of(47.0)),
+          Pair.of(Meters.of(2.0), Degrees.of(47.0)),
+          Pair.of(Meters.of(3.0), Degrees.of(47.0)),
+          Pair.of(Meters.of(4.0), Degrees.of(47.0)),
+          Pair.of(Meters.of(5.0), Degrees.of(47.0)),
+          Pair.of(Meters.of(6.0), Degrees.of(47.0)),
+          Pair.of(Meters.of(7.0), Degrees.of(47.0)),
+          Pair.of(Meters.of(8.0), Degrees.of(46.9)),
+          Pair.of(Meters.of(9.0), Degrees.of(46.7)),
+          Pair.of(Meters.of(10.0), Degrees.of(46.5)),
+          Pair.of(Meters.of(11.0), Degrees.of(46.4)))) {
         ferryHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
     }

@@ -68,7 +68,7 @@ public class AimHood extends Command {
             Logger.recordOutput("Hood/Mode", "Hub");
             Logger.recordOutput("Hood/DistanceToHub", distToHub);
             Logger.recordOutput("Hood/TargetAngle", targetAngle);
-        } else {
+        } else if (swerveSubsystem.isInNeutralZone()) {
             Translation2d turretToFerry = swerveSubsystem.getDynamicFerryLocation()
                     .getTranslation().minus(turretPos);
             double distToFerry = turretToFerry.getNorm();
@@ -80,6 +80,9 @@ public class AimHood extends Command {
             Logger.recordOutput("Hood/Mode", "Ferry");
             Logger.recordOutput("Hood/DistanceToFerry", distToFerry);
             Logger.recordOutput("Hood/TargetAngle", targetAngle);
+        } else { // opponent alliance zone - we never shoot from here, so stow
+            hood.goToMin();
+            Logger.recordOutput("Hood/Mode", "HoldOpponentZone");
         }
 
         Logger.recordOutput("Hood/CurrentAngle", hood.getAngleDegrees());

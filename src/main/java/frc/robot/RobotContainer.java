@@ -388,7 +388,7 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   private boolean isOnAllianceOutpostSide() {
     Alliance alliance = getAlliance();
-    Distance midLine = Inches.of(158.84375);
+    Distance midLine = Inches.of(158.32677); // AndyMark field half-width
 
     if (alliance == Alliance.Blue && drivebase.getPose().getMeasureY().lt(midLine))
       return true;

@@ -24,6 +24,7 @@ public class ControlAllShooting extends Command {
     public double recordedTargetRPS = 0.0;
     private boolean isFiring = false;
     private boolean isAtSpeed = false;
+    private boolean inShootingZone = true; // false in the opponent alliance zone
 
     public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Hood hood,
             Rollers rollers, Turret turret, SwerveSubsystem swerve) {
@@ -55,7 +56,8 @@ public class ControlAllShooting extends Command {
     }
 
     private boolean isReadyToFire() { // must be at speed, turret at angle, and hood at angle to shoot
-        return isAtSpeed
+        return inShootingZone
+                && isAtSpeed
                 && m_hood.isAtAngle()
                 && m_turret.isAtAngle()
                 && m_turret.isTargetReachable();
@@ -70,6 +72,7 @@ public class ControlAllShooting extends Command {
     @Override
     public void execute() {
         Translation2d turretPos = drivebase.getTurretFieldPosition();
+        inShootingZone = !drivebase.isInOpponentAllianceZone();
 
         if (drivebase.isInAllianceZone()) { // shoot at hub
             Translation2d turretToHub = drivebase.getDynamicHubLocation()
@@ -86,7 +89,7 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/Mode", "Hub");
             Logger.recordOutput("Shooting/DistanceToHub", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
-        } else { // ferry
+        } else if (drivebase.isInNeutralZone()) { // ferry
             Translation2d turretToFerry = drivebase.getDynamicFerryLocation()
                     .getTranslation().minus(turretPos);
             double dist = turretToFerry.getNorm();
@@ -101,6 +104,11 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/Mode", "Ferry");
             Logger.recordOutput("Shooting/DistanceToFerry", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
+        } else { // opponent alliance zone - we never shoot or ferry from here
+            recordedTargetRPS = ShooterConstants.ALLIANCE_IDLE_RPS;
+            m_shooter.setTargetRPS(ShooterConstants.ALLIANCE_IDLE_RPS);
+            isAtSpeed = false;
+            Logger.recordOutput("Shooting/Mode", "HoldOpponentZone");
         }
         
         // m_intake.runIntake();
@@ -133,6 +141,7 @@ public class ControlAllShooting extends Command {
         Logger.recordOutput("Shooting/HoodAtAngle", m_hood.isAtAngle());
         Logger.recordOutput("Shooting/TurretAtCableLimit", m_turret.isAtCableLimit());
         Logger.recordOutput("Shooting/Distance", distance);
+        Logger.recordOutput("Shooting/InShootingZone", inShootingZone);
     }
 
     @Override
