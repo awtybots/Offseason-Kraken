@@ -174,14 +174,23 @@ public final class Constants {
     public static final double ALLIANCE_AUTO_RPS = 30;
     public static final double NEUTRAL_IDLE_RPS = 0;
 
-    // PID Constants For Shooter
-    public static final double p = 0.00039;
+    // Phoenix 6 VelocityVoltage takes ROTATIONS PER SECOND and these gains are
+    // volts per rps. The old values were volts per RPM - 60x too small - so the
+    // loop asked for 0.16 V at a 4600 RPM setpoint and the flywheel never spun up.
+    // Tell-tale: 0.00169 * 60 = 0.101, right next to the theoretical Kraken kV.
+    //
+    // kV is derived, not tuned: Kraken x60 free speed 6000 RPM = 100 rps at 12 V.
+    // kP/kD are the old values carried across the same 60x, and still want a real
+    // sysid - the routine is already wired up in Shooter.java.
+    public static final double p = 0.0234;
     public static final double i = 0.000;
-    public static final double d = 0.0065;
+    public static final double d = 0.0; // was 0.0065; carrying it across the 60x would
+                                        // give 0.39 V per rps/s, and derivative on a
+                                        // noisy flywheel velocity signal just chatters.
+                                        // 0 is the normal starting point for a flywheel.
 
-    // Feed-Forward Constants for Shooter
     public static final double s = 0.0;
-    public static final double v = 0.00169;
+    public static final double v = 0.12; // 12 V / 100 rps
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----

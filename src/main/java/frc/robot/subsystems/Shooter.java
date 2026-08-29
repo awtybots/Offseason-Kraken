@@ -77,10 +77,13 @@ public class Shooter extends SubsystemBase {
         ShooterLeftMotor.setControl(new Follower(ShooterRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
+    // Against the live setpoint, not SHOOTER_SPEED. That constant is a 20 rps bench
+    // value while the tables now command 51-77 rps, so this read false all match.
     public boolean isShooterFast() {
-        double avgRPS = (ShooterRightMotor.getVelocity().getValueAsDouble()
-                + ShooterLeftMotor.getVelocity().getValueAsDouble()) / 2.0;
-        return Math.abs(avgRPS - ShooterConstants.SHOOTER_SPEED) <= ShooterConstants.ERROR_MARGIN;
+        if (targetRPS == 0.0) {
+            return false;
+        }
+        return Math.abs(getRPS() - targetRPS) <= ShooterConstants.ERROR_MARGIN;
     }
 
     public double getRPS() {
@@ -108,6 +111,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void SpeedUpShooter() {
+        targetRPS = ShooterConstants.SHOOTER_SPEED;
         ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
         // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
     }
@@ -119,6 +123,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void ShooterPassing() {
+         targetRPS = ShooterConstants.SHOOTER_PASSING_SPEED;
         ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
         // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
     }

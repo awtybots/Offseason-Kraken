@@ -17,7 +17,12 @@ public final class Configs
                 public static final SparkMaxConfig HoodMotorConfig = new SparkMaxConfig();
 
                 static {
-                        HoodMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(30).voltageCompensation(12);
+                        // kBrake, not kCoast: the hood has no absolute encoder and seeds its
+                        // zero from HOOD_MIN_DEGREES at boot, so drift while disabled becomes a
+                        // permanent offset - and at 60:1 that is 12x more motor rotations of
+                        // error than it used to be. 20 A is REV's ceiling for a NEO 550; at 60:1
+                        // the hood can stall against its own travel limits.
+                        HoodMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12);
 
                         HoodMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
