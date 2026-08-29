@@ -44,6 +44,7 @@ public class Turret extends SubsystemBase {
     private int wrapCount = 0; // # of times the through bore has wrapped since the last resync
     private double lastAbsolutePosition = 0.0; // last abs encoder reading in encoder degrees, used for tracking wraps
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
+    private boolean setpointWasClamped = false; // last setAngle call hit a travel limit
 
     public Turret() {
         // TalonFXConfiguration motorConfig = new TalonFXConfiguration();
@@ -107,10 +108,42 @@ public class Turret extends SubsystemBase {
         lastAbsolutePosition = current; // update for next loop
     }
 
+    // Travel limits backed off from the hard stops by the safety margin. Every
+    // setpoint this class issues is clamped into [softMin, softMax], so the closed
+    // loop can never command the turret past a stop - and if it somehow starts
+    // outside the range, the clamped setpoint pulls it back instead of freezing.
+    private static double softMinDegrees() {
+        return TurretConstants.MIN_CONTINUOUS_DEGREES + TurretConstants.CABLE_LIMIT_MARGIN_DEGREES;
+    }
+
+    private static double softMaxDegrees() {
+        return TurretConstants.MAX_CONTINUOUS_DEGREES - TurretConstants.CABLE_LIMIT_MARGIN_DEGREES;
+    }
+
     public boolean isAtCableLimit() {
         double continuous = getContinuousDegrees();
-        return continuous >= TurretConstants.MAX_CONTINUOUS_DEGREES
-                || continuous <= TurretConstants.MIN_CONTINUOUS_DEGREES;
+        return continuous >= softMaxDegrees() || continuous <= softMinDegrees();
+    }
+
+    /**
+     * True if driving at {@code speed} would push the turret further past its travel
+     * limit. Motion back toward the valid range is always allowed, so the turret can
+     * never latch itself against a stop with no way to drive off it.
+     *
+     * <p>Assumes positive output raises {@link #getContinuousDegrees()}. That is the
+     * same convention {@link #degreesToRotations} already bakes into the position
+     * loop, so it is not a new assumption - but confirm it during the gear ratio
+     * sweep, and flip ABSOLUTE_ENCODER_INVERTED if the encoder counts the other way.
+     */
+    public boolean wouldExceedCableLimit(double speed) {
+        double continuous = getContinuousDegrees();
+        if (speed > 0 && continuous >= softMaxDegrees()) {
+            return true;
+        }
+        if (speed < 0 && continuous <= softMinDegrees()) {
+            return true;
+        }
+        return false;
     }
 
      // true = turret is within tolerance of its last commanded angle
@@ -139,8 +172,7 @@ public class Turret extends SubsystemBase {
         for (int lap = -1; lap <= 1; lap++) { // same heading is reachable at up to 2 laps in a 320 degree range
             double candidate = base + lap * 360.0;
 
-            if (candidate > TurretConstants.MAX_CONTINUOUS_DEGREES
-                    || candidate < TurretConstants.MIN_CONTINUOUS_DEGREES) {
+            if (candidate > softMaxDegrees() || candidate < softMinDegrees()) {
                 continue; // outside the cable limit, cant go there
             }
 
@@ -169,8 +201,7 @@ public class Turret extends SubsystemBase {
         double setpoint = angleToSetpoint(targetDegrees);
         if (Double.isNaN(setpoint)) {
             double base = MathUtil.inputModulus(targetDegrees, -180.0, 180.0);
-            setpoint = MathUtil.clamp(base, TurretConstants.MIN_CONTINUOUS_DEGREES,
-                    TurretConstants.MAX_CONTINUOUS_DEGREES);
+            setpoint = MathUtil.clamp(base, softMinDegrees(), softMaxDegrees());
             targetReachable = false;
         } else {
             targetReachable = true;
@@ -180,7 +211,11 @@ public class Turret extends SubsystemBase {
     }
 
     public void setAngle(double degrees) { // send turret to angle in degrees using position control
-        currentTargetDegrees = degrees; // track target so isAtAngle can check it
+        // Hard guard for the closed loop. A position setpoint inside the soft range
+        // cannot command the turret into a stop no matter who calls this.
+        double clamped = MathUtil.clamp(degrees, softMinDegrees(), softMaxDegrees());
+        setpointWasClamped = clamped != degrees;
+        currentTargetDegrees = clamped; // track target so isAtAngle can check it
         // kPosition, not kMAXMotionPositionControl. Two reasons:
         // 1. TurretMotorConfig never sets a maxMotion block, and we configure with
         //    kResetSafeParameters, which wipes whatever was stored on the SPARK. So
@@ -189,7 +224,7 @@ public class Turret extends SubsystemBase {
         // 2. MAXMotion is the wrong mode for a continuously moving setpoint anyway;
         //    it re-plans a deceleration ramp every loop. The hood already uses
         //    kPosition. If a trapezoid is wanted later, configure maxMotion first.
-        turretController.setSetpoint(degreesToRotations(degrees), ControlType.kPosition);
+        turretController.setSetpoint(degreesToRotations(clamped), ControlType.kPosition);
     }
 
     public void stopTurret() {
@@ -197,7 +232,7 @@ public class Turret extends SubsystemBase {
     }
 
     public void manualDrive(double speed) {
-        if (isAtCableLimit()) { // dont let it pull its leash more than possible
+        if (wouldExceedCableLimit(speed)) { // dont let it pull its leash more than possible
             stopTurret();
             return;
         }
@@ -247,5 +282,9 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/Current", TurretMotor.getOutputCurrent());
         Logger.recordOutput("Turret/MotorRotations", turretRelativeEncoder.getPosition());
         Logger.recordOutput("Turret/FrameDisagreementDeg", getContinuousDegrees() - getRelativeDegrees());
+        Logger.recordOutput("Turret/SoftMinDegrees", softMinDegrees());
+        Logger.recordOutput("Turret/SoftMaxDegrees", softMaxDegrees());
+        Logger.recordOutput("Turret/SetpointWasClamped", setpointWasClamped);
+        Logger.recordOutput("Turret/IsTargetReachable", isTargetReachable());
     }
 }

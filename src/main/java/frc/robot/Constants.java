@@ -270,6 +270,11 @@ public final class Constants {
     public static final double MIN_CONTINUOUS_DEGREES = -160.0; // TODO measure: how far CW it goes from forward
     public static final double MAX_CONTINUOUS_DEGREES = 160.0; // TODO measure: how far CCW it goes from forward
 
+    // Keep this much air between the commanded setpoint and the hard stop. Clamping
+    // straight to MIN/MAX parks the turret on the stop and leaves the position loop
+    // pushing into it forever.
+    public static final double CABLE_LIMIT_MARGIN_DEGREES = 2.0;
+
     public static final double p = 0.05;
     public static final double i = 0.0;
     public static final double d = 0.0;
