@@ -5,7 +5,6 @@
 package frc.robot.subsystems.swervedrive;
 
 import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -32,7 +31,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 // import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -1270,12 +1268,11 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public boolean isInAllianceZone() {
     Alliance alliance = getAlliance();
-    Distance blueZone = Inches.of(182);
-    Distance redZone = Inches.of(469);
+    double x = getPose().getX();
 
-    if (alliance == Alliance.Blue && getPose().getMeasureX().lt(blueZone)) {
+    if (alliance == Alliance.Blue && x < Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M) {
       return true;
-    } else if (alliance == Alliance.Red && getPose().getMeasureX().gt(redZone)) {
+    } else if (alliance == Alliance.Red && x > Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M) {
       return true;
     }
 

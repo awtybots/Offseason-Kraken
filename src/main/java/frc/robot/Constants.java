@@ -88,6 +88,14 @@ public final class Constants {
       }
     }
 
+    // Boundary between the ALLIANCE ZONE and the NEUTRAL ZONE: the near face of
+    // each HUB, not its center. Read off the official 2026-rebuilt-welded AprilTag
+    // layout - tag 26 is the blue hub's west face, tag 10 the red hub's east face.
+    // The old 182"/469" were the hub CENTERS, which claimed an extra 0.606 m band
+    // on each side as "in zone" and flipped hub/ferry within a meter of the target.
+    public static final double BLUE_ALLIANCE_ZONE_X_M = 4.0219;
+    public static final double RED_ALLIANCE_ZONE_X_M = 12.5192;
+
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
   }
@@ -284,10 +292,19 @@ public final class Constants {
     public static final double GEAR_RATIO = 5.0;
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
 
+    // The TRENCH sits at the HUB's x, so these double as the trench x band.
     public static final double TRENCH_X_BLUE = 4.6; // blue side trench x coordinate
     public static final double TRENCH_X_RED = 11.9; // red side trench x coordinate
     public static final double TRENCH_THRESHOLD = 0.6; // tuck when within this many meters of the trench (prolly needs
                                                        // to be lower)
+
+    // The trench is NOT a band across the field - it is two openings along the
+    // guardrails with the HUB sitting in the gap between them. Derived from the
+    // 2026 field: width 8.069 m, hub 47" wide, bumps 73" wide, plus 12" of approach.
+    // Without this y test the hood tucks itself in front of the hub, which is where
+    // most shots are taken from.
+    public static final double TRENCH_Y_RIGHT_MAX = 1.279; // opening on the y=0 guardrail
+    public static final double TRENCH_Y_LEFT_MIN = 6.790; // opening on the y=8.069 guardrail
 
     // PID — tune on robot
     public static final double p = 0.1;

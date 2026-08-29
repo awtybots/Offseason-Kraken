@@ -364,12 +364,11 @@ public class RobotContainer {
 
   private boolean isInAllianceZone() {
     Alliance alliance = getAlliance();
-    Distance blueZone = Inches.of(182);
-    Distance redZone = Inches.of(469);
+    double x = drivebase.getPose().getX();
 
-    if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().lt(blueZone))
+    if (alliance == Alliance.Blue && x < Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M)
       return true;
-    else if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().gt(redZone))
+    else if (alliance == Alliance.Red && x > Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M)
       return true;
     return false;
   }
@@ -377,12 +376,11 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   private boolean isInOpponentZone() {
     Alliance alliance = getAlliance();
-    Distance blueZone = Inches.of(182);
-    Distance redZone = Inches.of(469);
+    double x = drivebase.getPose().getX();
 
-    if (alliance == Alliance.Red && drivebase.getPose().getMeasureX().lt(blueZone))
+    if (alliance == Alliance.Red && x < Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M)
       return true;
-    else if (alliance == Alliance.Blue && drivebase.getPose().getMeasureX().gt(redZone))
+    else if (alliance == Alliance.Blue && x > Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M)
       return true;
     return false;
   }

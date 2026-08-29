@@ -181,7 +181,15 @@ public class Turret extends SubsystemBase {
 
     public void setAngle(double degrees) { // send turret to angle in degrees using position control
         currentTargetDegrees = degrees; // track target so isAtAngle can check it
-        turretController.setSetpoint(degreesToRotations(degrees), ControlType.kMAXMotionPositionControl);
+        // kPosition, not kMAXMotionPositionControl. Two reasons:
+        // 1. TurretMotorConfig never sets a maxMotion block, and we configure with
+        //    kResetSafeParameters, which wipes whatever was stored on the SPARK. So
+        //    the motion profile ran on the controller's own defaults - nothing this
+        //    code chose - and a zero cruise velocity there means no motion at all.
+        // 2. MAXMotion is the wrong mode for a continuously moving setpoint anyway;
+        //    it re-plans a deceleration ramp every loop. The hood already uses
+        //    kPosition. If a trapezoid is wanted later, configure maxMotion first.
+        turretController.setSetpoint(degreesToRotations(degrees), ControlType.kPosition);
     }
 
     public void stopTurret() {
