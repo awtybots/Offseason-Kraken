@@ -189,6 +189,11 @@ public class Turret extends SubsystemBase {
 
     private boolean targetReachable = true;
 
+    /** Last angle actually commanded, after the travel clamp. */
+    public double getTargetDegrees() {
+        return currentTargetDegrees;
+    }
+
     public boolean isTargetReachable() {
         return targetReachable;
     }

@@ -288,6 +288,8 @@ public class RobotContainer {
     // LB retracts
     driverXbox.leftBumper().whileTrue(m_pushout.RetractCommand());
 
+    driverXbox.b().whileTrue(new AimTurret(m_turret, drivebase));
+
     // RB unjams
     driverXbox.rightBumper().whileTrue(
         Commands.parallel(
