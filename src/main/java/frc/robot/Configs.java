@@ -31,9 +31,9 @@ public final class Configs
                         .d(HoodConstants.d)
                         .outputRange(-HoodConstants.MAX_OUTPUT, HoodConstants.MAX_OUTPUT)
                         .feedForward
-                        .kS(KickerConstants.s)
-                        .kV(KickerConstants.v)
-                        .kA(KickerConstants.a);
+                        .kS(HoodConstants.s)
+                        .kV(HoodConstants.v)
+                        .kA(HoodConstants.a);
                 }
         }
 

@@ -355,13 +355,25 @@ public final class Constants {
     // pushing into it forever.
     public static final double CABLE_LIMIT_MARGIN_DEGREES = 2.0;
 
-    public static final double p = 0.05;
-    public static final double i = 0.0;
-    public static final double d = 0.0;
+    // Position loop on the SPARK: error is in MOTOR ROTATIONS (no positionConversionFactor
+    // on the primary encoder) and the output is duty cycle, so
+    //     duty per turret degree = p * GEAR_RATIO / 360
+    // and p saturates MAX_OUTPUT at  MAX_OUTPUT * 360 / (GEAR_RATIO * p)  degrees of error.
+    // p = 0.10 -> 1.39% duty/deg, saturating 0.25 at 18 deg. The old 0.05 needed 36 deg,
+    // more than the turret's useful error range. Starting point, not a tuned value.
+    public static final double p = 0.10;
+    public static final double i = 0.0; // integral winds up against gear lash - leave at 0
+    public static final double d = 0.0; // if it overshoots try 0.001; past ~0.002 the
+                                        // derivative term dominates during a fast slew
 
-    public static final double s = 0.100;
-    public static final double v = 0.004;
-    public static final double a = 0.0003;
+    // kS is VOLTS, and is the only feedforward term that does anything in kPosition:
+    // REVLib does not apply kV in position control, and applies kA only in MAXMotion.
+    // It carries the small-error authority - at p = 0.10 a 2 deg error is 2.8% duty, which
+    // is around stiction. Measure it: ramp open-loop duty until the turret just breaks
+    // away, then kS = duty * 12. Approach from below; too high and it buzzes at setpoint.
+    public static final double s = 0.20;
+    public static final double v = 0.004; // inert in kPosition
+    public static final double a = 0.0003; // inert in kPosition
 
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
 
@@ -395,10 +407,21 @@ public final class Constants {
     public static final double TRENCH_Y_RIGHT_MAX = 1.266; // opening on the y=0 guardrail
     public static final double TRENCH_Y_LEFT_MIN = 6.777; // opening on the y=8.043 guardrail
 
-    // PID — tune on robot
-    public static final double p = 0.1;
+    // Same units as the turret: error in motor rotations, output in duty cycle.
+    // p = 0.15 -> 2.50% duty/deg, saturating MAX_OUTPUT at 20 deg, against 26 deg of total
+    // travel. A NEO 550 at 60:1 is ~1100 deg/s unloaded, so expect to fight overshoot
+    // rather than sluggishness.
+    public static final double p = 0.15;
     public static final double i = 0.0;
-    public static final double d = 0.0;
+    public static final double d = 0.0; // if it overshoots try 0.0005; ~0.001 is the ceiling
+
+    // The hood used to borrow KickerConstants for these, because it had none of its own.
+    // kS is volts and is the only one live in kPosition; v and a exist so Configs has hood
+    // numbers to read rather than the kicker's.
+    public static final double s = 0.15;
+    public static final double v = 0.0; // inert in kPosition
+    public static final double a = 0.0; // inert in kPosition
+
     public static final double MAX_OUTPUT = 0.5; // limit speed for safety while tuning
 
     public static final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
