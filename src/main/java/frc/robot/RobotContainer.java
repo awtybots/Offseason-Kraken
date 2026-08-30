@@ -240,8 +240,9 @@ public class RobotContainer {
 
     // ==================== DEFAULT COMMANDS ====================
 
-    // turret and hood always aim at hub/ferry the whole match
+    // turret always aim at hub/ferry the whole match
     // shooter idle entire match
+    //hood stays tucked unless otherwise commanded
     m_shooter.setDefaultCommand(m_shooter.idleCommand());
     m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase));
     m_hood.setDefaultCommand(m_hood.tuckCommand());
@@ -308,11 +309,8 @@ public class RobotContainer {
 
     // ==================== OPERATOR BINDINGS ====================
 
-    // Manual bring-up for shooter / hood / turret. The shooter and hood values are the
-    // hub table's 3 m entry, so holding LT + LB together sets up a real 3 m shot.
-    // LT - flywheel to 57.7 RPS (3461 RPM). Once settled, Shooter/RightAppliedVolts
-    //      divided by Shooter/AverageRPS should read about 0.12 - that is ShooterConstants.v.
-    operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPSCommand(57.7));
+  
+    operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPSCommand(30));
     // LB - hood to 33.2 deg. Check it against a protractor, and measure the ball exit
     //      height here and at HOOD_MIN: SHOOTER_HEIGHT_M assumes it does not move.
     operatorXbox.leftBumper().whileTrue(m_hood.setAngleCommand(33.2));
