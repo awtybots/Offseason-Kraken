@@ -28,7 +28,7 @@ public class Hood extends SubsystemBase {
         HoodMotor.configure(Configs.HoodSubsystem.HoodMotorConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
 
-        HoodEncoder.setPosition(degreesToRotations(HoodConstants.HOOD_MIN_DEGREES)); // set to 0 which is start pos
+        HoodEncoder.setPosition(degreesToRotations(HoodConstants.HOOD_MIN_DEGREES)); // set to 21 which is start pos
     }
 
     private double degreesToRotations(double degrees) { // hood degrees to motor rotations taking gear ratio into account

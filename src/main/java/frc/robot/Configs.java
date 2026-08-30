@@ -80,7 +80,7 @@ public final class Configs
                         .p(TurretConstants.p)
                         .i(TurretConstants.i)
                         .d(TurretConstants.d)
-                        .outputRange(-TurretConstants.MAX_OUTPUT, TurretConstants.MAX_OUTPUT)
+                        .outputRange(-TurretConstants.MAX_OUTPUT, TurretConstants.MAX_OUTPUT) //do 0.66 after testing
                         .feedForward
                         .kS(TurretConstants.s)
                         .kV(TurretConstants.v)

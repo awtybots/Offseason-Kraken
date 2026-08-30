@@ -244,7 +244,7 @@ public class RobotContainer {
     // shooter idle entire match
     //hood stays tucked unless otherwise commanded
     m_shooter.setDefaultCommand(m_shooter.idleCommand());
-    m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase));
+    // m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase)); commented out for testing
     m_hood.setDefaultCommand(m_hood.tuckCommand());
 
     if (RobotBase.isSimulation()) {
@@ -326,6 +326,8 @@ public class RobotContainer {
             m_rollers.runRollersToConveyorCommand(),
             m_shooter.shootingTestCommad()));
 
+
+    operatorXbox.back().onTrue(m_turret.resyncEncoderCommand());
     // reset encoder
     operatorXbox.start().onTrue(m_pushout.ResetEncoderCommand());
 

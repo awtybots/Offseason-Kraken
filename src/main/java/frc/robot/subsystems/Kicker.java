@@ -15,18 +15,20 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
+// import com.revrobotics.spark.SparkBase.ControlType;
 
 import frc.robot.Configs;
 import frc.robot.Constants.KickerConstants;
 import org.littletonrobotics.junction.Logger;
 
+
+@SuppressWarnings("unused")
 public class Kicker extends SubsystemBase {
 
     private TalonFX KickerMotor = new TalonFX(KickerConstants.KICKER_ID);
     private SparkMax VerticalRollerMotor = new SparkMax(KickerConstants.VERT_ROLLER_ID, MotorType.kBrushless);
     private RelativeEncoder VertRollerEncoder = VerticalRollerMotor.getEncoder();
-    private SparkClosedLoopController VerticalRollerController = VerticalRollerMotor.getClosedLoopController(); 
+    // private SparkClosedLoopController VerticalRollerController = VerticalRollerMotor.getClosedLoopController(); 
 
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
