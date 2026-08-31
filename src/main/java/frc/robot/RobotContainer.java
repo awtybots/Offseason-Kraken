@@ -243,7 +243,7 @@ public class RobotContainer {
     // turret always aim at hub/ferry the whole match
     // shooter idle entire match
     //hood stays tucked unless otherwise commanded
-    m_shooter.setDefaultCommand(m_shooter.idleCommand());
+    // m_shooter.setDefaultCommand(m_shooter.idleCommand());
     // m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase)); commented out for testing
     m_hood.setDefaultCommand(m_hood.tuckCommand());
 
