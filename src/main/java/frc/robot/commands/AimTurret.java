@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import org.littletonrobotics.junction.Logger;
 
 public class AimTurret extends Command {
 
@@ -47,11 +48,21 @@ public class AimTurret extends Command {
         // get the robot relative angle that the turret needs to go to
         double turretTargetDegrees = fieldAngleToTarget.minus(robotPose.getRotation()).getDegrees();
 
-        // convert to setpoint and send to turret
-        double setpoint = turret.angleToSetpoint(turretTargetDegrees);
-        if (!Double.isNaN(setpoint)) {
-            turret.setAngle(setpoint);
-        }
+        boolean reachable = turret.setAngleClamped(turretTargetDegrees);
+
+        Logger.recordOutput("AimTurret/Mode",
+                swerveSubsystem.isInAllianceZone() ? "Hub" : "Ferry");
+        Logger.recordOutput("AimTurret/TargetPose", target);
+        Logger.recordOutput("AimTurret/DistanceM", turretToTarget.getNorm());
+        Logger.recordOutput("AimTurret/FieldBearingDeg", fieldAngleToTarget.getDegrees());
+        Logger.recordOutput("AimTurret/WantedTurretDeg", turretTargetDegrees);
+        Logger.recordOutput("AimTurret/CommandedTurretDeg", turret.getTargetDegrees());
+        Logger.recordOutput("AimTurret/ActualTurretDeg", turret.getContinuousDegrees());
+        Logger.recordOutput("AimTurret/ErrorDeg",
+                turret.getTargetDegrees() - turret.getContinuousDegrees());
+        Logger.recordOutput("AimTurret/Reachable", reachable);
+        Logger.recordOutput("AimTurret/AtCableLimit", turret.isAtCableLimit());
+        Logger.recordOutput("AimTurret/RobotHeadingDeg", robotPose.getRotation().getDegrees());
     }
     
     @Override

@@ -30,23 +30,27 @@ public class Turret extends SubsystemBase {
 
     // private TalonFX TurretMotor = new TalonFX(TurretConstants.TURRET_ID);
 
-    // private final PositionVoltage positionRequest = new PositionVoltage(0); // position control
-    // private final VoltageOut voltageRequest = new VoltageOut(0); // open loop for manual + stop
+    // private final PositionVoltage positionRequest = new PositionVoltage(0); //
+    // position control
+    // private final VoltageOut voltageRequest = new VoltageOut(0); // open loop for
+    // manual + stop
 
     private SparkMax TurretMotor = new SparkMax(TurretConstants.TURRET_ID, MotorType.kBrushless);
     private SparkClosedLoopController turretController = TurretMotor.getClosedLoopController();
     private RelativeEncoder turretRelativeEncoder = TurretMotor.getEncoder();
-    private AbsoluteEncoder turretAbsoluteEncoder = TurretMotor.getAbsoluteEncoder(); // REV Through Bore on the data port
-
+    private AbsoluteEncoder turretAbsoluteEncoder = TurretMotor.getAbsoluteEncoder(); // REV Through Bore on the data
+                                                                                      // port
 
     private int wrapCount = 0; // # of times the through bore has wrapped since the last resync
     private double lastAbsolutePosition = 0.0; // last abs encoder reading in encoder degrees, used for tracking wraps
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
+    private boolean setpointWasClamped = false; // last setAngle call hit a travel limit
 
     public Turret() {
         // TalonFXConfiguration motorConfig = new TalonFXConfiguration();
         // motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        // motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // hopefully correct
+        // motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        // // hopefully correct
         // motorConfig.CurrentLimits.StatorCurrentLimit = 70.0;
         // motorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         // motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -58,7 +62,8 @@ public class Turret extends SubsystemBase {
         // motorConfig.Slot0.kA = TurretConstants.a;
         // TurretMotor.getConfigurator().apply(motorConfig);
 
-        // TurretMotor.setPosition(degreesToRotations(getAbsoluteDegrees())); // makes relative equal to abs at beginning
+        // TurretMotor.setPosition(degreesToRotations(getAbsoluteDegrees())); // makes
+        // relative equal to abs at beginning
         // lastAbsolutePosition = getAbsoluteDegrees();
         TurretMotor.configure(Configs.TurretSubsystem.TurretMotorConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
@@ -66,9 +71,8 @@ public class Turret extends SubsystemBase {
         resyncFromAbsolute(); // assumes the turret booted parked at the reference spot
     }
 
-
-
-    public double getAbsoluteDegrees() { // through bore shaft angle, (-180, 180]. NOT the turret angle, it spins 10x faster
+    public double getAbsoluteDegrees() { // through bore shaft angle, (-180, 180]. NOT the turret angle, it spins 10x
+                                         // faster
         return turretAbsoluteEncoder.getPosition();
     }
 
@@ -77,11 +81,13 @@ public class Turret extends SubsystemBase {
     }
 
     public double getContinuousDegrees() { // actual turret angle, unwrapped, 0 = robot forward
-        double degreesFromReference = (wrapCount * 360.0 + getAbsoluteDegrees()) / TurretConstants.ABSOLUTE_ENCODER_RATIO;
+        double degreesFromReference = (wrapCount * 360.0 + getAbsoluteDegrees())
+                / TurretConstants.ABSOLUTE_ENCODER_RATIO;
         return TurretConstants.REFERENCE_TURRET_DEGREES + degreesFromReference;
     }
 
-    private double degreesToRotations(double degrees) { // gets motor rotations from the desired angle accounting for the gear ratio
+    private double degreesToRotations(double degrees) { // gets motor rotations from the desired angle accounting for
+                                                        // the gear ratio
         return (degrees / 360.0) * TurretConstants.GEAR_RATIO;
     }
 
@@ -102,21 +108,57 @@ public class Turret extends SubsystemBase {
         lastAbsolutePosition = current; // update for next loop
     }
 
+    // Travel limits backed off from the hard stops by the safety margin. Every
+    // setpoint this class issues is clamped into [softMin, softMax], so the closed
+    // loop can never command the turret past a stop - and if it somehow starts
+    // outside the range, the clamped setpoint pulls it back instead of freezing.
+    private static double softMinDegrees() {
+        return TurretConstants.MIN_CONTINUOUS_DEGREES + TurretConstants.CABLE_LIMIT_MARGIN_DEGREES;
+    }
+
+    private static double softMaxDegrees() {
+        return TurretConstants.MAX_CONTINUOUS_DEGREES - TurretConstants.CABLE_LIMIT_MARGIN_DEGREES;
+    }
+
     public boolean isAtCableLimit() {
         double continuous = getContinuousDegrees();
-        return continuous >= TurretConstants.MAX_CONTINUOUS_DEGREES
-                || continuous <= TurretConstants.MIN_CONTINUOUS_DEGREES;
+        return continuous >= softMaxDegrees() || continuous <= softMinDegrees();
     }
 
-    public boolean isAtAngle() { // true = turret is within tolerance of its last commanded angle
-        return Math.abs(getRelativeDegrees() - currentTargetDegrees) <= TurretConstants.ANGLE_TOLERANCE_DEGREES;
+    /**
+     * True if driving at {@code speed} would push the turret further past its travel
+     * limit. Motion back toward the valid range is always allowed, so the turret can
+     * never latch itself against a stop with no way to drive off it.
+     *
+     * <p>Assumes positive output raises {@link #getContinuousDegrees()}. That is the
+     * same convention {@link #degreesToRotations} already bakes into the position
+     * loop, so it is not a new assumption - but confirm it during the gear ratio
+     * sweep, and flip ABSOLUTE_ENCODER_INVERTED if the encoder counts the other way.
+     */
+    public boolean wouldExceedCableLimit(double speed) {
+        double continuous = getContinuousDegrees();
+        if (speed > 0 && continuous >= softMaxDegrees()) {
+            return true;
+        }
+        if (speed < 0 && continuous <= softMinDegrees()) {
+            return true;
+        }
+        return false;
     }
 
-    // only call this with the turret parked at the reference spot. the through bore cant tell
-    // which 36 degree window its in, so this is us promising it that its in the reference one.
+     // true = turret is within tolerance of its last commanded angle
+ public boolean isAtAngle() {
+    return Math.abs(getContinuousDegrees() - currentTargetDegrees) <= TurretConstants.ANGLE_TOLERANCE_DEGREES;
+}
+
+    // only call this with the turret parked at the reference spot. the through bore
+    // cant tell
+    // which 36 degree window its in, so this is us promising it that its in the
+    // reference one.
     public void resyncFromAbsolute() {
         wrapCount = 0;
-        lastAbsolutePosition = getAbsoluteDegrees(); // seed from where it actually is, otherwise the next loop fakes a wrap
+        lastAbsolutePosition = getAbsoluteDegrees(); // seed from where it actually is, otherwise the next loop fakes a
+                                                     // wrap
         turretRelativeEncoder.setPosition(degreesToRotations(getContinuousDegrees()));
     }
 
@@ -130,8 +172,7 @@ public class Turret extends SubsystemBase {
         for (int lap = -1; lap <= 1; lap++) { // same heading is reachable at up to 2 laps in a 320 degree range
             double candidate = base + lap * 360.0;
 
-            if (candidate > TurretConstants.MAX_CONTINUOUS_DEGREES
-                    || candidate < TurretConstants.MIN_CONTINUOUS_DEGREES) {
+            if (candidate > softMaxDegrees() || candidate < softMinDegrees()) {
                 continue; // outside the cable limit, cant go there
             }
 
@@ -143,11 +184,52 @@ public class Turret extends SubsystemBase {
         }
 
         return best; // NaN if no valid pos, so it doesnt kill itself
+
+    }
+
+    private boolean targetReachable = true;
+
+    /** Last angle actually commanded, after the travel clamp. */
+    public double getTargetDegrees() {
+        return currentTargetDegrees;
+    }
+
+    public boolean isTargetReachable() {
+        return targetReachable;
+    }
+
+    /**
+     * Command toward a field-derived angle, clamping into the cable range.
+     * Returns false if the requested angle was outside that range.
+     */
+    public boolean setAngleClamped(double targetDegrees) {
+        double setpoint = angleToSetpoint(targetDegrees);
+        if (Double.isNaN(setpoint)) {
+            double base = MathUtil.inputModulus(targetDegrees, -180.0, 180.0);
+            setpoint = MathUtil.clamp(base, softMinDegrees(), softMaxDegrees());
+            targetReachable = false;
+        } else {
+            targetReachable = true;
+        }
+        setAngle(setpoint);
+        return targetReachable;
     }
 
     public void setAngle(double degrees) { // send turret to angle in degrees using position control
-        currentTargetDegrees = degrees; // track target so isAtAngle can check it
-        turretController.setSetpoint(degreesToRotations(degrees), ControlType.kMAXMotionPositionControl);
+        // Hard guard for the closed loop. A position setpoint inside the soft range
+        // cannot command the turret into a stop no matter who calls this.
+        double clamped = MathUtil.clamp(degrees, softMinDegrees(), softMaxDegrees());
+        setpointWasClamped = clamped != degrees;
+        currentTargetDegrees = clamped; // track target so isAtAngle can check it
+        // kPosition, not kMAXMotionPositionControl. Two reasons:
+        // 1. TurretMotorConfig never sets a maxMotion block, and we configure with
+        //    kResetSafeParameters, which wipes whatever was stored on the SPARK. So
+        //    the motion profile ran on the controller's own defaults - nothing this
+        //    code chose - and a zero cruise velocity there means no motion at all.
+        // 2. MAXMotion is the wrong mode for a continuously moving setpoint anyway;
+        //    it re-plans a deceleration ramp every loop. The hood already uses
+        //    kPosition. If a trapezoid is wanted later, configure maxMotion first.
+        turretController.setSetpoint(degreesToRotations(clamped), ControlType.kPosition);
     }
 
     public void stopTurret() {
@@ -155,7 +237,7 @@ public class Turret extends SubsystemBase {
     }
 
     public void manualDrive(double speed) {
-        if (isAtCableLimit()) { // dont let it pull its leash more than possible
+        if (wouldExceedCableLimit(speed)) { // dont let it pull its leash more than possible
             stopTurret();
             return;
         }
@@ -204,5 +286,10 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/AppliedVolts", TurretMotor.getBusVoltage());
         Logger.recordOutput("Turret/Current", TurretMotor.getOutputCurrent());
         Logger.recordOutput("Turret/MotorRotations", turretRelativeEncoder.getPosition());
+        Logger.recordOutput("Turret/FrameDisagreementDeg", getContinuousDegrees() - getRelativeDegrees());
+        Logger.recordOutput("Turret/SoftMinDegrees", softMinDegrees());
+        Logger.recordOutput("Turret/SoftMaxDegrees", softMaxDegrees());
+        Logger.recordOutput("Turret/SetpointWasClamped", setpointWasClamped);
+        Logger.recordOutput("Turret/IsTargetReachable", isTargetReachable());
     }
 }

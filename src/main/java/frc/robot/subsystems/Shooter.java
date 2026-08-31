@@ -52,10 +52,13 @@ public class Shooter extends SubsystemBase {
     public Shooter() {
         TalonFXConfiguration rightConfig = new TalonFXConfiguration();
         rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        rightConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
+        rightConfig.CurrentLimits.StatorCurrentLimit = 120.0;
         rightConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust if needed
         rightConfig.CurrentLimits.StatorCurrentLimit = 100.0;
         rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         rightConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        rightConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         rightConfig.Slot0.kP = ShooterConstants.p;
         rightConfig.Slot0.kI = ShooterConstants.i;
         rightConfig.Slot0.kD = ShooterConstants.d;
@@ -66,19 +69,23 @@ public class Shooter extends SubsystemBase {
 
         TalonFXConfiguration leftConfig = new TalonFXConfiguration();
         leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        leftConfig.CurrentLimits.StatorCurrentLimit = 100.0;
-        rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        leftConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+        leftConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         leftConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        leftConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         ShooterLeftMotor.getConfigurator().apply(leftConfig);
 
         // Follow the right motor
         ShooterLeftMotor.setControl(new Follower(ShooterRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
+    // Against the live setpoint, not SHOOTER_SPEED. That constant is a 20 rps bench
+    // value while the tables now command 51-77 rps, so this read false all match.
     public boolean isShooterFast() {
-        double avgRPS = (ShooterRightMotor.getVelocity().getValueAsDouble()
-                + ShooterLeftMotor.getVelocity().getValueAsDouble()) / 2.0;
-        return Math.abs(avgRPS - ShooterConstants.SHOOTER_SPEED) <= ShooterConstants.ERROR_MARGIN;
+        if (targetRPS == 0.0) {
+            return false;
+        }
+        return Math.abs(getRPS() - targetRPS) <= ShooterConstants.ERROR_MARGIN;
     }
 
     public double getRPS() {
@@ -88,7 +95,7 @@ public class Shooter extends SubsystemBase {
 
     public boolean isShooterRunning() {
         double setpoint = Math.abs(targetRPS);
-        boolean running = Math.abs(setpoint - getRPS()) < 1.67 // ~100 RPM in RPS
+        boolean running = Math.abs(setpoint - getRPS()) < ShooterConstants.ERROR_MARGIN
                 && setpoint != 0
                 && setpoint != ShooterConstants.ALLIANCE_IDLE_RPS;
         SmartDashboard.putBoolean("Shooter Running", running);
@@ -106,6 +113,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void SpeedUpShooter() {
+        targetRPS = ShooterConstants.SHOOTER_SPEED;
         ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
         // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
     }
@@ -117,6 +125,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void ShooterPassing() {
+         targetRPS = ShooterConstants.SHOOTER_PASSING_SPEED;
         ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
         // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
     }
@@ -168,6 +177,10 @@ public class Shooter extends SubsystemBase {
     public Command sysIdDynamicReverse() {
         return sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse);
     }
+
+    public Command idleCommand() {
+    return this.run(() -> setTargetRPS(ShooterConstants.ALLIANCE_IDLE_RPS));
+}
 
     @Override
     public void periodic() {

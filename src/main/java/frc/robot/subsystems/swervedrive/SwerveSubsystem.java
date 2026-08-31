@@ -5,7 +5,6 @@
 package frc.robot.subsystems.swervedrive;
 
 import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meter;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -32,7 +31,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 // import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -45,6 +43,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+import frc.robot.Constants.DrivebaseConstants;
 import frc.robot.Constants.LimelightConstants;
 import frc.robot.LimelightHelpers;
 
@@ -363,31 +362,44 @@ public class SwerveSubsystem extends SubsystemBase {
       // --- Aim debugging ---
       cachedDynamicHub = getDynamicHubLocation();
       cachedDynamicFerry = getDynamicFerryLocation();
+      // The turret is zeroed facing the FRONT of the robot, so turret angle 0 is along the
+      // robot's +X and the angle it must hold is just the bearing to the target minus the
+      // robot heading - exactly what AimTurret computes. No 180 flip: that used to be here
+      // from the drivebase-aim days, when the ROBOT had to point at the hub, and it left
+      // these logs reading a half turn away from the error the turret was actually closing.
+      // Measured from the turret, not robot centre, so these agree with the aim commands.
       Pose2d dynamicHub = cachedDynamicHub;
-      Translation2d robotToHub = dynamicHub.getTranslation().minus(pose.getTranslation());
-      Rotation2d targetAngle = robotToHub.getAngle().plus(Rotation2d.fromDegrees(180));
+      Translation2d turretPos = getTurretFieldPosition();
+      Translation2d turretToHub = dynamicHub.getTranslation().minus(turretPos);
+      Rotation2d targetAngle = turretToHub.getAngle();
       double aimError = targetAngle.minus(getHeading()).getDegrees();
-      double distanceToHub = robotToHub.getNorm();
+      double distanceToHub = turretToHub.getNorm();
 
       Logger.recordOutput("Drive/Aim/DynamicHubPose", dynamicHub);
       Logger.recordOutput("Drive/Aim/StaticHubPose", Constants.DrivebaseConstants.getHubPose2D());
       Logger.recordOutput("Drive/Aim/TargetAngleDeg", targetAngle.getDegrees());
       Logger.recordOutput("Drive/Aim/CurrentHeadingDeg", getHeading().getDegrees());
-      Logger.recordOutput("Drive/Aim/ErrorDegHub", aimError);
+      Logger.recordOutput("Drive/Aim/TurretAngleForHubDeg", aimError);
       Logger.recordOutput("Drive/Aim/DistanceToHubM", distanceToHub);
       Logger.recordOutput("Drive/Aim/RobotVelX", fieldVel.vxMetersPerSecond);
       Logger.recordOutput("Drive/Aim/RobotVelY", fieldVel.vyMetersPerSecond);
+      Translation2d turretVel = getTurretFieldVelocity();
+      Logger.recordOutput("Drive/Aim/TurretVelX", turretVel.getX());
+      Logger.recordOutput("Drive/Aim/TurretVelY", turretVel.getY());
+      Logger.recordOutput("Drive/Aim/OmegaCrossRMagnitude",
+          turretVel.minus(new Translation2d(
+              fieldVel.vxMetersPerSecond, fieldVel.vyMetersPerSecond)).getNorm());
       Logger.recordOutput("Drive/Aim/IsLocked", locked);
 
       // --- Ferry aim debugging ---
       Pose2d dynamicFerry = cachedDynamicFerry;
-      Translation2d robotToFerry = dynamicFerry.getTranslation().minus(pose.getTranslation());
-      Rotation2d ferryTargetAngle = robotToFerry.getAngle().plus(Rotation2d.fromDegrees(180));
+      Translation2d turretToFerry = dynamicFerry.getTranslation().minus(turretPos);
+      Rotation2d ferryTargetAngle = turretToFerry.getAngle();
       double ferryAimError = ferryTargetAngle.minus(getHeading()).getDegrees();
-      double distanceToFerry = robotToFerry.getNorm();
+      double distanceToFerry = turretToFerry.getNorm();
 
       Logger.recordOutput("Drive/Aim/DynamicFerryPose", dynamicFerry);
-      Logger.recordOutput("Drive/Aim/ErrorDegFerry", ferryAimError);
+      Logger.recordOutput("Drive/Aim/TurretAngleForFerryDeg", ferryAimError);
       Logger.recordOutput("Drive/Aim/DistanceToFerryM", distanceToFerry);
   }
 
@@ -1161,9 +1173,8 @@ public class SwerveSubsystem extends SubsystemBase {
     public Pose2d getDynamicHubLocation() {
 
         Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
-        Translation2d robotVec = getPose().getTranslation();
-        ChassisSpeeds vel = getFieldVelocity();
-        Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
+        Translation2d robotVec = getTurretFieldPosition();
+        Translation2d robotVel = getTurretFieldVelocity(); // includes omega x r
 
         // velocity compensation — iterative TOF convergence
         Translation2d CompensatedHub = hubVec;
@@ -1225,12 +1236,33 @@ public class SwerveSubsystem extends SubsystemBase {
         return new Pose2d(CompensatedHub, aimRotation);
     }
 
+    /**
+     * Field-frame velocity of the TURRET, which is what the ball actually inherits at
+     * release - not the velocity of the robot's centre of rotation.
+     *
+     * <p>{@code v_turret = v_chassis + omega x r}, with {@code r} the turret offset rotated
+     * into the field frame. In 2D, {@code omega x r = omega * (-r.y, r.x)}.
+     *
+     * <p>At |r| = 0.237 m a spin of 8 rad/s adds 1.9 m/s - comparable to translation speed,
+     * and it does not vanish when the robot is driving straight, only when it is not turning.
+     */
+    public Translation2d getTurretFieldVelocity() {
+      ChassisSpeeds fieldVel = getFieldVelocity();
+      Translation2d r = Constants.DrivebaseConstants.TURRET_OFFSET
+          .rotateBy(getPose().getRotation());
+      double omega = fieldVel.omegaRadiansPerSecond;
+      return new Translation2d(
+          fieldVel.vxMetersPerSecond - omega * r.getY(),
+          fieldVel.vyMetersPerSecond + omega * r.getX());
+    }
+
     public Translation2d getTurretFieldPosition() {
       Pose2d robotPose = getPose();
-      double xOffset = (-29.5 / 2.0 + 3.0) * 0.0254;
-      double yOffset = (24.5 / 2.0 - 3.0) * 0.0254;
-      Translation2d offset = new Translation2d(xOffset, yOffset).rotateBy(robotPose.getRotation());
-      return robotPose.getTranslation().plus(offset);
+      // double xOffset = (-29.5 / 2.0 + 3.0) * 0.0254;
+      // double yOffset = (24.5 / 2.0 - 3.0) * 0.0254;
+      // Translation2d offset = new Translation2d(xOffset, yOffset).rotateBy(robotPose.getRotation());
+       return robotPose.getTranslation().plus(
+            Constants.DrivebaseConstants.TURRET_OFFSET.rotateBy(robotPose.getRotation()));
     }
 
   /**
@@ -1242,14 +1274,15 @@ public class SwerveSubsystem extends SubsystemBase {
    */
   public Pose2d getDynamicFerryLocation() {
     Translation2d ferryVec = Constants.DrivebaseConstants.getFerryPose(getPose().getTranslation()).getTranslation();
-    Translation2d robotVec = getPose().getTranslation();
-    ChassisSpeeds vel = getFieldVelocity();
-    Translation2d robotVel = new Translation2d(vel.vxMetersPerSecond, vel.vyMetersPerSecond);
+    Translation2d robotVec = getTurretFieldPosition();
+    Translation2d robotVel = getTurretFieldVelocity(); // includes omega x r
 
     Translation2d CompensatedFerry = ferryVec;
     for (int i = 0; i < 4; i++) {
       double distance = CompensatedFerry.minus(robotVec).getNorm();
-      double tof = Constants.ShooterConstants.TOF.get(distance);
+      // ferryTOF, not the hub TOF map: the hub map only spans 2-6 m and clamps, so
+      // every pass past 6 m used to lead with the 6 m hub flight time.
+      double tof = Constants.ShooterConstants.ferryTOF.get(distance);
       CompensatedFerry = ferryVec.minus(robotVel.times(tof));
     }
 
@@ -1268,16 +1301,31 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public boolean isInAllianceZone() {
     Alliance alliance = getAlliance();
-    Distance blueZone = Inches.of(182);
-    Distance redZone = Inches.of(469);
+    double x = getPose().getX();
 
-    if (alliance == Alliance.Blue && getPose().getMeasureX().lt(blueZone)) {
+    if (alliance == Alliance.Blue && x < Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M) {
       return true;
-    } else if (alliance == Alliance.Red && getPose().getMeasureX().gt(redZone)) {
+    } else if (alliance == Alliance.Red && x > Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M) {
       return true;
     }
 
     return false;
+  }
+
+  /**
+   * True when the robot is between the two alliance zones. We ferry only from here -
+   * never from the opponent's alliance zone - so this bounds ferry distance to about
+   * 1.8-10.6 m, which is the domain ferryTOF and the ferry tables are built over.
+   */
+  public boolean isInNeutralZone() {
+    double x = getPose().getX();
+    return x > Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M
+        && x < Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M;
+  }
+
+  /** True when the robot is deep in the opponent's alliance zone, where we never shoot. */
+  public boolean isInOpponentAllianceZone() {
+    return !isInAllianceZone() && !isInNeutralZone();
   }
 
   private Pose2d GetDriveToPose()

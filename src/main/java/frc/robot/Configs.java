@@ -17,7 +17,12 @@ public final class Configs
                 public static final SparkMaxConfig HoodMotorConfig = new SparkMaxConfig();
 
                 static {
-                        HoodMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(30).voltageCompensation(12);
+                        // kBrake, not kCoast: the hood has no absolute encoder and seeds its
+                        // zero from HOOD_MIN_DEGREES at boot, so drift while disabled becomes a
+                        // permanent offset - and at 60:1 that is 12x more motor rotations of
+                        // error than it used to be. 20 A is REV's ceiling for a NEO 550; at 60:1
+                        // the hood can stall against its own travel limits.
+                        HoodMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12);
 
                         HoodMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
@@ -26,30 +31,30 @@ public final class Configs
                         .d(HoodConstants.d)
                         .outputRange(-HoodConstants.MAX_OUTPUT, HoodConstants.MAX_OUTPUT)
                         .feedForward
-                        .kS(KickerConstants.s)
-                        .kV(KickerConstants.v)
-                        .kA(KickerConstants.a);
+                        .kS(HoodConstants.s)
+                        .kV(HoodConstants.v)
+                        .kA(HoodConstants.a);
                 }
         }
 
-        // public static final class KickerSubsystem {
+        public static final class KickerSubsystem {
 
-        //         public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
+                public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
 
-        //         static {
-        //                 VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12);
+                static {
+                        VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12).inverted(true);
 
-        //                 VertivalMotorConfig.closedLoop
-        //                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        //                 .p(KickerConstants.VRp)
-        //                 .i(KickerConstants.VRi)
-        //                 .d(KickerConstants.VRd)
-        //                 .feedForward
-        //                 .kS(KickerConstants.VRs)
-        //                 .kV(KickerConstants.VRv)
-        //                 .kA(KickerConstants.VRa);
-        //         }
-        // }
+                        VertivalMotorConfig.closedLoop
+                        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                        .p(KickerConstants.VRp)
+                        .i(KickerConstants.VRi)
+                        .d(KickerConstants.VRd)
+                        .feedForward
+                        .kS(KickerConstants.VRs)
+                        .kV(KickerConstants.VRv)
+                        .kA(KickerConstants.VRa);
+                }
+        }
 
         public static final class TurretSubsystem {
 
@@ -75,7 +80,7 @@ public final class Configs
                         .p(TurretConstants.p)
                         .i(TurretConstants.i)
                         .d(TurretConstants.d)
-                        .outputRange(-TurretConstants.MAX_OUTPUT, TurretConstants.MAX_OUTPUT)
+                        .outputRange(-TurretConstants.MAX_OUTPUT, TurretConstants.MAX_OUTPUT) //do 0.66 after testing
                         .feedForward
                         .kS(TurretConstants.s)
                         .kV(TurretConstants.v)

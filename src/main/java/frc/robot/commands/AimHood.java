@@ -24,10 +24,20 @@ public class AimHood extends Command {
     public void initialize() {
     }
 
-    private boolean isUnderTrench() {// checks if turret is under the trench by looking at the field x pos
-    double x = swerveSubsystem.getTurretFieldPosition().getX();
-    return Math.abs(x - HoodConstants.TRENCH_X_BLUE) <= HoodConstants.TRENCH_THRESHOLD
-            || Math.abs(x - HoodConstants.TRENCH_X_RED) <= HoodConstants.TRENCH_THRESHOLD;
+    // under the trench = inside the trench x band AND in one of the two guardrail
+    // openings. The x test alone fires anywhere along the hub's x line, including
+    // directly in front of the hub.
+    private boolean isUnderTrench() {
+        Translation2d turretPos = swerveSubsystem.getTurretFieldPosition();
+        double x = turretPos.getX();
+        double y = turretPos.getY();
+
+        boolean inTrenchX = Math.abs(x - HoodConstants.TRENCH_X_BLUE) <= HoodConstants.TRENCH_THRESHOLD
+                || Math.abs(x - HoodConstants.TRENCH_X_RED) <= HoodConstants.TRENCH_THRESHOLD;
+        boolean inTrenchY = y <= HoodConstants.TRENCH_Y_RIGHT_MAX
+                || y >= HoodConstants.TRENCH_Y_LEFT_MIN;
+
+        return inTrenchX && inTrenchY;
     }
 
     @Override
@@ -58,7 +68,7 @@ public class AimHood extends Command {
             Logger.recordOutput("Hood/Mode", "Hub");
             Logger.recordOutput("Hood/DistanceToHub", distToHub);
             Logger.recordOutput("Hood/TargetAngle", targetAngle);
-        } else {
+        } else if (swerveSubsystem.isInNeutralZone()) {
             Translation2d turretToFerry = swerveSubsystem.getDynamicFerryLocation()
                     .getTranslation().minus(turretPos);
             double distToFerry = turretToFerry.getNorm();
@@ -70,6 +80,9 @@ public class AimHood extends Command {
             Logger.recordOutput("Hood/Mode", "Ferry");
             Logger.recordOutput("Hood/DistanceToFerry", distToFerry);
             Logger.recordOutput("Hood/TargetAngle", targetAngle);
+        } else { // opponent alliance zone - we never shoot from here, so stow
+            hood.goToMin();
+            Logger.recordOutput("Hood/Mode", "HoldOpponentZone");
         }
 
         Logger.recordOutput("Hood/CurrentAngle", hood.getAngleDegrees());
