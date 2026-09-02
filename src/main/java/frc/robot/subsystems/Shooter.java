@@ -54,8 +54,6 @@ public class Shooter extends SubsystemBase {
         rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         rightConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
         rightConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-        rightConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust if needed
-        rightConfig.CurrentLimits.StatorCurrentLimit = 100.0;
         rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         rightConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         rightConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
