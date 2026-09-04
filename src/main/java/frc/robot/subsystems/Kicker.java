@@ -52,7 +52,7 @@ public class Kicker extends SubsystemBase {
     }
 
     public void ConveyorToShooter() {
-        VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
+        // VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
     }
 

@@ -295,7 +295,7 @@ public class SwerveSubsystem extends SubsystemBase {
     
     SmartDashboard.putNumber("FrontMegatagNumber", frontMegatagNumber);
 
-    updateOdometry();
+    // updateOdometry();
     // -----------------------
     // AdvantageKit Logging
     // -----------------------
