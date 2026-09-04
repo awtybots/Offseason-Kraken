@@ -18,6 +18,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import org.littletonrobotics.junction.Logger;
 
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.utils.utils.*;
+
 
 public class Shooter extends SubsystemBase {
 
