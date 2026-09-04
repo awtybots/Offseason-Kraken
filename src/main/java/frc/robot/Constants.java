@@ -472,7 +472,7 @@ public final class Constants {
     public static final int VERT_ROLLER_ID = 11;
 
     public static final double KICKER_REVERSE_SPEED = -0.85; // adjust speeds
-    public static final double KICKER_SPEED = 0.85;
+    public static final double KICKER_SPEED = 1.0;
 
     public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
     public static final double VERT_ROLLER_SPEED = 0.85;
@@ -505,7 +505,7 @@ public final class Constants {
     public static final int CONVEYOR_BOTTOM_ID = 13;
 
     public static final double CONVEYOR_REVERSE_SPEED = -0.85;
-    public static final double CONVEYOR_SPEED = 0.85;
+    public static final double CONVEYOR_SPEED = 1.0;
 
     public static final double CONVEYOR_RPS = 75;
     public static final double CONVEYOR_REVERSE_RPS = -75;
