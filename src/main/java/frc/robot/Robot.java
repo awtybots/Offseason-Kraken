@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.BuildConstants; // <---------- WISCONSIN???
 import edu.wpi.first.wpilibj.DataLogManager;
+import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -37,6 +38,14 @@ public class Robot extends LoggedRobot {
     public Robot() {
         instance = this;
 
+        if (isReal()) {
+            // REVLib auto-logs every Spark into its own .revlog on the USB stick. That is
+            // a third writer competing with the two below for the same slow flash, and we
+            // only need it when we are actually debugging a Spark - comment this out to
+            // get the .revlog files back.
+            StatusLogger.disableAutoLogging();
+        }
+
         // Log WPILib DataLog (SysId, etc.) to the same USB location as AKit logs.
         if (isReal()) {
             DataLogManager.start("/U/logs");
@@ -44,6 +53,20 @@ public class Robot extends LoggedRobot {
             // In sim, log locally to ./logs so we don't depend on a USB mount.
             DataLogManager.start();
         }
+
+        // This has to come AFTER start(): logNetworkTables() falls back to calling
+        // start() with the *default* directory when the log has not been opened yet,
+        // which would quietly move the file off the USB stick.
+        //
+        // AdvantageKit's NT4Publisher republishes every logged value to NetworkTables, so
+        // with NT logging on DataLogManager wrote a verbatim second copy of the entire
+        // AdvantageKit stream - 87.6% of FRC_20260904_223800.wpilog was NT:/AdvantageKit/**.
+        // Two writers at ~1.5 MB/min each outran the USB flush and WPILib tripped its own
+        // guard, "outgoing buffers exceeded threshold, pausing logging", leaving the
+        // unflushed blocks sitting in RAM. On a roboRIO 1 (256 MB) that is enough for the
+        // kernel to kill the JVM, which is why every akit log from 2026-09-04 ends
+        // truncated mid-record on a 4096-byte boundary instead of on a stack trace.
+        DataLogManager.logNetworkTables(false);
 
         Logger.recordMetadata("ProjectName", "2026Rebuilt");
         Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
