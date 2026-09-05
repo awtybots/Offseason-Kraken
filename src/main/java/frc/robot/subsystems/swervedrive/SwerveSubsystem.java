@@ -514,8 +514,18 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   private void configurePathPlannerLogging() {
+      // PathPlannerLib publishes these to NetworkTables itself, but nothing writes them
+      // to disk any more: DataLogManager used to sweep them up as a side effect of
+      // logging all of NT, and that is off now because it was duplicating the whole
+      // AdvantageKit stream into a second file. Route them through AdvantageKit instead
+      // so auto path following is still replayable in AdvantageScope.
       PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
           targetPathPose = pose;
+          Logger.recordOutput("PathPlanner/TargetPose", pose);
+      });
+      // Fires once per path rather than once per loop, so building the array is cheap.
+      PathPlannerLogging.setLogActivePathCallback((poses) -> {
+          Logger.recordOutput("PathPlanner/ActivePath", poses.toArray(new Pose2d[0]));
       });
   }
 
