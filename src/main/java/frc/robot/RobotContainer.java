@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import static edu.wpi.first.units.Units.Inches;
+import static frc.robot.utils.utils.*;
 
 import java.io.File;
 
@@ -312,7 +313,7 @@ public class RobotContainer {
     // ==================== OPERATOR BINDINGS ====================
 
   
-    operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPSCommand(30));
+    operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPMCommand(RPSToRPM(30)));
     // LB - hood to 33.2 deg. Check it against a protractor, and measure the ball exit
     //      height here and at HOOD_MIN: SHOOTER_HEIGHT_M assumes it does not move.
     operatorXbox.leftBumper().whileTrue(m_hood.setAngleCommand(33.2));

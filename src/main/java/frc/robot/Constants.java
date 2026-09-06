@@ -157,6 +157,11 @@ public final class Constants {
     public static final double PUSHOUT_RETRACTED_POS = 5.0;
     public static final double FULLY_RETRACTED_POS = 0.0;
 
+
+    public static final double dutyRetractSpeed = -8.0;
+    public static final double dutyExtendSpeed = 8.0;
+    public static final double cheesySpeed = -5.0;
+
     // PID/FF
     public static final double p = 1.0;
     public static final double i = 0.0;
@@ -173,15 +178,15 @@ public final class Constants {
     public static final int SHOOTER_L_ID = 16;
     public static final int SHOOTER_R_ID = 17;
 
-    public static final double SHOOTER_SPEED = 40;
-    public static final double SHOOTER_PASSING_SPEED = 20;
+    public static final double SHOOTER_SPEED = 2400;
+    public static final double SHOOTER_PASSING_SPEED = 1200;
     public static final double ERROR_MARGIN = 100.0 / 60.0; // 100 RPM, expressed in RPS
     public static final double STOP = 0;
     public static final double IDLE = 0.1;
 
-    public static final double ALLIANCE_IDLE_RPS = 30;
-    public static final double ALLIANCE_AUTO_RPS = 30;
-    public static final double NEUTRAL_IDLE_RPS = 0;
+    public static final double ALLIANCE_IDLE_RPM = 1800;
+    public static final double ALLIANCE_AUTO_RPM = 1800;
+    public static final double NEUTRAL_IDLE_RPM = 0;
 
     // Phoenix 6 VelocityVoltage takes ROTATIONS PER SECOND and these gains are
     // volts per rps. The old values were volts per RPM - 60x too small - so the

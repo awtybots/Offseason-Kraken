@@ -65,14 +65,12 @@ public class Pushout extends SubsystemBase {
         PushoutMotor.setControl(voltageRequest.withOutput(0).withEnableFOC(true));
     }
 
-    public void PushoutDutyCycle() {
-        // PushoutMotor.setControl(voltageRequest.withOutput(8.0));
-        PushoutMotor.setControl(voltageRequest.withOutput(8.0).withEnableFOC(true));
+    public void PushoutDutyCycle(double output) {
+        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(true));
     }
 
-    public void PushoutDutyCycleRetract() {
-        // PushoutMotor.setControl(voltageRequest.withOutput(-8.0));
-        PushoutMotor.setControl(voltageRequest.withOutput(-8.0).withEnableFOC(true));
+    public void PushoutDutyCycleRetract(double output) {
+        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(true));
     }
 
     public void AgitateStep(boolean retract) {
@@ -89,13 +87,25 @@ public class Pushout extends SubsystemBase {
 
     public Command PushoutDutyCycleCommand() {
         return this.run(() -> {
-            PushoutDutyCycle();
+            PushoutDutyCycle(PushoutConstants.dutyExtendSpeed);
         }).finallyDo(interrupted -> StopPushout());
     }
 
     public Command PushoutDutyCycleRetractCommand() {
         return this.run(() -> {
-            PushoutDutyCycleRetract();
+            PushoutDutyCycleRetract(PushoutConstants.dutyRetractSpeed);
+        }).finallyDo(interrupted -> StopPushout());
+    }
+
+    public Command PushoutDutyCycleCommand(double output) {
+        return this.run(() -> {
+            PushoutDutyCycle(output);
+        }).finallyDo(interrupted -> StopPushout());
+    }
+
+    public Command PushoutDutyCycleRetractCommand(double output) {
+        return this.run(() -> {
+            PushoutDutyCycleRetract(output);
         }).finallyDo(interrupted -> StopPushout());
     }
 
@@ -121,6 +131,11 @@ public class Pushout extends SubsystemBase {
         return this.runOnce(() -> {
             ResetEncoder();
         });
+    }
+
+    public Command CheesyAgitation()
+    {
+        return PushoutDutyCycleRetractCommand(PushoutConstants.cheesySpeed);
     }
 
     public Command AgitateCommand() {
@@ -200,9 +215,8 @@ public class Pushout extends SubsystemBase {
     public void periodic() {
         Logger.recordOutput("Pushout/Position", PushoutMotor.getPosition().getValueAsDouble());
         Logger.recordOutput("Pushout/Velocity", PushoutMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Pushout/AppliedVolts", PushoutMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Pushout/StatorCurrent", PushoutMotor.getStatorCurrent().getValueAsDouble());
-
-        utils.logFOC("Pushout", PushoutMotor);
+        Logger.recordOutput("Pushout/Voltage", PushoutMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Pushout/CurrentDraw", PushoutMotor.getSupplyCurrent().getValueAsDouble());
+            utils.logFOC("Pushout", PushoutMotor);
     }
 }

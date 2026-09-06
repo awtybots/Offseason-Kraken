@@ -6,6 +6,7 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import org.littletonrobotics.junction.Logger;
+import static frc.robot.utils.utils.*;
 
 public class ControlAllShooting extends Command {
 
@@ -21,7 +22,7 @@ public class ControlAllShooting extends Command {
     private final SwerveSubsystem drivebase;
 
     public double distance = 0.0;
-    public double recordedTargetRPS = 0.0;
+    public double recordedTargetRPM = 0.0;
     private boolean isFiring = false;
     private boolean isAtSpeed = false;
     private boolean inShootingZone = true; // false in the opponent alliance zone
@@ -80,11 +81,11 @@ public class ControlAllShooting extends Command {
             double dist = turretToHub.getNorm();
             distance = dist;
 
-            double targetRPS = ShooterConstants.hubShooterTable.get(dist);
-            recordedTargetRPS = targetRPS;
+            double targetRPM = ShooterConstants.hubShooterTable.get(dist);
+            recordedTargetRPM = targetRPM;
 
-            m_shooter.setTargetRPS(targetRPS);
-            isAtSpeed = Math.abs(m_shooter.getRPS() - targetRPS) <= ShooterConstants.ERROR_MARGIN;
+            m_shooter.setTargetRPM(targetRPM);
+            isAtSpeed = Math.abs(m_shooter.getRPS() - RPMToRPS(targetRPM)) <= ShooterConstants.ERROR_MARGIN;
 
             Logger.recordOutput("Shooting/Mode", "Hub");
             Logger.recordOutput("Shooting/DistanceToHub", dist);
@@ -95,18 +96,18 @@ public class ControlAllShooting extends Command {
             double dist = turretToFerry.getNorm();
             distance = dist;
 
-            double targetRPS = ShooterConstants.ferryShooterTable.get(dist);
-            recordedTargetRPS = targetRPS;
+            double targetRPM = ShooterConstants.ferryShooterTable.get(dist);
+            recordedTargetRPM = targetRPM;
 
-            m_shooter.setTargetRPS(targetRPS);
-            isAtSpeed = Math.abs(m_shooter.getRPS() - targetRPS) <= ShooterConstants.ERROR_MARGIN;
+            m_shooter.setTargetRPM(targetRPM);
+            isAtSpeed = Math.abs(m_shooter.getRPS() - RPMToRPS(targetRPM)) <= ShooterConstants.ERROR_MARGIN;
 
             Logger.recordOutput("Shooting/Mode", "Ferry");
             Logger.recordOutput("Shooting/DistanceToFerry", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         } else { // opponent alliance zone - we never shoot or ferry from here
-            recordedTargetRPS = ShooterConstants.ALLIANCE_IDLE_RPS;
-            m_shooter.setTargetRPS(ShooterConstants.ALLIANCE_IDLE_RPS);
+            recordedTargetRPM = ShooterConstants.ALLIANCE_IDLE_RPM;
+            m_shooter.setTargetRPM(ShooterConstants.ALLIANCE_IDLE_RPM);
             isAtSpeed = false;
             Logger.recordOutput("Shooting/Mode", "HoldOpponentZone");
         }
@@ -132,8 +133,8 @@ public class ControlAllShooting extends Command {
             m_rollers.stopRollers();
         }
 
-        Logger.recordOutput("Shooting/TargetRPS", recordedTargetRPS);
-        Logger.recordOutput("Shooting/CurrentRPS", m_shooter.getRPS());
+        Logger.recordOutput("Shooting/TargetRPM", recordedTargetRPM);
+        Logger.recordOutput("Shooting/CurrentRPM", RPSToRPM(m_shooter.getRPS()));
         Logger.recordOutput("Shooting/IsAtSpeed", isAtSpeed);
         Logger.recordOutput("Shooting/IsFiring", isFiring);
         Logger.recordOutput("Shooting/IsReadyToFire", isReadyToFire());

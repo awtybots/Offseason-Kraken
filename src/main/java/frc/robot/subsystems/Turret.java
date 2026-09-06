@@ -288,7 +288,7 @@ public class Turret extends SubsystemBase {
         // cycle scaled by the bus.
         Logger.recordOutput("Turret/AppliedVolts",
                 TurretMotor.getAppliedOutput() * TurretMotor.getBusVoltage());
-        Logger.recordOutput("Turret/Current", TurretMotor.getOutputCurrent());
+        Logger.recordOutput("Turret/CurrentDraw", TurretMotor.getOutputCurrent() * TurretMotor.getAppliedOutput());
         Logger.recordOutput("Turret/MotorRotations", turretRelativeEncoder.getPosition());
         Logger.recordOutput("Turret/FrameDisagreementDeg", getContinuousDegrees() - getRelativeDegrees());
         Logger.recordOutput("Turret/SoftMinDegrees", softMinDegrees());

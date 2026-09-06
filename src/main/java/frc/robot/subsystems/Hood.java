@@ -95,7 +95,8 @@ public class Hood extends SubsystemBase {
         Logger.recordOutput("Hood/TargetDegrees", currentTargetDegrees);
         Logger.recordOutput("Hood/IsAtAngle", isAtAngle());
         Logger.recordOutput("Hood/MotorRotations", HoodEncoder.getPosition());
-        Logger.recordOutput("Hood/AppliedVolts", HoodMotor.getAppliedOutput() * HoodMotor.getBusVoltage());
+        Logger.recordOutput("Hood/Voltage", HoodMotor.getAppliedOutput() * HoodMotor.getBusVoltage());
         Logger.recordOutput("Hood/StatorCurrent", HoodMotor.getOutputCurrent());
+        Logger.recordOutput("Hood/CurrentDraw", HoodMotor.getOutputCurrent() * HoodMotor.getAppliedOutput());
     }
 }

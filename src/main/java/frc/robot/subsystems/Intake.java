@@ -69,7 +69,8 @@ public class Intake extends SubsystemBase {
     @Override
     public void periodic() {
         Logger.recordOutput("Intake/DesiredPercent", desiredPercent);
-        Logger.recordOutput("Intake/AppliedVolts", intakeMotor.getBusVoltage());
+        Logger.recordOutput("Intake/Voltage", intakeMotor.getBusVoltage() * intakeMotor.getAppliedOutput());
+        Logger.recordOutput("Intake/CurrentDraw", intakeMotor.getOutputCurrent() * intakeMotor.getAppliedOutput());
         Logger.recordOutput("Intake/Velocity", intakeController.getSetpoint());
         Logger.recordOutput("Intake/TargetVelocity", IntakeConstants.INTAKE_RPM);
     }
