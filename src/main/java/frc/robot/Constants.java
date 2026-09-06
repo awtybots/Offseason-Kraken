@@ -308,7 +308,7 @@ public final class Constants {
           Pair.of(Meters.of(5.0), RPM.of(4239)),
           Pair.of(Meters.of(5.5), RPM.of(4426)),
           Pair.of(Meters.of(6.0), RPM.of(4610)))) {
-        hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+        hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
       // Derived, no longer placeholders: floor target (dz = -0.5177 m) on the
@@ -330,7 +330,7 @@ public final class Constants {
           Pair.of(Meters.of(9.0), RPM.of(5031)),
           Pair.of(Meters.of(10.0), RPM.of(5387)),
           Pair.of(Meters.of(11.0), RPM.of(5734)))) {
-        ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+        ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
     }
 

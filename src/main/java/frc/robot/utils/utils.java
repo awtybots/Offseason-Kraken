@@ -10,9 +10,9 @@ public class utils {
         return rpm / 60;
     }
 
-    public static double RPSToRPM(double rpm)
+    public static double RPSToRPM(double rps)
     {
-        return rpm / 60;
+        return rps * 60;
     }
 
     /**

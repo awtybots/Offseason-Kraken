@@ -71,8 +71,8 @@ public class Shooter extends SubsystemBase {
         ShooterLeftMotor.setControl(new Follower(ShooterRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
-    // Against the live setpoint, not SHOOTER_SPEED. That constant is a 20 rps bench
-    // value while the tables now command 51-77 rps, so this read false all match.
+    // Against the live setpoint, not SHOOTER_SPEED. That constant is a 2400 RPM bench
+    // value while the tables now command 3065-5734 RPM, so this read false at all match.
     public boolean isShooterFast() {
         if (targetRPS == 0.0) {
             return false;
@@ -101,23 +101,21 @@ public class Shooter extends SubsystemBase {
     public void stopShooting() {
         targetRPS = 0.0;
         ShooterRightMotor.setControl(dutyCycleRequest.withOutput(0.0));
-        // ShooterLeftMotor.setControl(dutyCycleRequest.withOutput(0.0));
     }
 
     public void SpeedUpShooter() {
+        targetRPS = RPMToRPS(ShooterConstants.SHOOTER_SPEED);
         setTargetRPM(ShooterConstants.SHOOTER_SPEED);
-        // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
     }
 
     public void setTargetRPM(double rpm) {
         targetRPS = RPMToRPS(rpm);
         ShooterRightMotor.setControl(velocityRequest.withVelocity(RPMToRPS(rpm)).withSlot(0));
-        // ShooterLeftMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
     }
 
     public void ShooterPassing() {
+        targetRPS = RPMToRPS(ShooterConstants.SHOOTER_PASSING_SPEED);
         setTargetRPM(ShooterConstants.SHOOTER_PASSING_SPEED);
-        // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
     }
 
     public Command setAllianceIdle() {
