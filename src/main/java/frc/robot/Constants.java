@@ -157,6 +157,11 @@ public final class Constants {
     public static final double PUSHOUT_RETRACTED_POS = 5.0;
     public static final double FULLY_RETRACTED_POS = 0.0;
 
+
+    public static final double dutyRetractSpeed = -8.0;
+    public static final double dutyExtendSpeed = 8.0;
+    public static final double cheesySpeed = -5.0;
+
     // PID/FF
     public static final double p = 1.0;
     public static final double i = 0.0;

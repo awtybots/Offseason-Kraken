@@ -60,12 +60,12 @@ public class Pushout extends SubsystemBase {
         PushoutMotor.setControl(voltageRequest.withOutput(0));
     }
 
-    public void PushoutDutyCycle() {
-        PushoutMotor.setControl(voltageRequest.withOutput(8.0));
+    public void PushoutDutyCycle(double output) {
+        PushoutMotor.setControl(voltageRequest.withOutput(output));
     }
 
-    public void PushoutDutyCycleRetract() {
-        PushoutMotor.setControl(voltageRequest.withOutput(-8.0));
+    public void PushoutDutyCycleRetract(double output) {
+        PushoutMotor.setControl(voltageRequest.withOutput(output));
     }
 
     public void AgitateStep(boolean retract) {
@@ -78,13 +78,25 @@ public class Pushout extends SubsystemBase {
 
     public Command PushoutDutyCycleCommand() {
         return this.run(() -> {
-            PushoutDutyCycle();
+            PushoutDutyCycle(PushoutConstants.dutyExtendSpeed);
         }).finallyDo(interrupted -> StopPushout());
     }
 
     public Command PushoutDutyCycleRetractCommand() {
         return this.run(() -> {
-            PushoutDutyCycleRetract();
+            PushoutDutyCycleRetract(PushoutConstants.dutyRetractSpeed);
+        }).finallyDo(interrupted -> StopPushout());
+    }
+
+    public Command PushoutDutyCycleCommand(double output) {
+        return this.run(() -> {
+            PushoutDutyCycle(output);
+        }).finallyDo(interrupted -> StopPushout());
+    }
+
+    public Command PushoutDutyCycleRetractCommand(double output) {
+        return this.run(() -> {
+            PushoutDutyCycleRetract(output);
         }).finallyDo(interrupted -> StopPushout());
     }
 
@@ -110,6 +122,11 @@ public class Pushout extends SubsystemBase {
         return this.runOnce(() -> {
             ResetEncoder();
         });
+    }
+
+    public Command CheesyAgitation()
+    {
+        return PushoutDutyCycleRetractCommand(PushoutConstants.cheesySpeed);
     }
 
     public Command AgitateCommand() {
