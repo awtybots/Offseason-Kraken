@@ -1,6 +1,6 @@
 {
-  "robotWidth": 0.832,
-  "robotLength": 0.705,
+  "robotWidth": 0.944,
+  "robotLength": 0.812,
   "holonomicMode": true,
   "pathFolders": [
     "TRI Paths"
@@ -13,7 +13,7 @@
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
-  "robotMass": 45.36,
+  "robotMass": 50.0,
   "robotMOI": 4.2,
   "robotTrackwidth": 0.546,
   "driveWheelRadius": 0.049,
@@ -22,18 +22,18 @@
   "driveMotorType": "NEO",
   "driveCurrentLimit": 60.0,
   "wheelCOF": 1.2,
-  "flModuleX": 0.223,
-  "flModuleY": 0.273,
-  "frModuleX": 0.223,
-  "frModuleY": -0.273,
-  "blModuleX": -0.223,
-  "blModuleY": 0.273,
-  "brModuleX": -0.223,
-  "brModuleY": -0.273,
+  "flModuleX": 0.255,
+  "flModuleY": 0.318,
+  "frModuleX": 0.2547366,
+  "frModuleY": -0.318,
+  "blModuleX": -0.255,
+  "blModuleY": 0.318,
+  "brModuleX": -0.255,
+  "brModuleY": -0.318,
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
   "robotFeatures": [
-    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.4,\"y\":0.0},\"size\":{\"width\":0.749,\"length\":0.2},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":true}}",
-    "{\"name\":\"Circle\",\"type\":\"circle\",\"data\":{\"center\":{\"x\":-0.2,\"y\":0.25},\"radius\":0.1,\"strokeWidth\":0.02,\"filled\":true}}"
+    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.51,\"y\":0.0},\"size\":{\"width\":0.749,\"length\":0.205},\"borderRadius\":0.02,\"strokeWidth\":0.02,\"filled\":true}}",
+    "{\"name\":\"Circle\",\"type\":\"circle\",\"data\":{\"center\":{\"x\":-0.21,\"y\":0.27},\"radius\":0.1525,\"strokeWidth\":0.02,\"filled\":true}}"
   ]
 }
