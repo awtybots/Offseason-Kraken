@@ -44,6 +44,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "TRI Autons",
+  "folder": null,
   "choreoAuto": false
 }

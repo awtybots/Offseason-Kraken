@@ -2,12 +2,8 @@
   "robotWidth": 0.832,
   "robotLength": 0.705,
   "holonomicMode": true,
-  "pathFolders": [
-    "TRI Paths"
-  ],
-  "autoFolders": [
-    "TRI Autons"
-  ],
+  "pathFolders": [],
+  "autoFolders": [],
   "defaultMaxVel": 3.75,
   "defaultMaxAccel": 3.75,
   "defaultMaxAngVel": 540.0,
