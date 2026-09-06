@@ -70,7 +70,8 @@ public class Rollers extends SubsystemBase {
     @Override
     public void periodic() {
         Logger.recordOutput("Rollers/DesiredRPS", RollersMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Rollers/Volts", RollersMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Rollers/Voltage", RollersMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Rollers/CurrentDraw", RollersMotor.getSupplyCurrent().getValueAsDouble());
         Logger.recordOutput("Rollers/RPS", RollersMotor.getVelocity().getValueAsDouble());
     }
 }

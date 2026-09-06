@@ -90,10 +90,12 @@ public class Kicker extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Kicker/TopDutyCycle", KickerMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Kicker/TopVolts", KickerMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerVolts", VerticalRollerMotor.getBusVoltage());
-        Logger.recordOutput("Kicker/TopRPS", KickerMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerRPS", VertRollerEncoder.getVelocity());
+        Logger.recordOutput("Kicker/KickerDutyCycle", KickerMotor.getDutyCycle().getValueAsDouble());
+        Logger.recordOutput("Kicker/KickerVoltage", KickerMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Kicker/VerticalRollerVoltage", VerticalRollerMotor.getBusVoltage() * VerticalRollerMotor.getAppliedOutput());
+        Logger.recordOutput("Kicker/VerticalRollerCurrentDraw", VerticalRollerMotor.getOutputCurrent() * VerticalRollerMotor.getAppliedOutput());
+        Logger.recordOutput("Kicker/KickerRPS", KickerMotor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Kicker/VerticalRollerRPM", VertRollerEncoder.getVelocity());
+        Logger.recordOutput("Kicker/KickerCurrentDraw", KickerMotor.getSupplyCurrent().getValueAsDouble());
     }
 }

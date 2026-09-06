@@ -191,8 +191,10 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("Shooter/LeftRPS", leftRPS);
         Logger.recordOutput("Shooter/AverageRPS", getRPS());
         Logger.recordOutput("Shooter/TargetRPS", targetRPS);
-        Logger.recordOutput("Shooter/RightAppliedVolts", ShooterRightMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Shooter/LeftAppliedVolts", ShooterLeftMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Shooter/RightVoltage", ShooterRightMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Shooter/LeftVoltage", ShooterLeftMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Shooter/RightCurrentDraw", ShooterRightMotor.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("Shooter/LeftCurrentDraw", ShooterLeftMotor.getSupplyCurrent().getValueAsDouble());
         Logger.recordOutput("Shooter/IsShooterFast", isShooterFast());
     }
 }

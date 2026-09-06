@@ -81,8 +81,10 @@ public class Conveyor extends SubsystemBase {
     public void periodic() {
         Logger.recordOutput("Conveyor/TopDutyCycle", ConveyorTopMotor.getDutyCycle().getValueAsDouble());
         Logger.recordOutput("Conveyor/BottomDutyCycle", ConveyorBottomMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Conveyor/TopVolts", ConveyorTopMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Conveyor/BottomVolts", ConveyorBottomMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Conveyor/TopVoltage", ConveyorTopMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Conveyor/BottomVoltage", ConveyorBottomMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Conveyor/TopCurrentDraw", ConveyorTopMotor.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("Conveyor/BottomCurrentDraw", ConveyorBottomMotor.getSupplyCurrent().getValueAsDouble());
         Logger.recordOutput("Conveyor/TopRPS", ConveyorTopMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Conveyor/BottomRPS", ConveyorBottomMotor.getVelocity().getValueAsDouble());
     }

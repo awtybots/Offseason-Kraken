@@ -178,7 +178,7 @@ public class Pushout extends SubsystemBase {
     public void periodic() {
         Logger.recordOutput("Pushout/Position", PushoutMotor.getPosition().getValueAsDouble());
         Logger.recordOutput("Pushout/Velocity", PushoutMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Pushout/AppliedVolts", PushoutMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Pushout/StatorCurrent", PushoutMotor.getStatorCurrent().getValueAsDouble());
+        Logger.recordOutput("Pushout/Voltage", PushoutMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Pushout/CurrentDraw", PushoutMotor.getSupplyCurrent().getValueAsDouble());
     }
 }
