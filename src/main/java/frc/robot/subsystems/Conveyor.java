@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import org.littletonrobotics.junction.Logger;
+import frc.robot.utils.utils;
 
 import frc.robot.Constants.ConveyorConstants;
 public class Conveyor extends SubsystemBase {
@@ -46,16 +47,19 @@ public class Conveyor extends SubsystemBase {
     }
 
     public void ReverseConveyor() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED));
+        // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED).withEnableFOC(true));
     }
 
     public void HopperToShooter() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
+        // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED).withEnableFOC(true));
     }
 
 
     public void stopConveyor() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0));
+        // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(true));
         // bottom follows for all the voids
     }
     
@@ -85,5 +89,8 @@ public class Conveyor extends SubsystemBase {
         Logger.recordOutput("Conveyor/BottomVolts", ConveyorBottomMotor.getMotorVoltage().getValueAsDouble());
         Logger.recordOutput("Conveyor/TopRPS", ConveyorTopMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Conveyor/BottomRPS", ConveyorBottomMotor.getVelocity().getValueAsDouble());
+
+        utils.logFOC("Conveyor/Top", ConveyorTopMotor);
+        utils.logFOC("Conveyor/Bottom", ConveyorBottomMotor);
     }
 }

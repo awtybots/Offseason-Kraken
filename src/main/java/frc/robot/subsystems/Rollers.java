@@ -12,6 +12,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants.RollersConstants;
 import org.littletonrobotics.junction.Logger;
+import frc.robot.utils.utils;
 
 public class Rollers extends SubsystemBase {
 
@@ -39,18 +40,21 @@ public class Rollers extends SubsystemBase {
 
     public void ReverseRollers() {
         // RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.REVERSE_ROLLERS_RPS).withSlot(0));
-        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.REVERSE_ROLLERS_SPEED));
+        // RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.REVERSE_ROLLERS_SPEED));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.REVERSE_ROLLERS_SPEED).withEnableFOC(true));
     }
 
     public void RollersToConveyor() {
         // RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.ROLLERS_RPS).withSlot(0));
-        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED));
+        // RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED).withEnableFOC(true));
     }
 
     
 
     public void stopRollers() {
-        RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));
+        // RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(0.0).withEnableFOC(true));
     }
 
 
@@ -72,5 +76,7 @@ public class Rollers extends SubsystemBase {
         Logger.recordOutput("Rollers/DesiredRPS", RollersMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Rollers/Volts", RollersMotor.getMotorVoltage().getValueAsDouble());
         Logger.recordOutput("Rollers/RPS", RollersMotor.getVelocity().getValueAsDouble());
+
+        utils.logFOC("Rollers", RollersMotor);
     }
 }

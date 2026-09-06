@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants.PushoutConstants;
 import org.littletonrobotics.junction.Logger;
+import frc.robot.utils.utils;
 
 public class Pushout extends SubsystemBase {
 
@@ -41,15 +42,18 @@ public class Pushout extends SubsystemBase {
     }
 
     public void PushIntake() {
-        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0));
+        // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0));
+        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0).withEnableFOC(true));
     }
 
     public void RetractIntake() {
-        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0));
+        // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0));
+        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0).withEnableFOC(true));
     }
 
     public void FullyRetract() {
-        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0));
+        // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0));
+        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0).withEnableFOC(true));
     }
 
     public void ResetEncoder() {
@@ -57,23 +61,30 @@ public class Pushout extends SubsystemBase {
     }
 
     public void StopPushout() {
-        PushoutMotor.setControl(voltageRequest.withOutput(0));
+        // PushoutMotor.setControl(voltageRequest.withOutput(0));
+        PushoutMotor.setControl(voltageRequest.withOutput(0).withEnableFOC(true));
     }
 
     public void PushoutDutyCycle() {
-        PushoutMotor.setControl(voltageRequest.withOutput(8.0));
+        // PushoutMotor.setControl(voltageRequest.withOutput(8.0));
+        PushoutMotor.setControl(voltageRequest.withOutput(8.0).withEnableFOC(true));
     }
 
     public void PushoutDutyCycleRetract() {
-        PushoutMotor.setControl(voltageRequest.withOutput(-8.0));
+        // PushoutMotor.setControl(voltageRequest.withOutput(-8.0));
+        PushoutMotor.setControl(voltageRequest.withOutput(-8.0).withEnableFOC(true));
     }
 
     public void AgitateStep(boolean retract) {
         double extendedPos = PushoutConstants.PUSHOUT_EXTENDED_POS;
         double agitatePos = extendedPos - (extendedPos * 0.25);
+        // PushoutMotor.setControl(positionRequest
+        //         .withPosition(retract ? agitatePos : extendedPos)
+        //         .withSlot(0));
         PushoutMotor.setControl(positionRequest
                 .withPosition(retract ? agitatePos : extendedPos)
-                .withSlot(0));
+                .withSlot(0)
+                .withEnableFOC(true));
     }
 
     public Command PushoutDutyCycleCommand() {
@@ -120,37 +131,48 @@ public class Pushout extends SubsystemBase {
         final double waitBetween = PushoutConstants.PUSHOUT_BETWEEN;
 
         Command agitate = Commands.sequence(
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0))),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0))),
-                Commands.waitSeconds(waitTime),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0))),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
                 Commands.waitSeconds(waitBetween),
 
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0))),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0))),
-                Commands.waitSeconds(waitTime),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0))),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
                 Commands.waitSeconds(waitBetween),
 
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0))),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0))),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
                 Commands.waitSeconds(waitBetween),
 
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(finalPos).withSlot(0))),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                Commands.waitSeconds(waitBetween),
+
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                Commands.waitSeconds(waitBetween),
+
+                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(finalPos).withSlot(0))),
+                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(finalPos).withSlot(0).withEnableFOC(true))),
                 Commands.idle(this)
 
         ).finallyDo(interrupted -> PushIntake());
@@ -180,5 +202,7 @@ public class Pushout extends SubsystemBase {
         Logger.recordOutput("Pushout/Velocity", PushoutMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Pushout/AppliedVolts", PushoutMotor.getMotorVoltage().getValueAsDouble());
         Logger.recordOutput("Pushout/StatorCurrent", PushoutMotor.getStatorCurrent().getValueAsDouble());
+
+        utils.logFOC("Pushout", PushoutMotor);
     }
 }

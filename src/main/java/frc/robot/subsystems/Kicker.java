@@ -20,6 +20,7 @@ import com.revrobotics.spark.SparkMax;
 import frc.robot.Configs;
 import frc.robot.Constants.KickerConstants;
 import org.littletonrobotics.junction.Logger;
+import frc.robot.utils.utils;
 
 
 @SuppressWarnings("unused")
@@ -48,21 +49,25 @@ public class Kicker extends SubsystemBase {
 
     public void ReverseKicker() {
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_REVERSE_SPEED);
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED).withEnableFOC(true));
     }
 
     public void ConveyorToShooter() {
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
     }
 
     public void ClearBall() {
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
     }
 
 
     public void stopKicker() {
-        KickerMotor.setControl(dutyCycleRequest.withOutput(0));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(0));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(true));
         VerticalRollerMotor.set(0.0);
     }
 
@@ -95,5 +100,7 @@ public class Kicker extends SubsystemBase {
         Logger.recordOutput("Kicker/VerticalRollerVolts", VerticalRollerMotor.getBusVoltage());
         Logger.recordOutput("Kicker/TopRPS", KickerMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Kicker/VerticalRollerRPS", VertRollerEncoder.getVelocity());
+
+        utils.logFOC("Kicker/Top", KickerMotor);
     }
 }
