@@ -7,49 +7,43 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Regular First Swipe Over Bump"
+            "pathName": "Swipe1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Over Bump"
+            "pathName": "OverBump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot Over Bump"
+            "pathName": "SOTM"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Second Swipe Over Bump"
+            "pathName": "Swipe2"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Over Bump"
+            "pathName": "OverBump2"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Over bump + Intake Depot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "End of Auto"
+            "pathName": "SOTM"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Remix",
+  "folder": "Trial",
   "choreoAuto": false
 }

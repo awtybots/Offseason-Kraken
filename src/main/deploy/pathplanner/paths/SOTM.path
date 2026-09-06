@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.324244482173175,
-        "y": 7.494360498019241
+        "x": 3.0747861078703007,
+        "y": 5.5761801552076165
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.324244482173175,
-        "y": 7.494360498019241
+        "x": 1.3734144965277784,
+        "y": 5.881214771412037
       },
       "isLocked": false,
-      "linkedName": "Under Trench Forward"
+      "linkedName": "OverBumpEnd"
     },
     {
       "anchor": {
-        "x": 7.322026032823996,
-        "y": 6.9881126202603285
+        "x": 4.005877385394399,
+        "y": 7.414555386284423
       },
       "prevControl": {
-        "x": 6.567617430673458,
-        "y": 7.474507640067912
+        "x": 1.6332037019453254,
+        "y": 7.661185377603867
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "SOTM1"
     }
   ],
   "rotationTargets": [],
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.75,
+    "maxVelocity": 1.5,
     "maxAcceleration": 3.75,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -41,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -56.82148834060726
-  },
-  "reversed": false,
-  "folder": "Remix",
-  "idealStartingState": {
-    "velocity": 1.0,
+    "velocity": 1.5,
     "rotation": 0.0
   },
-  "useDefaultConstraints": true
+  "reversed": false,
+  "folder": "Trial",
+  "idealStartingState": {
+    "velocity": 1.0,
+    "rotation": 121.68700000000001
+  },
+  "useDefaultConstraints": false
 }
