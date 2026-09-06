@@ -35,7 +35,8 @@ public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
 
 
-  public static final double MAX_SPEED = Units.feetToMeters(15.724);
+
+  public static final double MAX_SPEED = Units.feetToMeters(15.331);
 
   public static final class DrivebaseConstants {
 
