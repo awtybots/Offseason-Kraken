@@ -50,28 +50,21 @@ public class Shooter extends SubsystemBase {
                     this));
 
     public Shooter() {
-        TalonFXConfiguration rightConfig = new TalonFXConfiguration();
-        rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        rightConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
-        rightConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-        rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
-        rightConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        rightConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        rightConfig.Slot0.kP = ShooterConstants.p;
-        rightConfig.Slot0.kI = ShooterConstants.i;
-        rightConfig.Slot0.kD = ShooterConstants.d;
-        rightConfig.Slot0.kS = ShooterConstants.s;
-        rightConfig.Slot0.kV = ShooterConstants.v;
-        rightConfig.Slot0.kA = ShooterConstants.a;
-        ShooterRightMotor.getConfigurator().apply(rightConfig);
-
-        TalonFXConfiguration leftConfig = new TalonFXConfiguration();
-        leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        leftConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-        leftConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
-        leftConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        leftConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        ShooterLeftMotor.getConfigurator().apply(leftConfig);
+        TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
+        shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
+        shooterConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+        shooterConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        shooterConfig.Slot0.kP = ShooterConstants.p;
+        shooterConfig.Slot0.kI = ShooterConstants.i;
+        shooterConfig.Slot0.kD = ShooterConstants.d;
+        shooterConfig.Slot0.kS = ShooterConstants.s;
+        shooterConfig.Slot0.kV = ShooterConstants.v;
+        shooterConfig.Slot0.kA = ShooterConstants.a;
+        ShooterRightMotor.getConfigurator().apply(shooterConfig);
+        ShooterLeftMotor.getConfigurator().apply(shooterConfig);
 
         // Follow the right motor
         ShooterLeftMotor.setControl(new Follower(ShooterRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
