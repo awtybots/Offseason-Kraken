@@ -21,30 +21,6 @@
           "data": {
             "pathName": "SOTM"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Swipe2"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "OverBump2"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SOTM"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RushIn"
-          }
         }
       ]
     }
