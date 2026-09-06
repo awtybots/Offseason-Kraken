@@ -34,7 +34,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
 
-  public static final double MAX_SPEED = Units.feetToMeters(16.5);
+
+  public static final double MAX_SPEED = Units.feetToMeters(15.724);
 
   public static final class DrivebaseConstants {
 
