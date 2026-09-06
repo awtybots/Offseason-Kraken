@@ -5,9 +5,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
+import frc.robot.Configs;
 import frc.robot.Constants.IntakeConstants;
 import org.littletonrobotics.junction.Logger;
 
@@ -20,21 +23,27 @@ public class Intake extends SubsystemBase {
 
     public Intake() {
 
+        intakeMotor.configure(Configs.IntakeSubsystem.IntakeConfig, ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters);
+
     }
 
     public void runOuttake() {
-        intakeController.setSetpoint(IntakeConstants.OUTTAKE_RPM, ControlType.kVelocity);
+        desiredPercent = IntakeConstants.OUTTAKE_DUTY;
+        intakeController.setSetpoint(IntakeConstants.OUTTAKE_DUTY, ControlType.kDutyCycle);
     }
 
     public void runIntake() {
-        intakeController.setSetpoint(IntakeConstants.INTAKE_RPM, ControlType.kVelocity);
+        desiredPercent = IntakeConstants.INTAKE_DUTY;
+        intakeController.setSetpoint(IntakeConstants.INTAKE_DUTY, ControlType.kDutyCycle);
     }
 
     public void stopIntake() {
         desiredPercent = 0.0;
-        intakeMotor.set(0);
+        intakeController.setSetpoint(0.0, ControlType.kDutyCycle);
+
     }
-  
+
     public Command runIntakeCommand() {
         return this.run(() -> {
             runIntake();

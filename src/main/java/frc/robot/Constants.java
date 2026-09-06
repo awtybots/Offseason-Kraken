@@ -144,6 +144,9 @@ public final class Constants {
     public static final double INTAKE_RPM = 2000;
     public static final double OUTTAKE_RPM = -2000;
 
+    public static final double INTAKE_DUTY = 0.8;
+    public static final double OUTTAKE_DUTY = -0.8; 
+
   }
 
   public static final class PushoutConstants {

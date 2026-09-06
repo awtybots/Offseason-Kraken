@@ -42,7 +42,7 @@ public class Kicker extends SubsystemBase {
         KickerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         KickerMotor.getConfigurator().apply(KickerConfig);
 
-        VerticalRollerMotor.configure(Configs.KickerSubsystem.VertivalMotorConfig, ResetMode.kResetSafeParameters,
+        VerticalRollerMotor.configure(Configs.KickerSubsystem.VerticalMotorConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
     }
 
