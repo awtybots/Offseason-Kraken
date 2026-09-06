@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.BuildConstants; // <---------- WISCONSIN???
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import org.littletonrobotics.junction.LoggedPowerDistribution;
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -67,6 +69,14 @@ public class Robot extends LoggedRobot {
         // kernel to kill the JVM, which is why every akit log from 2026-09-04 ends
         // truncated mid-record on a 4096-byte boundary instead of on a stack trace.
         DataLogManager.logNetworkTables(false);
+
+        // Point the AdvantageKit conduit at the REV PDH on CAN 1. Without this it falls
+        // back to PowerDistributionJNI.DEFAULT_MODULE + AUTOMATIC_TYPE, which never found
+        // the module: every /PowerDistribution field logged once as 0, including Voltage,
+        // so we had no current data at all while the battery was sagging to 8.85 V.
+        // Must run before Logger.start(), because Logger's own no-arg getInstance() call
+        // returns whatever singleton already exists.
+        LoggedPowerDistribution.getInstance(1, ModuleType.kRev);
 
         Logger.recordMetadata("ProjectName", "2026Rebuilt");
         Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);

@@ -100,7 +100,7 @@
       "command": {
         "type": "named",
         "data": {
-          "name": "extend"
+          "name": "extend intake"
         }
       }
     },
@@ -108,7 +108,12 @@
       "name": "intake",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": 3.4981549815497965,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake"
+        }
+      }
     },
     {
       "name": "Shoot With Timeout",
