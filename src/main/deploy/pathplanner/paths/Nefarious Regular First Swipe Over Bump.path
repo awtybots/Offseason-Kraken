@@ -145,7 +145,7 @@
     "rotation": 136.565
   },
   "reversed": false,
-  "folder": "TRI Paths",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": -90.0
