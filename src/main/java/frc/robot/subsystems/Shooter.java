@@ -18,6 +18,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import org.littletonrobotics.junction.Logger;
 
 import frc.robot.Constants.ShooterConstants;
+import static frc.robot.utils.utils.*;
 
 public class Shooter extends SubsystemBase {
 
@@ -80,15 +81,15 @@ public class Shooter extends SubsystemBase {
     }
 
     public double getRPS() {
-        return (ShooterRightMotor.getVelocity().getValueAsDouble()
-                + ShooterLeftMotor.getVelocity().getValueAsDouble()) / 2.0;
+        return (Math.abs(ShooterRightMotor.getVelocity().getValueAsDouble())
+                + Math.abs(ShooterLeftMotor.getVelocity().getValueAsDouble())) / 2.0;
     }
 
     public boolean isShooterRunning() {
         double setpoint = Math.abs(targetRPS);
         boolean running = Math.abs(setpoint - getRPS()) < ShooterConstants.ERROR_MARGIN
                 && setpoint != 0
-                && setpoint != ShooterConstants.ALLIANCE_IDLE_RPS;
+                && setpoint != RPMToRPS(ShooterConstants.ALLIANCE_IDLE_RPM);
         SmartDashboard.putBoolean("Shooter Running", running);
         return running;
     }
@@ -104,38 +105,36 @@ public class Shooter extends SubsystemBase {
     }
 
     public void SpeedUpShooter() {
-        targetRPS = ShooterConstants.SHOOTER_SPEED;
-        ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
+        setTargetRPM(ShooterConstants.SHOOTER_SPEED);
         // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_SPEED).withSlot(0));
     }
 
-    public void setTargetRPS(double rps) {
-        targetRPS = rps;
-        ShooterRightMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
+    public void setTargetRPM(double rpm) {
+        targetRPS = RPMToRPS(rpm);
+        ShooterRightMotor.setControl(velocityRequest.withVelocity(RPMToRPS(rpm)).withSlot(0));
         // ShooterLeftMotor.setControl(velocityRequest.withVelocity(rps).withSlot(0));
     }
 
     public void ShooterPassing() {
-         targetRPS = ShooterConstants.SHOOTER_PASSING_SPEED;
-        ShooterRightMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
+        setTargetRPM(ShooterConstants.SHOOTER_PASSING_SPEED);
         // ShooterLeftMotor.setControl(velocityRequest.withVelocity(ShooterConstants.SHOOTER_PASSING_SPEED).withSlot(0));
     }
 
     public Command setAllianceIdle() {
         return this.run(() -> {
-            setTargetRPS(ShooterConstants.ALLIANCE_IDLE_RPS);
+            setTargetRPM(ShooterConstants.ALLIANCE_IDLE_RPM);
         }).finallyDo(interrupted -> stopShooting());
     }
 
     public Command setNeutralIdle() {
         return this.run(() -> {
-            setTargetRPS(ShooterConstants.NEUTRAL_IDLE_RPS);
+            setTargetRPM(ShooterConstants.NEUTRAL_IDLE_RPM);
         }).finallyDo(interrupted -> stopShooting());
     }
 
-    public Command setTargetRPSCommand(double rps) {
+    public Command setTargetRPMCommand(double rpm) {
         return this.run(() -> {
-            setTargetRPS(rps);
+            setTargetRPM(rpm);
         }).finallyDo(interrupted -> stopShooting());
     }
 
@@ -170,7 +169,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public Command idleCommand() {
-    return this.run(() -> setTargetRPS(ShooterConstants.ALLIANCE_IDLE_RPS));
+    return this.run(() -> setTargetRPM(ShooterConstants.ALLIANCE_IDLE_RPM));
 }
 
     @Override
@@ -180,10 +179,10 @@ public class Shooter extends SubsystemBase {
         double rightRPS = ShooterRightMotor.getVelocity().getValueAsDouble();
         double leftRPS = ShooterLeftMotor.getVelocity().getValueAsDouble();
 
-        Logger.recordOutput("Shooter/RightRPS", rightRPS);
-        Logger.recordOutput("Shooter/LeftRPS", leftRPS);
-        Logger.recordOutput("Shooter/AverageRPS", getRPS());
-        Logger.recordOutput("Shooter/TargetRPS", targetRPS);
+        Logger.recordOutput("Shooter/RightRPM", RPSToRPM(rightRPS));
+        Logger.recordOutput("Shooter/LeftRPM", RPSToRPM(leftRPS));
+        Logger.recordOutput("Shooter/AverageRPM", RPSToRPM(getRPS()));
+        Logger.recordOutput("Shooter/TargetRPM", RPSToRPM(targetRPS));
         Logger.recordOutput("Shooter/RightVoltage", ShooterRightMotor.getMotorVoltage().getValueAsDouble());
         Logger.recordOutput("Shooter/LeftVoltage", ShooterLeftMotor.getMotorVoltage().getValueAsDouble());
         Logger.recordOutput("Shooter/RightCurrentDraw", ShooterRightMotor.getSupplyCurrent().getValueAsDouble());
