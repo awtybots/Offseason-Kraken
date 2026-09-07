@@ -353,15 +353,14 @@ public final class Constants {
 
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
-    // how much they can spin each way (shouldnt be the same just is as a
-    // placeholder for now)
-    public static final double MIN_CONTINUOUS_DEGREES = -160.0; // TODO measure: how far CW it goes from forward
-    public static final double MAX_CONTINUOUS_DEGREES = 160.0; // TODO measure: how far CCW it goes from forward
+
+    public static final double MIN_CONTINUOUS_DEGREES = -435.0; // 435 deg CW from forward
+    public static final double MAX_CONTINUOUS_DEGREES = 180.0;  // 180 deg CCW from forward
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
     // pushing into it forever.
-    public static final double CABLE_LIMIT_MARGIN_DEGREES = 2.0;
+    public static final double CABLE_LIMIT_MARGIN_DEGREES = 7.0;
 
     // Position loop on the SPARK: error is in MOTOR ROTATIONS (no positionConversionFactor
     // on the primary encoder) and the output is duty cycle, so
@@ -385,7 +384,7 @@ public final class Constants {
 
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
 
-    public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning
+    public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning use 0.88 after testing
   }
 
   public static final class HoodConstants {

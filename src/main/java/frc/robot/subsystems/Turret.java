@@ -169,7 +169,7 @@ public class Turret extends SubsystemBase {
         double best = Double.NaN;
         double bestError = Double.POSITIVE_INFINITY;
 
-        for (int lap = -1; lap <= 1; lap++) { // same heading is reachable at up to 2 laps in a 320 degree range
+        for (int lap = -1; lap <= 1; lap++) { // 615 deg 
             double candidate = base + lap * 360.0;
 
             if (candidate > softMaxDegrees() || candidate < softMinDegrees()) {
