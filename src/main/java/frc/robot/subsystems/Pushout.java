@@ -1,10 +1,12 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -24,6 +26,16 @@ public class Pushout extends SubsystemBase {
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
 
+    private final CoastOut coastRequest = new CoastOut();
+
+
+    public enum PushoutMode {
+        IDLE, EXTENDING, COMPLIANT, WAITING
+    }
+
+    private PushoutMode mode = PushoutMode.IDLE;
+    private final Timer reextendTimer = new Timer();
+
     public Pushout() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -38,24 +50,27 @@ public class Pushout extends SubsystemBase {
         config.Slot0.kS = PushoutConstants.s;
         config.Slot0.kV = PushoutConstants.v;
         config.Slot0.kA = PushoutConstants.a;
-        
+
         PushoutMotor.getConfigurator().apply(config);
         PushoutMotor.setPosition(0);
     }
 
     public void PushIntake() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0));
-        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0).withEnableFOC(true));
+        PushoutMotor.setControl(
+                positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0).withEnableFOC(true));
     }
 
     public void RetractIntake() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0));
-        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0).withEnableFOC(true));
+        PushoutMotor.setControl(
+                positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0).withEnableFOC(true));
     }
 
     public void FullyRetract() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0));
-        PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0).withEnableFOC(true));
+        PushoutMotor.setControl(
+                positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0).withEnableFOC(true));
     }
 
     public void ResetEncoder() {
@@ -75,12 +90,78 @@ public class Pushout extends SubsystemBase {
         PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(true));
     }
 
+    public double getPosition() {
+        return PushoutMotor.getPosition().getValueAsDouble();
+    }
+
+    public PushoutMode getMode() {
+        return mode;
+    }
+
+    /**
+     * Tru whent the pushout is out far enough we can stop the motor
+     */
+    public boolean isAtExtended() {
+        return Math.abs(
+                getPosition() - PushoutConstants.PUSHOUT_EXTENDED_POS) <= PushoutConstants.PUSHOUT_AT_TARGET_TOLERANCE;
+    }
+
+    /** Tru when something has shoved the intake back in past the  threshold. */
+    public boolean wasKnockedBack() {
+        return PushoutConstants.PUSHOUT_EXTENDED_POS - getPosition() > PushoutConstants.PUSHOUT_KNOCKED_BACK;
+    }
+
+
+    public void compliantStep() {
+        switch (mode) {
+            case EXTENDING:
+                PushIntake();
+                if (isAtExtended()) {
+                    mode = PushoutMode.COMPLIANT;
+                }
+                break;
+
+            case COMPLIANT:
+                PushoutMotor.setControl(coastRequest); // limp: no target, free to be pushed in
+                if (wasKnockedBack()) {
+                    mode = PushoutMode.WAITING;
+                    reextendTimer.restart();
+                }
+                break;
+
+            case WAITING:
+                PushoutMotor.setControl(coastRequest); // stay limp while whatever hit us clears
+                if (reextendTimer.hasElapsed(PushoutConstants.PUSHOUT_REEXTEND_DELAY)) {
+                    mode = PushoutMode.EXTENDING;
+                }
+                break;
+
+            case IDLE:
+            default:
+                break;
+        }
+    }
+
+   
+    public Command CompliantPushCommand() {
+        return this.run(this::compliantStep)
+                .beforeStarting(() -> {
+                    mode = PushoutMode.EXTENDING;
+                    reextendTimer.stop();
+                    reextendTimer.reset();
+                })
+                .finallyDo(interrupted -> {
+                    mode = PushoutMode.IDLE;
+                    StopPushout();
+                });
+    }
+
     public void AgitateStep(boolean retract) {
         double extendedPos = PushoutConstants.PUSHOUT_EXTENDED_POS;
         double agitatePos = extendedPos - (extendedPos * 0.25);
         // PushoutMotor.setControl(positionRequest
-        //         .withPosition(retract ? agitatePos : extendedPos)
-        //         .withSlot(0));
+        // .withPosition(retract ? agitatePos : extendedPos)
+        // .withSlot(0));
         PushoutMotor.setControl(positionRequest
                 .withPosition(retract ? agitatePos : extendedPos)
                 .withSlot(0)
@@ -135,8 +216,7 @@ public class Pushout extends SubsystemBase {
         });
     }
 
-    public Command CheesyAgitation()
-    {
+    public Command CheesyAgitation() {
         return PushoutDutyCycleRetractCommand(PushoutConstants.cheesySpeed);
     }
 
@@ -148,48 +228,70 @@ public class Pushout extends SubsystemBase {
         final double waitBetween = PushoutConstants.PUSHOUT_BETWEEN;
 
         Command agitate = Commands.sequence(
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0).withEnableFOC(true))),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0).withEnableFOC(true))),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
                 Commands.waitSeconds(waitBetween),
 
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0).withEnableFOC(true))),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0).withEnableFOC(true))),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
                 Commands.waitSeconds(waitBetween),
 
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0).withEnableFOC(true))),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0).withEnableFOC(true))),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0).withEnableFOC(true))),
                 Commands.waitSeconds(waitTime),
                 Commands.waitSeconds(waitBetween),
 
-                // runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(finalPos).withSlot(0))),
-                runOnce(() -> PushoutMotor.setControl(positionRequest.withPosition(finalPos).withSlot(0).withEnableFOC(true))),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                Commands.waitSeconds(waitBetween),
+
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0).withEnableFOC(true))),
+                Commands.waitSeconds(waitTime),
+                Commands.waitSeconds(waitBetween),
+
+                // runOnce(() ->
+                // PushoutMotor.setControl(positionRequest.withPosition(finalPos).withSlot(0))),
+                runOnce(() -> PushoutMotor
+                        .setControl(positionRequest.withPosition(finalPos).withSlot(0).withEnableFOC(true))),
                 Commands.idle(this)
 
         ).finallyDo(interrupted -> PushIntake());
@@ -203,8 +305,7 @@ public class Pushout extends SubsystemBase {
                 runOnce(() -> AgitateStep(true)),
                 Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT),
                 runOnce(() -> AgitateStep(false)),
-                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT)
-        ).finallyDo(interrupted -> PushIntake());
+                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT)).finallyDo(interrupted -> PushIntake());
     }
 
     public Command runDefaultCommand() {
@@ -221,5 +322,10 @@ public class Pushout extends SubsystemBase {
         Logger.recordOutput("Pushout/CurrentDraw", getSupplyCurrent(PushoutMotor));
         Logger.recordOutput("Pushout/StatorCurrent", getStatorCurrent(PushoutMotor));
         logFOC("Pushout", PushoutMotor);
+        Logger.recordOutput("Pushout/Mode", mode.toString());
+        Logger.recordOutput("Pushout/IsAtExtended", isAtExtended());
+        Logger.recordOutput("Pushout/WasKnockedBack", wasKnockedBack());
+        Logger.recordOutput("Pushout/PositionError",
+                PushoutConstants.PUSHOUT_EXTENDED_POS - getPosition());
     }
 }

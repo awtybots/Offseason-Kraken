@@ -174,6 +174,10 @@ public final class Constants {
 
     public static final double PUSHOUT_AGITATE_WAIT = 0.2; // seconds
     public static final double PUSHOUT_BETWEEN = 0.5; // seconds between in and out
+
+    public static final double PUSHOUT_AT_TARGET_TOLERANCE = 0.5; // rot
+    public static final double PUSHOUT_KNOCKED_BACK = 1.5;        // rot pushed in before we call it a hit
+    public static final double PUSHOUT_REEXTEND_DELAY = 1.0;      // s to wait before driving back out
   }
 
   public static class ShooterConstants {
