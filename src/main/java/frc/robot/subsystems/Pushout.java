@@ -51,6 +51,8 @@ public class Pushout extends SubsystemBase {
         config.Slot0.kS = PushoutConstants.s;
         config.Slot0.kV = PushoutConstants.v;
         config.Slot0.kA = PushoutConstants.a;
+        config.MotionMagic.MotionMagicCruiseVelocity = PushoutConstants.PUSHOUT_CRUISE_VELOCITY;
+        config.MotionMagic.MotionMagicAcceleration = PushoutConstants.PUSHOUT_ACCELERATION;
 
         PushoutMotor.getConfigurator().apply(config);
         PushoutMotor.setPosition(0);
