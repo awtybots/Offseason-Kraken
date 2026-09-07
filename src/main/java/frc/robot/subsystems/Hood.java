@@ -68,19 +68,19 @@ public class Hood extends SubsystemBase {
     public Command setAngleCommand(double degrees) { // pass in any angle and hood goes there
         return this.run(() -> {
             setAngle(degrees);
-        }).finallyDo(interrupted -> stopHood());
+        }).finallyDo(interrupted -> goToMin());
     }
 
     public Command goToMinCommand() {
         return this.run(() -> {
             goToMin();
-        }).finallyDo(interrupted -> stopHood());
+        }).finallyDo(interrupted -> goToMin());
     }
 
     public Command goToMaxCommand() {
         return this.run(() -> {
             goToMax();
-        }).finallyDo(interrupted -> stopHood());
+        }).finallyDo(interrupted -> goToMin());
     }
 
     public Command tuckCommand() {

@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.PersistMode;
@@ -20,6 +21,7 @@ public class Intake extends SubsystemBase {
 
     private SparkFlex intakeMotor = new SparkFlex(IntakeConstants.INTAKE_ID, MotorType.kBrushless);
     private SparkClosedLoopController intakeController = intakeMotor.getClosedLoopController();
+    private RelativeEncoder intakeEncoder = intakeMotor.getEncoder();
 
     public Intake() {
 
@@ -69,6 +71,9 @@ public class Intake extends SubsystemBase {
     @Override
     public void periodic() {
         Logger.recordOutput("Intake/DesiredPercent", desiredPercent);
+        Logger.recordOutput("Intake/DutyCycleSetpoint", intakeController.getSetpoint());
+        Logger.recordOutput("Intake/AppliedOutput", intakeMotor.getAppliedOutput());
+        Logger.recordOutput("Intake/MeasuredRPM", intakeEncoder.getVelocity());
         Logger.recordOutput("Intake/Voltage", intakeMotor.getBusVoltage() * intakeMotor.getAppliedOutput());
         Logger.recordOutput("Intake/CurrentDraw", intakeMotor.getOutputCurrent() * intakeMotor.getAppliedOutput());
         Logger.recordOutput("Intake/Velocity", intakeController.getSetpoint());
