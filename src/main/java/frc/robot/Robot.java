@@ -158,7 +158,6 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void disabledInit() {
-        m_robotContainer.setUseMegaTag2(true); // Use MT1 during disabled to calibrate heading
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_FRONT, 1); // Seed internal IMU
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_BACK, 1); // Seed internal IMU
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_LEFT, 1); // Seed internal IMU
@@ -185,7 +184,6 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void autonomousInit() {
-        m_robotContainer.setUseMegaTag2(true); // Switch to MT2 for accurate x/y with calibrated gyro
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_FRONT, 0);
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_BACK, 0);
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_LEFT, 0);
@@ -216,7 +214,6 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
-        m_robotContainer.setUseMegaTag2(true); // Switch to MT2 for accurate x/y with calibrated gyro
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_FRONT, 0);
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_FRONT, 3); // Use internal IMU + external IMU
         // LimelightHelpers.SetIMUAssistAlpha(LimelightConstants.LIMELIGHT_FRONT, 0.1);

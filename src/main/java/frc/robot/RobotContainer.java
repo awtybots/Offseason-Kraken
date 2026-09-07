@@ -454,8 +454,4 @@ public class RobotContainer {
   public void setMotorBrake(boolean brake) {
     drivebase.setMotorBrake(brake);
   }
-
-  public void setUseMegaTag2(boolean use) {
-    drivebase.useMegaTag2 = use;
-  }
 }
