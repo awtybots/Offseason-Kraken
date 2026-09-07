@@ -34,7 +34,8 @@ public class Pushout extends SubsystemBase {
     }
 
     private PushoutMode mode = PushoutMode.IDLE;
-    private final Timer reextendTimer = new Timer();
+    private final Timer stateTimer = new Timer();
+    private double releasePosition = PushoutConstants.PUSHOUT_EXTENDED_POS;
 
     public Pushout() {
         TalonFXConfiguration config = new TalonFXConfiguration();
@@ -108,7 +109,19 @@ public class Pushout extends SubsystemBase {
 
     /** Tru when something has shoved the intake back in past the  threshold. */
     public boolean wasKnockedBack() {
-        return PushoutConstants.PUSHOUT_EXTENDED_POS - getPosition() > PushoutConstants.PUSHOUT_KNOCKED_BACK;
+        return releasePosition - getPosition() > PushoutConstants.PUSHOUT_KNOCKED_BACK;
+    }
+
+    private void setMode(PushoutMode next) {
+        if (mode != next) {
+            mode = next;
+            stateTimer.restart();
+        }
+    }
+
+    private void release() {
+        releasePosition = getPosition();
+        setMode(PushoutMode.COMPLIANT);
     }
 
 
@@ -117,22 +130,24 @@ public class Pushout extends SubsystemBase {
             case EXTENDING:
                 PushIntake();
                 if (isAtExtended()) {
-                    mode = PushoutMode.COMPLIANT;
+                    release();
+                } else if (stateTimer.hasElapsed(PushoutConstants.PUSHOUT_EXTEND_TIMEOUT)) {
+                    release();
                 }
                 break;
 
             case COMPLIANT:
-                PushoutMotor.setControl(coastRequest); // limp: no target, free to be pushed in
+                PushoutMotor.setControl(
+                        voltageRequest.withOutput(PushoutConstants.PUSHOUT_HOLD_VOLTS).withEnableFOC(true));
                 if (wasKnockedBack()) {
-                    mode = PushoutMode.WAITING;
-                    reextendTimer.restart();
+                    setMode(PushoutMode.WAITING);
                 }
                 break;
 
             case WAITING:
-                PushoutMotor.setControl(coastRequest); // stay limp while whatever hit us clears
-                if (reextendTimer.hasElapsed(PushoutConstants.PUSHOUT_REEXTEND_DELAY)) {
-                    mode = PushoutMode.EXTENDING;
+                PushoutMotor.setControl(coastRequest);
+                if (stateTimer.hasElapsed(PushoutConstants.PUSHOUT_REEXTEND_DELAY)) {
+                    setMode(PushoutMode.EXTENDING);
                 }
                 break;
 
@@ -146,9 +161,8 @@ public class Pushout extends SubsystemBase {
     public Command CompliantPushCommand() {
         return this.run(this::compliantStep)
                 .beforeStarting(() -> {
-                    mode = PushoutMode.EXTENDING;
-                    reextendTimer.stop();
-                    reextendTimer.reset();
+                    mode = PushoutMode.IDLE;
+                    setMode(PushoutMode.EXTENDING);
                 })
                 .finallyDo(interrupted -> {
                     mode = PushoutMode.IDLE;
@@ -325,7 +339,7 @@ public class Pushout extends SubsystemBase {
         Logger.recordOutput("Pushout/Mode", mode.toString());
         Logger.recordOutput("Pushout/IsAtExtended", isAtExtended());
         Logger.recordOutput("Pushout/WasKnockedBack", wasKnockedBack());
-        Logger.recordOutput("Pushout/PositionError",
-                PushoutConstants.PUSHOUT_EXTENDED_POS - getPosition());
+        Logger.recordOutput("Pushout/ReleasePosition", releasePosition);
+        Logger.recordOutput("Pushout/DriftFromRelease", releasePosition - getPosition());
     }
 }

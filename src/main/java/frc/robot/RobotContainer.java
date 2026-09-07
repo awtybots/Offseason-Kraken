@@ -284,7 +284,7 @@ public class RobotContainer {
         .whileTrue(m_intake.runIntakeCommand());
 
     // LT extends pushout to intaking position
-    driverXbox.leftTrigger().whileTrue(m_pushout.PushCommand());
+    driverXbox.leftTrigger().whileTrue(m_pushout.CompliantPushCommand());
 
     // LB retracts
     driverXbox.leftBumper().whileTrue(m_pushout.RetractCommand());

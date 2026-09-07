@@ -155,7 +155,7 @@ public final class Constants {
     public static final int PUSHOUT_ID = 19; // set CAN ID
 
     // Positions in rotations (tune these to match your old encoder values)
-    public static final double PUSHOUT_EXTENDED_POS = 15.0;
+    public static final double PUSHOUT_EXTENDED_POS = 8.0;
     public static final double PUSHOUT_RETRACTED_POS = 5.0;
     public static final double FULLY_RETRACTED_POS = 0.0;
 
@@ -178,6 +178,8 @@ public final class Constants {
     public static final double PUSHOUT_AT_TARGET_TOLERANCE = 0.5; // rot
     public static final double PUSHOUT_KNOCKED_BACK = 1.5;        // rot pushed in before we call it a hit
     public static final double PUSHOUT_REEXTEND_DELAY = 1.0;      // s to wait before driving back out
+    public static final double PUSHOUT_EXTEND_TIMEOUT = 2.0;
+    public static final double PUSHOUT_HOLD_VOLTS = 1.5;
   }
 
   public static class ShooterConstants {
