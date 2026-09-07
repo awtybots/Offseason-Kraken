@@ -11,8 +11,10 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants.RollersConstants;
+
+import static frc.robot.utils.utils.*;
+
 import org.littletonrobotics.junction.Logger;
-import frc.robot.utils.utils;
 
 public class Rollers extends SubsystemBase {
 
@@ -74,10 +76,11 @@ public class Rollers extends SubsystemBase {
     @Override
     public void periodic() {
         Logger.recordOutput("Rollers/DesiredRPS", RollersMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Rollers/Voltage", RollersMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Rollers/CurrentDraw", RollersMotor.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("Rollers/Voltage", getAppliedVoltage(RollersMotor));
+        Logger.recordOutput("Rollers/CurrentDraw", getSupplyCurrent(RollersMotor));
+        Logger.recordOutput("Rollers/StatorCurrent", getStatorCurrent(RollersMotor));
         Logger.recordOutput("Rollers/RPS", RollersMotor.getVelocity().getValueAsDouble());
 
-        utils.logFOC("Rollers", RollersMotor);
+        logFOC("Rollers", RollersMotor);
     }
 }

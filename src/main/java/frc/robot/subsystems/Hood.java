@@ -16,6 +16,8 @@ import org.littletonrobotics.junction.Logger;
 import frc.robot.Configs;
 import frc.robot.Constants.HoodConstants;
 
+import static frc.robot.utils.utils.*;
+
 public class Hood extends SubsystemBase {
 
     private SparkMax HoodMotor = new SparkMax(HoodConstants.HOOD_ID, MotorType.kBrushless);
@@ -95,8 +97,8 @@ public class Hood extends SubsystemBase {
         Logger.recordOutput("Hood/TargetDegrees", currentTargetDegrees);
         Logger.recordOutput("Hood/IsAtAngle", isAtAngle());
         Logger.recordOutput("Hood/MotorRotations", HoodEncoder.getPosition());
-        Logger.recordOutput("Hood/Voltage", HoodMotor.getAppliedOutput() * HoodMotor.getBusVoltage());
-        Logger.recordOutput("Hood/StatorCurrent", HoodMotor.getOutputCurrent());
-        Logger.recordOutput("Hood/CurrentDraw", HoodMotor.getOutputCurrent() * HoodMotor.getAppliedOutput());
+        Logger.recordOutput("Hood/Voltage", getAppliedVoltage(HoodMotor));
+        Logger.recordOutput("Hood/StatorCurrent", getStatorCurrent(HoodMotor));
+        Logger.recordOutput("Hood/CurrentDraw", getSupplyCurrent(HoodMotor));
     }
 }

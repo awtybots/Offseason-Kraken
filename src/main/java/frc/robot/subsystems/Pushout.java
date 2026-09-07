@@ -12,8 +12,10 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants.PushoutConstants;
+
+import static frc.robot.utils.utils.*;
+
 import org.littletonrobotics.junction.Logger;
-import frc.robot.utils.utils;
 
 public class Pushout extends SubsystemBase {
 
@@ -215,8 +217,9 @@ public class Pushout extends SubsystemBase {
     public void periodic() {
         Logger.recordOutput("Pushout/Position", PushoutMotor.getPosition().getValueAsDouble());
         Logger.recordOutput("Pushout/Velocity", PushoutMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Pushout/Voltage", PushoutMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Pushout/CurrentDraw", PushoutMotor.getSupplyCurrent().getValueAsDouble());
-            utils.logFOC("Pushout", PushoutMotor);
+        Logger.recordOutput("Pushout/Voltage", getAppliedVoltage(PushoutMotor));
+        Logger.recordOutput("Pushout/CurrentDraw", getSupplyCurrent(PushoutMotor));
+        Logger.recordOutput("Pushout/StatorCurrent", getStatorCurrent(PushoutMotor));
+        logFOC("Pushout", PushoutMotor);
     }
 }

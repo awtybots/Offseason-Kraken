@@ -13,7 +13,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import org.littletonrobotics.junction.Logger;
-import frc.robot.utils.utils;
+import static frc.robot.utils.utils.*;
 
 import frc.robot.Constants.ConveyorConstants;
 public class Conveyor extends SubsystemBase {
@@ -83,16 +83,16 @@ public class Conveyor extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Conveyor/TopDutyCycle", ConveyorTopMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Conveyor/BottomDutyCycle", ConveyorBottomMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Conveyor/TopVoltage", ConveyorTopMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Conveyor/BottomVoltage", ConveyorBottomMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Conveyor/TopCurrentDraw", ConveyorTopMotor.getSupplyCurrent().getValueAsDouble());
-        Logger.recordOutput("Conveyor/BottomCurrentDraw", ConveyorBottomMotor.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("Conveyor/TopDutyCycle", getDutyCycle(ConveyorTopMotor));
+        Logger.recordOutput("Conveyor/BottomDutyCycle", getDutyCycle(ConveyorBottomMotor));
+        Logger.recordOutput("Conveyor/TopVoltage", getAppliedVoltage(ConveyorTopMotor));
+        Logger.recordOutput("Conveyor/BottomVoltage", getAppliedVoltage(ConveyorBottomMotor));
+        Logger.recordOutput("Conveyor/TopCurrentDraw", getSupplyCurrent(ConveyorTopMotor));
+        Logger.recordOutput("Conveyor/BottomCurrentDraw", getSupplyCurrent(ConveyorBottomMotor));
         Logger.recordOutput("Conveyor/TopRPS", ConveyorTopMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Conveyor/BottomRPS", ConveyorBottomMotor.getVelocity().getValueAsDouble());
 
-        utils.logFOC("Conveyor/Top", ConveyorTopMotor);
-        utils.logFOC("Conveyor/Bottom", ConveyorBottomMotor);
+        logFOC("Conveyor/Top", ConveyorTopMotor);
+        logFOC("Conveyor/Bottom", ConveyorBottomMotor);
     }
 }

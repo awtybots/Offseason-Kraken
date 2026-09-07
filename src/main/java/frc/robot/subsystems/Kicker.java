@@ -20,7 +20,7 @@ import com.revrobotics.spark.SparkMax;
 import frc.robot.Configs;
 import frc.robot.Constants.KickerConstants;
 import org.littletonrobotics.junction.Logger;
-import frc.robot.utils.utils;
+import static frc.robot.utils.utils.*;
 
 
 @SuppressWarnings("unused")
@@ -95,14 +95,16 @@ public class Kicker extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Kicker/KickerDutyCycle", KickerMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Kicker/KickerVoltage", KickerMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerVoltage", VerticalRollerMotor.getBusVoltage() * VerticalRollerMotor.getAppliedOutput());
-        Logger.recordOutput("Kicker/VerticalRollerCurrentDraw", VerticalRollerMotor.getOutputCurrent() * VerticalRollerMotor.getAppliedOutput());
+        Logger.recordOutput("Kicker/KickerDutyCycle", getDutyCycle(KickerMotor));
+        Logger.recordOutput("Kicker/KickerVoltage", getAppliedVoltage(KickerMotor));
+        Logger.recordOutput("Kicker/VerticalRoller/Voltage", getAppliedVoltage(VerticalRollerMotor));
+        Logger.recordOutput("Kicker/VerticalRoller/CurrentDraw", getSupplyCurrent(VerticalRollerMotor));
         Logger.recordOutput("Kicker/KickerRPS", KickerMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerRPM", VertRollerEncoder.getVelocity());
-        Logger.recordOutput("Kicker/KickerCurrentDraw", KickerMotor.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("Kicker/VerticalRoller/RPM", VertRollerEncoder.getVelocity());
+        Logger.recordOutput("Kicker/KickerCurrentDraw", getSupplyCurrent(KickerMotor));
+        Logger.recordOutput("Kicker/VerticalRoller/StatorCurrent", getStatorCurrent(VerticalRollerMotor));
+        Logger.recordOutput("Kicker/KickerStatorCurrent", getStatorCurrent(KickerMotor));
 
-         utils.logFOC("Kicker/Top", KickerMotor);
+        logFOC("Kicker/Top", KickerMotor);
     }
 }

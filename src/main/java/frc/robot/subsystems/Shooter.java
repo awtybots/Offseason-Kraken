@@ -181,10 +181,14 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("Shooter/LeftRPM", RPSToRPM(leftRPS));
         Logger.recordOutput("Shooter/AverageRPM", RPSToRPM(getRPS()));
         Logger.recordOutput("Shooter/TargetRPM", RPSToRPM(targetRPS));
-        Logger.recordOutput("Shooter/RightVoltage", ShooterRightMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Shooter/LeftVoltage", ShooterLeftMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Shooter/RightCurrentDraw", ShooterRightMotor.getSupplyCurrent().getValueAsDouble());
-        Logger.recordOutput("Shooter/LeftCurrentDraw", ShooterLeftMotor.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("Shooter/RightVoltage", getAppliedVoltage(ShooterRightMotor));
+        Logger.recordOutput("Shooter/LeftVoltage", getAppliedVoltage(ShooterLeftMotor));
+        Logger.recordOutput("Shooter/RightCurrentDraw", getSupplyCurrent(ShooterRightMotor));
+        Logger.recordOutput("Shooter/LeftCurrentDraw", getSupplyCurrent(ShooterLeftMotor));
+        Logger.recordOutput("Shooter/RightStatorCurrent", getStatorCurrent(ShooterRightMotor));
+        Logger.recordOutput("Shooter/LeftStatorCurrent", getStatorCurrent(ShooterLeftMotor));
         Logger.recordOutput("Shooter/IsShooterFast", isShooterFast());
+
+        Logger.recordOutput("BatteryVoltage", getBatteryVoltage(ShooterLeftMotor));
     }
 }

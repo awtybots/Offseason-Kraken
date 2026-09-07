@@ -1,6 +1,10 @@
 package frc.robot.utils;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkMax;
+
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -27,5 +31,70 @@ public class utils {
         Logger.recordOutput(key + "/ControlMode", controlMode);
         Logger.recordOutput(key + "/FOCActive", controlMode.endsWith("FOC"));
         Logger.recordOutput(key + "/ProLicensed", motor.getIsProLicensed().getValue());
+    }
+
+    public static double getStatorCurrent(SparkFlex motor)
+    {
+        return motor.getOutputCurrent();
+    }
+
+    public static double getStatorCurrent(SparkMax motor)
+    {
+        return motor.getOutputCurrent();
+    }
+
+    public static double getStatorCurrent(TalonFX motor)
+    {
+        return motor.getStatorCurrent().getValueAsDouble();
+    }
+
+    public static double getAppliedVoltage(SparkFlex motor)
+    {
+        return motor.getBusVoltage() * motor.getAppliedOutput();
+    }
+
+    public static double getAppliedVoltage(SparkMax motor)
+    {
+        return motor.getBusVoltage() * motor.getAppliedOutput();
+    }
+
+    public static double getAppliedVoltage(TalonFX motor)
+    {
+        return motor.getMotorVoltage().getValueAsDouble();
+    }
+
+    public static double getBatteryVoltage(SparkFlex motor)
+    {
+        return motor.getBusVoltage();
+    }
+
+    public static double getBatteryVoltage(SparkMax motor)
+    {
+        return motor.getBusVoltage();
+    }
+
+    public static double getBatteryVoltage(TalonFX motor)
+    {
+        return motor.getSupplyVoltage().getValueAsDouble();
+    }
+
+    public static double getSupplyCurrent(SparkFlex motor)
+    {
+        return (getStatorCurrent(motor) * getAppliedVoltage(motor)) / getBatteryVoltage(motor);
+    }
+
+    public static double getSupplyCurrent(SparkMax motor)
+    {
+        return (getStatorCurrent(motor) * getAppliedVoltage(motor)) / getBatteryVoltage(motor);
+    }
+
+    public static double getSupplyCurrent(TalonFX motor)
+    {
+        return motor.getSupplyCurrent().getValueAsDouble();
+    }
+
+    public static double getDutyCycle(TalonFX motor)
+    {
+        return motor.getDutyCycle().getValueAsDouble();
     }
 }

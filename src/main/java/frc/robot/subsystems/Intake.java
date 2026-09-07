@@ -15,6 +15,8 @@ import frc.robot.Configs;
 import frc.robot.Constants.IntakeConstants;
 import org.littletonrobotics.junction.Logger;
 
+import static frc.robot.utils.utils.*;
+
 public class Intake extends SubsystemBase {
 
     private double desiredPercent = 0.0;
@@ -74,8 +76,9 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput("Intake/DutyCycleSetpoint", intakeController.getSetpoint());
         Logger.recordOutput("Intake/AppliedOutput", intakeMotor.getAppliedOutput());
         Logger.recordOutput("Intake/MeasuredRPM", intakeEncoder.getVelocity());
-        Logger.recordOutput("Intake/Voltage", intakeMotor.getBusVoltage() * intakeMotor.getAppliedOutput());
-        Logger.recordOutput("Intake/CurrentDraw", intakeMotor.getOutputCurrent() * intakeMotor.getAppliedOutput());
+        Logger.recordOutput("Intake/Voltage", getAppliedVoltage(intakeMotor));
+        Logger.recordOutput("Intake/CurrentDraw", getSupplyCurrent(intakeMotor));
+        Logger.recordOutput("Intake/StatorCurrent", getStatorCurrent(intakeMotor));
         Logger.recordOutput("Intake/Velocity", intakeController.getSetpoint());
         Logger.recordOutput("Intake/TargetVelocity", IntakeConstants.INTAKE_RPM);
     }

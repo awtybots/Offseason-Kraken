@@ -21,6 +21,8 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 
+import static frc.robot.utils.utils.*;
+
 import org.littletonrobotics.junction.Logger;
 
 import frc.robot.Configs;
@@ -286,9 +288,9 @@ public class Turret extends SubsystemBase {
         // getBusVoltage() alone is the battery rail at the Spark, not the motor output -
         // it read a flat ~12.4 V while the turret sat still. Applied output is the duty
         // cycle scaled by the bus.
-        Logger.recordOutput("Turret/AppliedVolts",
-                TurretMotor.getAppliedOutput() * TurretMotor.getBusVoltage());
-        Logger.recordOutput("Turret/CurrentDraw", TurretMotor.getOutputCurrent() * TurretMotor.getAppliedOutput());
+        Logger.recordOutput("Turret/AppliedVolts", getAppliedVoltage(TurretMotor));
+        Logger.recordOutput("Turret/CurrentDraw", getSupplyCurrent(TurretMotor));
+        Logger.recordOutput("Turret/StatorCurrent", getStatorCurrent(TurretMotor));
         Logger.recordOutput("Turret/MotorRotations", turretRelativeEncoder.getPosition());
         Logger.recordOutput("Turret/FrameDisagreementDeg", getContinuousDegrees() - getRelativeDegrees());
         Logger.recordOutput("Turret/SoftMinDegrees", softMinDegrees());
