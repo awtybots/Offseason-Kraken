@@ -4,6 +4,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.motorcontrol.Talon;
 
 import org.littletonrobotics.junction.Logger;
@@ -97,4 +99,9 @@ public class utils {
     {
         return motor.getDutyCycle().getValueAsDouble();
     }
+
+    public static Alliance getAlliance() 
+    {
+        return DriverStation.getAlliance().orElse(Alliance.Red);
+    } 
 }

@@ -373,9 +373,6 @@ public class RobotContainer {
     }
   }
 
-  private Alliance getAlliance() {
-    return DriverStation.getAlliance().orElse(Alliance.Red);
-  }
 
   private boolean isInAllianceZone() {
     Alliance alliance = getAlliance();
