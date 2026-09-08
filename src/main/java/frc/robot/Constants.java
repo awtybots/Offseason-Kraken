@@ -34,7 +34,9 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
 
-  public static final double MAX_SPEED = Units.feetToMeters(16.5);
+
+
+  public static final double MAX_SPEED = Units.feetToMeters(15.331);
 
   public static final class DrivebaseConstants {
 
@@ -141,10 +143,11 @@ public final class Constants {
     public static final double v = 0.5;
     public static final double a = 0.75;
 
-    public static final double OUTTAKE_SPEED = -1;
-    public static final double INTAKE_SPEED = 1;
-    public static final double INTAKE_RPS = 220;
-    public static final double OUTTAKE_RPS = -220;
+    public static final double INTAKE_RPM = 2000;
+    public static final double OUTTAKE_RPM = -2000;
+
+    public static final double INTAKE_DUTY = 0.8;
+    public static final double OUTTAKE_DUTY = -0.8; 
 
   }
 
@@ -152,12 +155,17 @@ public final class Constants {
     public static final int PUSHOUT_ID = 19; // set CAN ID
 
     // Positions in rotations (tune these to match your old encoder values)
-    public static final double PUSHOUT_EXTENDED_POS = 15.0;
+    public static final double PUSHOUT_EXTENDED_POS = 8.0;
     public static final double PUSHOUT_RETRACTED_POS = 5.0;
     public static final double FULLY_RETRACTED_POS = 0.0;
 
+
+    public static final double dutyRetractSpeed = -8.0;
+    public static final double dutyExtendSpeed = 8.0;
+    public static final double cheesySpeed = -5.0;
+
     // PID/FF
-    public static final double p = 1.0;
+    public static final double p = 6.0;
     public static final double i = 0.0;
     public static final double d = 0.0;
     public static final double s = 0.1;
@@ -166,21 +174,29 @@ public final class Constants {
 
     public static final double PUSHOUT_AGITATE_WAIT = 0.2; // seconds
     public static final double PUSHOUT_BETWEEN = 0.5; // seconds between in and out
+
+    public static final double PUSHOUT_AT_TARGET_TOLERANCE = 0.5; // rot
+    public static final double PUSHOUT_KNOCKED_BACK = 1.5;        // rot pushed in before we call it a hit
+    public static final double PUSHOUT_REEXTEND_DELAY = 1.0;      // s to wait before driving back out
+    public static final double PUSHOUT_EXTEND_TIMEOUT = 2.0;
+    public static final double PUSHOUT_CRUISE_VELOCITY = 20.0; // rot/s
+    public static final double PUSHOUT_ACCELERATION = 80.0;    // rot/s^2
+    public static final double PUSHOUT_HOLD_VOLTS = 1.5;
   }
 
   public static class ShooterConstants {
     public static final int SHOOTER_L_ID = 16;
     public static final int SHOOTER_R_ID = 17;
 
-    public static final double SHOOTER_SPEED = 48.0;
-    public static final double SHOOTER_PASSING_SPEED = 20;
+    public static final double SHOOTER_SPEED = 2400;
+    public static final double SHOOTER_PASSING_SPEED = 1200;
     public static final double ERROR_MARGIN = 100.0 / 60.0; // 100 RPM, expressed in RPS
     public static final double STOP = 0;
     public static final double IDLE = 0.1;
 
-    public static final double ALLIANCE_IDLE_RPS = 30;
-    public static final double ALLIANCE_AUTO_RPS = 30;
-    public static final double NEUTRAL_IDLE_RPS = 0;
+    public static final double ALLIANCE_IDLE_RPM = 1800;
+    public static final double ALLIANCE_AUTO_RPM = 1800;
+    public static final double NEUTRAL_IDLE_RPM = 0;
 
     // Phoenix 6 VelocityVoltage takes ROTATIONS PER SECOND and these gains are
     // volts per rps. The old values were volts per RPM - 60x too small - so the
@@ -302,7 +318,7 @@ public final class Constants {
           Pair.of(Meters.of(5.0), RPM.of(4239)),
           Pair.of(Meters.of(5.5), RPM.of(4426)),
           Pair.of(Meters.of(6.0), RPM.of(4610)))) {
-        hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+        hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
       // Derived, no longer placeholders: floor target (dz = -0.5177 m) on the
@@ -324,7 +340,7 @@ public final class Constants {
           Pair.of(Meters.of(9.0), RPM.of(5031)),
           Pair.of(Meters.of(10.0), RPM.of(5387)),
           Pair.of(Meters.of(11.0), RPM.of(5734)))) {
-        ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM) / 60.0); // convert to RPS
+        ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
     }
 
@@ -345,15 +361,14 @@ public final class Constants {
 
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
-    // how much they can spin each way (shouldnt be the same just is as a
-    // placeholder for now)
-    public static final double MIN_CONTINUOUS_DEGREES = -160.0; // TODO measure: how far CW it goes from forward
-    public static final double MAX_CONTINUOUS_DEGREES = 160.0; // TODO measure: how far CCW it goes from forward
+
+    public static final double MIN_CONTINUOUS_DEGREES = -435.0; // 435 deg CW from forward
+    public static final double MAX_CONTINUOUS_DEGREES = 180.0;  // 180 deg CCW from forward
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
     // pushing into it forever.
-    public static final double CABLE_LIMIT_MARGIN_DEGREES = 2.0;
+    public static final double CABLE_LIMIT_MARGIN_DEGREES = 7.0;
 
     // Position loop on the SPARK: error is in MOTOR ROTATIONS (no positionConversionFactor
     // on the primary encoder) and the output is duty cycle, so
@@ -377,7 +392,7 @@ public final class Constants {
 
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
 
-    public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning
+    public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning use 0.88 after testing
   }
 
   public static final class HoodConstants {

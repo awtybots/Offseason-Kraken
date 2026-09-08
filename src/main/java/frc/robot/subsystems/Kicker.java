@@ -20,6 +20,7 @@ import com.revrobotics.spark.SparkMax;
 import frc.robot.Configs;
 import frc.robot.Constants.KickerConstants;
 import org.littletonrobotics.junction.Logger;
+import static frc.robot.utils.utils.*;
 
 
 @SuppressWarnings("unused")
@@ -42,27 +43,31 @@ public class Kicker extends SubsystemBase {
         KickerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         KickerMotor.getConfigurator().apply(KickerConfig);
 
-        VerticalRollerMotor.configure(Configs.KickerSubsystem.VertivalMotorConfig, ResetMode.kResetSafeParameters,
+        VerticalRollerMotor.configure(Configs.KickerSubsystem.VerticalMotorConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
     }
 
     public void ReverseKicker() {
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_REVERSE_SPEED);
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED).withEnableFOC(true));
     }
 
     public void ConveyorToShooter() {
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
     }
 
     public void ClearBall() {
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
     }
 
 
     public void stopKicker() {
-        KickerMotor.setControl(dutyCycleRequest.withOutput(0));
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(0));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(true));
         VerticalRollerMotor.set(0.0);
     }
 
@@ -90,10 +95,16 @@ public class Kicker extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Kicker/TopDutyCycle", KickerMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Kicker/TopVolts", KickerMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerVolts", VerticalRollerMotor.getBusVoltage());
-        Logger.recordOutput("Kicker/TopRPS", KickerMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Kicker/VerticalRollerRPS", VertRollerEncoder.getVelocity());
+        Logger.recordOutput("Kicker/KickerDutyCycle", getDutyCycle(KickerMotor));
+        Logger.recordOutput("Kicker/KickerVoltage", getAppliedVoltage(KickerMotor));
+        Logger.recordOutput("Kicker/VerticalRoller/Voltage", getAppliedVoltage(VerticalRollerMotor));
+        Logger.recordOutput("Kicker/VerticalRoller/CurrentDraw", getSupplyCurrent(VerticalRollerMotor));
+        Logger.recordOutput("Kicker/KickerRPS", KickerMotor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Kicker/VerticalRoller/RPM", VertRollerEncoder.getVelocity());
+        Logger.recordOutput("Kicker/KickerCurrentDraw", getSupplyCurrent(KickerMotor));
+        Logger.recordOutput("Kicker/VerticalRoller/StatorCurrent", getStatorCurrent(VerticalRollerMotor));
+        Logger.recordOutput("Kicker/KickerStatorCurrent", getStatorCurrent(KickerMotor));
+
+        logFOC("Kicker/Top", KickerMotor);
     }
 }

@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import org.littletonrobotics.junction.Logger;
+import static frc.robot.utils.utils.*;
 
 import frc.robot.Constants.ConveyorConstants;
 public class Conveyor extends SubsystemBase {
@@ -46,16 +47,19 @@ public class Conveyor extends SubsystemBase {
     }
 
     public void ReverseConveyor() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED));
+        // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED).withEnableFOC(true));
     }
 
     public void HopperToShooter() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
+        // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED).withEnableFOC(true));
     }
 
 
     public void stopConveyor() {
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0));
+        // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(true));
         // bottom follows for all the voids
     }
     
@@ -79,11 +83,16 @@ public class Conveyor extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Conveyor/TopDutyCycle", ConveyorTopMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Conveyor/BottomDutyCycle", ConveyorBottomMotor.getDutyCycle().getValueAsDouble());
-        Logger.recordOutput("Conveyor/TopVolts", ConveyorTopMotor.getMotorVoltage().getValueAsDouble());
-        Logger.recordOutput("Conveyor/BottomVolts", ConveyorBottomMotor.getMotorVoltage().getValueAsDouble());
+        Logger.recordOutput("Conveyor/TopDutyCycle", getDutyCycle(ConveyorTopMotor));
+        Logger.recordOutput("Conveyor/BottomDutyCycle", getDutyCycle(ConveyorBottomMotor));
+        Logger.recordOutput("Conveyor/TopVoltage", getAppliedVoltage(ConveyorTopMotor));
+        Logger.recordOutput("Conveyor/BottomVoltage", getAppliedVoltage(ConveyorBottomMotor));
+        Logger.recordOutput("Conveyor/TopCurrentDraw", getSupplyCurrent(ConveyorTopMotor));
+        Logger.recordOutput("Conveyor/BottomCurrentDraw", getSupplyCurrent(ConveyorBottomMotor));
         Logger.recordOutput("Conveyor/TopRPS", ConveyorTopMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Conveyor/BottomRPS", ConveyorBottomMotor.getVelocity().getValueAsDouble());
+
+        logFOC("Conveyor/Top", ConveyorTopMotor);
+        logFOC("Conveyor/Bottom", ConveyorBottomMotor);
     }
 }

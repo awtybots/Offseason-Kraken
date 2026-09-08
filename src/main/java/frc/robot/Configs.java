@@ -3,9 +3,11 @@ package frc.robot;
 // import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.Constants.HoodConstants;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.KickerConstants;
 import frc.robot.Constants.TurretConstants;
 
@@ -39,12 +41,12 @@ public final class Configs
 
         public static final class KickerSubsystem {
 
-                public static final SparkMaxConfig VertivalMotorConfig = new SparkMaxConfig();
+                public static final SparkMaxConfig VerticalMotorConfig = new SparkMaxConfig();
 
                 static {
-                        VertivalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12).inverted(true);
+                        VerticalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12).inverted(true);
 
-                        VertivalMotorConfig.closedLoop
+                        VerticalMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                         .p(KickerConstants.VRp)
                         .i(KickerConstants.VRi)
@@ -53,6 +55,25 @@ public final class Configs
                         .kS(KickerConstants.VRs)
                         .kV(KickerConstants.VRv)
                         .kA(KickerConstants.VRa);
+                }
+        }
+
+        public static final class IntakeSubsystem {
+
+                public static final SparkFlexConfig IntakeConfig = new SparkFlexConfig();
+
+                static {
+                        IntakeConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12).inverted(true);
+
+                        IntakeConfig.closedLoop
+                        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                        .p(IntakeConstants.p)
+                        .i(IntakeConstants.i)
+                        .d(IntakeConstants.d)
+                        .feedForward
+                        .kS(IntakeConstants.s)
+                        .kV(IntakeConstants.v)
+                        .kA(IntakeConstants.a);
                 }
         }
 

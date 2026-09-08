@@ -100,7 +100,7 @@
       "command": {
         "type": "named",
         "data": {
-          "name": "extend"
+          "name": "extend intake"
         }
       }
     },
@@ -108,7 +108,12 @@
       "name": "intake",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": 3.4981549815497965,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake"
+        }
+      }
     },
     {
       "name": "Shoot With Timeout",
@@ -126,7 +131,7 @@
     "maxVelocity": 3.75,
     "maxAcceleration": 3.75,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 720.0,
+    "maxAngularAcceleration": 540.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
@@ -135,7 +140,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "TRI Paths",
+  "folder": "Remix",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

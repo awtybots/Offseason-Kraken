@@ -1,6 +1,6 @@
 {
   "optimalVoltage": 12,
-  "robotMass": 30,
+  "robotMass": 125.7,
   "wheelGripCoefficientOfFriction": 1.2,
   "currentLimit": {
     "drive": 50,
@@ -12,7 +12,7 @@
       "factor": 0
     },
     "drive": {
-      "diameter": 4,
+      "diameter": 3.9,
       "gearRatio": 6.3,
       "factor": 0
     }

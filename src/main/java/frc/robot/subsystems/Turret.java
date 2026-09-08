@@ -21,6 +21,8 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 
+import static frc.robot.utils.utils.*;
+
 import org.littletonrobotics.junction.Logger;
 
 import frc.robot.Configs;
@@ -169,7 +171,7 @@ public class Turret extends SubsystemBase {
         double best = Double.NaN;
         double bestError = Double.POSITIVE_INFINITY;
 
-        for (int lap = -1; lap <= 1; lap++) { // same heading is reachable at up to 2 laps in a 320 degree range
+        for (int lap = -1; lap <= 1; lap++) { // 615 deg 
             double candidate = base + lap * 360.0;
 
             if (candidate > softMaxDegrees() || candidate < softMinDegrees()) {
@@ -283,8 +285,12 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/IsAtAngle", isAtAngle());
         Logger.recordOutput("Turret/IsAtCableLimit", isAtCableLimit());
         Logger.recordOutput("Turret/TargetDegrees", currentTargetDegrees);
-        Logger.recordOutput("Turret/AppliedVolts", TurretMotor.getBusVoltage());
-        Logger.recordOutput("Turret/Current", TurretMotor.getOutputCurrent());
+        // getBusVoltage() alone is the battery rail at the Spark, not the motor output -
+        // it read a flat ~12.4 V while the turret sat still. Applied output is the duty
+        // cycle scaled by the bus.
+        Logger.recordOutput("Turret/AppliedVolts", getAppliedVoltage(TurretMotor));
+        Logger.recordOutput("Turret/CurrentDraw", getSupplyCurrent(TurretMotor));
+        Logger.recordOutput("Turret/StatorCurrent", getStatorCurrent(TurretMotor));
         Logger.recordOutput("Turret/MotorRotations", turretRelativeEncoder.getPosition());
         Logger.recordOutput("Turret/FrameDisagreementDeg", getContinuousDegrees() - getRelativeDegrees());
         Logger.recordOutput("Turret/SoftMinDegrees", softMinDegrees());

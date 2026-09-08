@@ -16,6 +16,8 @@ import org.littletonrobotics.junction.Logger;
 import frc.robot.Configs;
 import frc.robot.Constants.HoodConstants;
 
+import static frc.robot.utils.utils.*;
+
 public class Hood extends SubsystemBase {
 
     private SparkMax HoodMotor = new SparkMax(HoodConstants.HOOD_ID, MotorType.kBrushless);
@@ -68,19 +70,19 @@ public class Hood extends SubsystemBase {
     public Command setAngleCommand(double degrees) { // pass in any angle and hood goes there
         return this.run(() -> {
             setAngle(degrees);
-        }).finallyDo(interrupted -> stopHood());
+        }).finallyDo(interrupted -> goToMin());
     }
 
     public Command goToMinCommand() {
         return this.run(() -> {
             goToMin();
-        }).finallyDo(interrupted -> stopHood());
+        }).finallyDo(interrupted -> goToMin());
     }
 
     public Command goToMaxCommand() {
         return this.run(() -> {
             goToMax();
-        }).finallyDo(interrupted -> stopHood());
+        }).finallyDo(interrupted -> goToMin());
     }
 
     public Command tuckCommand() {
@@ -95,7 +97,8 @@ public class Hood extends SubsystemBase {
         Logger.recordOutput("Hood/TargetDegrees", currentTargetDegrees);
         Logger.recordOutput("Hood/IsAtAngle", isAtAngle());
         Logger.recordOutput("Hood/MotorRotations", HoodEncoder.getPosition());
-        Logger.recordOutput("Hood/AppliedVolts", HoodMotor.getAppliedOutput() * HoodMotor.getBusVoltage());
-        Logger.recordOutput("Hood/StatorCurrent", HoodMotor.getOutputCurrent());
+        Logger.recordOutput("Hood/Voltage", getAppliedVoltage(HoodMotor));
+        Logger.recordOutput("Hood/StatorCurrent", getStatorCurrent(HoodMotor));
+        Logger.recordOutput("Hood/CurrentDraw", getSupplyCurrent(HoodMotor));
     }
 }
