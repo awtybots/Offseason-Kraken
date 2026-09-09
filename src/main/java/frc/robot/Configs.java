@@ -25,7 +25,7 @@ public final class Configs
                         // permanent offset - and at 60:1 that is 12x more motor rotations of
                         // error than it used to be. 20 A is REV's ceiling for a NEO 550; at 60:1
                         // the hood can stall against its own travel limits.
-                        HoodMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12);
+                        HoodMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(30).voltageCompensation(12);
 
                         HoodMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)

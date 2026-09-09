@@ -61,7 +61,11 @@ public class Hood extends SubsystemBase {
     }
 
     public void moveHood() {
-        HoodMotor.set(0.4);
+        HoodMotor.set(0.67);
+    }
+
+    public void moveHoodReverse() {
+        HoodMotor.set(-0.67);
     }
 
     public void goToMin() { // send hood to lowest position (20 deg)
@@ -77,6 +81,8 @@ public class Hood extends SubsystemBase {
             moveHood();
         }).finallyDo(interrupted -> stopHood());
     }
+
+    
 
     public Command setAngleCommand(double degrees) { // pass in any angle and hood goes there
         return this.run(() -> {
