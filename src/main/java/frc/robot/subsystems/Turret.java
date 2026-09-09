@@ -69,6 +69,7 @@ public class Turret extends SubsystemBase {
         // lastAbsolutePosition = getAbsoluteDegrees();
         TurretMotor.configure(Configs.TurretSubsystem.TurretMotorConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);
+        TurretMotor.clearFaults();
 
         resyncFromAbsolute(); // assumes the turret booted parked at the reference spot
     }

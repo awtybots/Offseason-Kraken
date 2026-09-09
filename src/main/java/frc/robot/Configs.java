@@ -91,7 +91,6 @@ public final class Configs
                         // REV Through Bore on the data port. Reported in encoder shaft degrees,
                         // zero centered so the range is (-180, 180] instead of [0, 360).
                         TurretMotorConfig.absoluteEncoder
-                        .setSparkMaxDataPortConfig()
                         .inverted(TurretConstants.ABSOLUTE_ENCODER_INVERTED)
                         .zeroOffset(TurretConstants.ABSOLUTE_ENCODER_OFFSET)
                         .zeroCentered(true)
