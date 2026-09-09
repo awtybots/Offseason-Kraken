@@ -161,7 +161,7 @@ public class Robot extends LoggedRobot {
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_FRONT, 1); // Seed internal IMU
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_BACK, 1); // Seed internal IMU
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_LEFT, 1); // Seed internal IMU
-        LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_FRONT, 200);
+        LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_RIGHT, 200);
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_BACK, 200);
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_LEFT, 200);
         m_robotContainer.setMotorBrake(true);
@@ -184,13 +184,13 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void autonomousInit() {
-        LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_FRONT, 0);
+        LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_RIGHT, 0);
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_BACK, 0);
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_LEFT, 0);
-        // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_FRONT, 3); // Use internal IMU + external IMU
+        // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_RIGHT, 3); // Use internal IMU + external IMU
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_BACK, 3); // Use internal IMU + external IMU
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_LEFT, 3); // Use internal IMU + external IMU
-        // LimelightHelpers.SetIMUAssistAlpha(LimelightConstants.LIMELIGHT_FRONT, 0.1);
+        // LimelightHelpers.SetIMUAssistAlpha(LimelightConstants.LIMELIGHT_RIGHT, 0.1);
         // LimelightHelpers.SetIMUAssistAlpha(LimelightConstants.LIMELIGHT_BACK, 0.1);
         // LimelightHelpers.SetIMUAssistAlpha(LimelightConstants.LIMELIGHT_LEFT, 0.1);
 
@@ -214,7 +214,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
-        LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_FRONT, 0);
+        LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_RIGHT, 0);
         // LimelightHelpers.SetIMUMode(LimelightConstants.LIMELIGHT_FRONT, 3); // Use internal IMU + external IMU
         // LimelightHelpers.SetIMUAssistAlpha(LimelightConstants.LIMELIGHT_FRONT, 0.1);
         LimelightHelpers.SetThrottle(LimelightConstants.LIMELIGHT_BACK, 0);

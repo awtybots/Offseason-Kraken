@@ -112,8 +112,8 @@ public final class Constants {
 
   public static class LimelightConstants {
     public static final String LIMELIGHT_RIGHT = "limelight-right";  //10.58.29.15
-    public static final String LIMELIGHT_BACK = "limelight-back";
-    public static final String LIMELIGHT_LEFT = "limelight-left";
+    public static final String LIMELIGHT_BACK = "limelight-back"; //10.58.29.16
+    public static final String LIMELIGHT_LEFT = "limelight-left"; //10.58.29.17
   }
 
   public static class OperatorConstants {
@@ -188,7 +188,7 @@ public final class Constants {
     public static final int SHOOTER_L_ID = 16;
     public static final int SHOOTER_R_ID = 17;
 
-    public static final double SHOOTER_SPEED = 2400;
+    public static final double SHOOTER_SPEED = 400;
     public static final double SHOOTER_PASSING_SPEED = 1200;
     public static final double ERROR_MARGIN = 100.0 / 60.0; // 100 RPM, expressed in RPS
     public static final double STOP = 0;
@@ -355,15 +355,15 @@ public final class Constants {
 
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
     public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions per one full turret revolution
-    public static final double ABSOLUTE_ENCODER_OFFSET = 0.0;
+    public static final double ABSOLUTE_ENCODER_OFFSET = 0.125805;
     public static final boolean ABSOLUTE_ENCODER_INVERTED = true; // flip if the encoder counts down when the turret
                                                                    // goes counterclockwise
 
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
 
-    public static final double MIN_CONTINUOUS_DEGREES = -435.0; // 435 deg CW from forward
-    public static final double MAX_CONTINUOUS_DEGREES = 180.0;  // 180 deg CCW from forward
+    public static final double MIN_CONTINUOUS_DEGREES = -170.0; // 435 deg CW from forward
+    public static final double MAX_CONTINUOUS_DEGREES = 370.0;  // 180 deg CCW from forward
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
