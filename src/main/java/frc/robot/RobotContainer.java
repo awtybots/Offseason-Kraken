@@ -320,7 +320,7 @@ public class RobotContainer {
     // RB - turret to 45 deg. A real arc, so Turret/FrameDisagreementDeg should stay near
     //      zero the whole way if GEAR_RATIO = 50 is right.
     operatorXbox.rightBumper().whileTrue(m_turret.goToAngleCommand(45.0));
-
+            operatorXbox.povDown().whileTrue(m_hood.justmoveHooReverseCommandd());
     // Testing
     operatorXbox.rightTrigger().whileTrue(
         Commands.parallel(
@@ -346,10 +346,10 @@ public class RobotContainer {
     operatorXbox.b().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
 
     // vision
-    operatorXbox.povUp().onTrue(drivebase.FrontToggle());
-    operatorXbox.povLeft().onTrue(drivebase.LeftToggle());
-    operatorXbox.povRight().onTrue(drivebase.VisionToggle());
-    operatorXbox.povDown().onTrue(drivebase.BackToggle());
+    // operatorXbox.povUp().onTrue(drivebase.FrontToggle());
+    // operatorXbox.povLeft().onTrue(drivebase.LeftToggle());
+    // operatorXbox.povRight().onTrue(drivebase.VisionToggle());
+    // operatorXbox.povDown().onTrue(drivebase.BackToggle());
 
     // ==================== SIMULATION ====================
 

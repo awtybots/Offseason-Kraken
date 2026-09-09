@@ -82,7 +82,12 @@ public class Hood extends SubsystemBase {
         }).finallyDo(interrupted -> stopHood());
     }
 
-    
+    public Command justmoveHooReverseCommandd() {
+        return this.run(() -> {
+            moveHoodReverse();
+        }).finallyDo(interrupted -> stopHood());
+    }
+
 
     public Command setAngleCommand(double degrees) { // pass in any angle and hood goes there
         return this.run(() -> {
