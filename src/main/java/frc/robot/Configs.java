@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.revrobotics.spark.ClosedLoopSlot;
 // import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -31,11 +32,13 @@ public final class Configs
                         .p(HoodConstants.p)
                         .i(HoodConstants.i)
                         .d(HoodConstants.d)
+                        .allowedClosedLoopError(0.1, ClosedLoopSlot.kSlot0)
                         .outputRange(-HoodConstants.MAX_OUTPUT, HoodConstants.MAX_OUTPUT)
                         .feedForward
                         .kS(HoodConstants.s)
                         .kV(HoodConstants.v)
-                        .kA(HoodConstants.a);
+                        .kA(HoodConstants.a)
+;
                 }
         }
 
