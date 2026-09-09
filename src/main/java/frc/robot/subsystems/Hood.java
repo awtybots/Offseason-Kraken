@@ -45,6 +45,7 @@ public class Hood extends SubsystemBase {
         return rotationsToDegrees(HoodEncoder.getPosition());
     }
 
+
     public boolean isAtAngle() { // true = hood is within tolerance of its last commanded angle
         return Math.abs(getAngleDegrees() - currentTargetDegrees) <= HoodConstants.ANGLE_TOLERANCE_DEGREES;
     }
@@ -59,12 +60,22 @@ public class Hood extends SubsystemBase {
         HoodMotor.set(0);
     }
 
+    public void moveHood() {
+        HoodMotor.set(0.4);
+    }
+
     public void goToMin() { // send hood to lowest position (20 deg)
         setAngle(HoodConstants.HOOD_MIN_DEGREES);
     }
 
     public void goToMax() { // send hood to highest position (40-45 deg, tune in constants)
         setAngle(HoodConstants.HOOD_MAX_DEGREES);
+    }
+
+    public Command justmoveHooCommandd() {
+        return this.run(() -> {
+            moveHood();
+        }).finallyDo(interrupted -> stopHood());
     }
 
     public Command setAngleCommand(double degrees) { // pass in any angle and hood goes there
