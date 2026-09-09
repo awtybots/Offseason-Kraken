@@ -82,7 +82,7 @@ public final class Configs
                 public static final SparkMaxConfig TurretMotorConfig = new SparkMaxConfig();
 
                 static {
-                        TurretMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12)
+                        TurretMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12)
                         .inverted(true);
 
                         // REV Through Bore on the data port. Reported in encoder shaft degrees,
