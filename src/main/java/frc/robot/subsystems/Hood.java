@@ -61,11 +61,11 @@ public class Hood extends SubsystemBase {
     }
 
     public void moveHood() {
-        HoodMotor.set(0.67);
+        HoodMotor.set(1);
     }
 
     public void moveHoodReverse() {
-        HoodMotor.set(-0.67);
+        HoodMotor.set(-1);
     }
 
     public void goToMin() { // send hood to lowest position (20 deg)
