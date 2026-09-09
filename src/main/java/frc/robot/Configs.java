@@ -44,7 +44,7 @@ public final class Configs
                 public static final SparkMaxConfig VerticalMotorConfig = new SparkMaxConfig();
 
                 static {
-                        VerticalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12).inverted(true);
+                        VerticalMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12).inverted(false);
 
                         VerticalMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
