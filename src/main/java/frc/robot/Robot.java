@@ -10,6 +10,7 @@ import frc.robot.BuildConstants; // <---------- WISCONSIN???
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import org.littletonrobotics.junction.LoggedPowerDistribution;
+import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -46,6 +47,8 @@ public class Robot extends LoggedRobot {
             // only need it when we are actually debugging a Spark - comment this out to
             // get the .revlog files back.
             StatusLogger.disableAutoLogging();
+
+            SignalLogger.enableAutoLogging(false);
         }
 
         // Log WPILib DataLog (SysId, etc.) to the same USB location as AKit logs.
