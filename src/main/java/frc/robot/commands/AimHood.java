@@ -57,7 +57,7 @@ public class AimHood extends Command {
         Logger.recordOutput("Hood/TurretFieldY", turretPos.getY());
 
         if (swerveSubsystem.isInAllianceZone()) {
-            Translation2d turretToHub = swerveSubsystem.getDynamicHubLocation()
+            Translation2d turretToHub = swerveSubsystem.getCachedDynamicHubLocation()
                     .getTranslation().minus(turretPos);
             double distToHub = turretToHub.getNorm();
             distance = distToHub;
@@ -69,7 +69,7 @@ public class AimHood extends Command {
             Logger.recordOutput("Hood/DistanceToHub", distToHub);
             Logger.recordOutput("Hood/TargetAngle", targetAngle);
         } else if (swerveSubsystem.isInNeutralZone()) {
-            Translation2d turretToFerry = swerveSubsystem.getDynamicFerryLocation()
+            Translation2d turretToFerry = swerveSubsystem.getCachedDynamicFerryLocation()
                     .getTranslation().minus(turretPos);
             double distToFerry = turretToFerry.getNorm();
             distance = distToFerry;

@@ -76,7 +76,7 @@ public class ControlAllShooting extends Command {
         inShootingZone = !drivebase.isInOpponentAllianceZone();
 
         if (drivebase.isInAllianceZone()) { // shoot at hub
-            Translation2d turretToHub = drivebase.getDynamicHubLocation()
+            Translation2d turretToHub = drivebase.getCachedDynamicHubLocation()
                     .getTranslation().minus(turretPos);
             double dist = turretToHub.getNorm();
             distance = dist;
@@ -91,7 +91,7 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/DistanceToHub", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         } else if (drivebase.isInNeutralZone()) { // ferry
-            Translation2d turretToFerry = drivebase.getDynamicFerryLocation()
+            Translation2d turretToFerry = drivebase.getCachedDynamicFerryLocation()
                     .getTranslation().minus(turretPos);
             double dist = turretToFerry.getNorm();
             distance = dist;

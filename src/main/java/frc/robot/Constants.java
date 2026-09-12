@@ -295,6 +295,9 @@ public final class Constants {
     }
 
     public static final double TOF_SCALE = 1.0;   // tune up toward ~1.25 with real shots
+
+    public static final int SOTM_MAX_ITERATIONS = 32;
+    public static final double SOTM_TOLERANCE_M = 0.001;
     
     public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();

@@ -292,7 +292,7 @@ public class SwerveSubsystem extends SubsystemBase {
     
     SmartDashboard.putNumber("FrontMegatagNumber", frontMegatagNumber);
 
-    // updateOdometry();
+    updateOdometry();
     // -----------------------
     // AdvantageKit Logging
     // -----------------------
@@ -1185,10 +1185,17 @@ public class SwerveSubsystem extends SubsystemBase {
 
         // velocity compensation — iterative TOF convergence
         Translation2d CompensatedHub = hubVec;
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS; i++) {
             double distance = CompensatedHub.minus(robotVec).getNorm();
-            double tof = Constants.ShooterConstants.TOF.get(distance);
-            CompensatedHub = hubVec.minus(robotVel.times(tof));
+            double tof = Constants.ShooterConstants.TOF.get(distance)
+                * Constants.ShooterConstants.TOF_SCALE;
+            Translation2d next = hubVec.minus(robotVel.times(tof));
+            boolean settled = next.getDistance(CompensatedHub)
+                < Constants.ShooterConstants.SOTM_TOLERANCE_M;
+            CompensatedHub = next;
+            if (settled) {
+                break;
+            }
         }
 
         // // tilt compensation
@@ -1287,12 +1294,19 @@ public class SwerveSubsystem extends SubsystemBase {
     Translation2d robotVel = getTurretFieldVelocity(); // includes omega x r
 
     Translation2d CompensatedFerry = ferryVec;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS; i++) {
       double distance = CompensatedFerry.minus(robotVec).getNorm();
       // ferryTOF, not the hub TOF map: the hub map only spans 2-6 m and clamps, so
       // every pass past 6 m used to lead with the 6 m hub flight time.
-      double tof = Constants.ShooterConstants.ferryTOF.get(distance);
-      CompensatedFerry = ferryVec.minus(robotVel.times(tof));
+      double tof = Constants.ShooterConstants.ferryTOF.get(distance)
+          * Constants.ShooterConstants.TOF_SCALE;
+      Translation2d next = ferryVec.minus(robotVel.times(tof));
+      boolean settled = next.getDistance(CompensatedFerry)
+          < Constants.ShooterConstants.SOTM_TOLERANCE_M;
+      CompensatedFerry = next;
+      if (settled) {
+        break;
+      }
     }
 
     return new Pose2d(CompensatedFerry, new Rotation2d());

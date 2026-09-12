@@ -25,9 +25,9 @@ public class AimTurret extends Command {
 
     private Pose2d getTargetPose() {
         if (swerveSubsystem.isInAllianceZone()) {
-            return swerveSubsystem.getDynamicHubLocation(); 
+            return swerveSubsystem.getCachedDynamicHubLocation(); 
         } else {
-            return swerveSubsystem.getDynamicFerryLocation(); 
+            return swerveSubsystem.getCachedDynamicFerryLocation(); 
         }
     }
 
