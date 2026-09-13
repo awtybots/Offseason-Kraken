@@ -851,7 +851,7 @@ public class SwerveSubsystem extends SubsystemBase {
         {
           doRejectUpdate = true;
         }
-        if(mt1.rawFiducials[0].distToCamera > 3)
+        if(mt1.rawFiducials[0].distToCamera > LimelightConstants.MAX_SINGLE_TAG_DIST_M)
         {
           doRejectUpdate = true;
         }
@@ -859,7 +859,7 @@ public class SwerveSubsystem extends SubsystemBase {
       else
       {
         // Multi-tag: reject if average distance is too far
-        if(mt1.avgTagDist > 3)
+        if(mt1.avgTagDist > LimelightConstants.MAX_MULTI_TAG_DIST_M)
         {
           doRejectUpdate = true;
         }
@@ -875,13 +875,13 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         // Scale std devs by distance: close tags = more trust, far tags = less trust
         double dist = mt1.avgTagDist;
-        double xyStd = 0.3 + (dist * dist * 0.15);
-        // Multi-tag is more reliable, so reduce std devs
-        if(mt1.tagCount >= 2) xyStd *= 0.5;
-        // Trust vision more while disabled to lock in pose before match
-        if(DriverStation.isDisabled()) xyStd *= 0.25;
+        double xyStd = LimelightConstants.MT1_STD_BASE
+            + (dist * dist * LimelightConstants.MT1_STD_DIST_COEFF);
+        if(mt1.tagCount < 2) xyStd *= LimelightConstants.SINGLE_TAG_STD_SCALE;
+        if(DriverStation.isDisabled()) xyStd *= LimelightConstants.DISABLED_STD_SCALE;
 
-        swerveDrive.setVisionMeasurementStdDevs(VecBuilder.fill(xyStd, xyStd, 9999999));
+        swerveDrive.setVisionMeasurementStdDevs(
+            VecBuilder.fill(xyStd, xyStd, LimelightConstants.THETA_STD_IGNORE));
         swerveDrive.addVisionMeasurement(
             mt1.pose,
             mt1.timestampSeconds);
@@ -903,7 +903,7 @@ public class SwerveSubsystem extends SubsystemBase {
         doRejectUpdate = true;
       }
       // Reject if average tag distance is too far for reliable MT2
-      if(mt2.avgTagDist > 3)
+      if(mt2.avgTagDist > LimelightConstants.MAX_MULTI_TAG_DIST_M)
       {
         doRejectUpdate = true;
       }
@@ -911,12 +911,13 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         // Scale std devs by distance and tag count
         double dist = mt2.avgTagDist;
-        double xyStd = 0.3 + (dist * dist * 0.1);
-        if(mt2.tagCount >= 2) xyStd *= 0.5;
-        // Trust vision more while disabled to lock in pose before match
-        if(DriverStation.isDisabled()) xyStd *= 0.25;
+        double xyStd = LimelightConstants.MT2_STD_BASE
+            + (dist * dist * LimelightConstants.MT2_STD_DIST_COEFF);
+        if(mt2.tagCount < 2) xyStd *= LimelightConstants.SINGLE_TAG_STD_SCALE;
+        if(DriverStation.isDisabled()) xyStd *= LimelightConstants.DISABLED_STD_SCALE;
 
-        swerveDrive.setVisionMeasurementStdDevs(VecBuilder.fill(xyStd, xyStd, 9999999));
+        swerveDrive.setVisionMeasurementStdDevs(
+            VecBuilder.fill(xyStd, xyStd, LimelightConstants.THETA_STD_IGNORE));
         swerveDrive.addVisionMeasurement(
             mt2.pose,
             mt2.timestampSeconds);

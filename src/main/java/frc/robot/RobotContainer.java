@@ -186,6 +186,23 @@ public class RobotContainer {
     autoChooser.setDefaultOption("Do Nothing", Commands.none());
     SmartDashboard.putData("Auto Chooser", autoChooser);
     loggedAutoChooser = new LoggedDashboardChooser<>("Auto Routine", autoChooser);
+
+    configureSysIdDashboard();
+  }
+
+  private void configureSysIdDashboard() {
+    SmartDashboard.putData("Shooter SysId Quasistatic Fwd",
+        m_shooter.sysIdQuasistaticForward().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Quasistatic Fwd"));
+    SmartDashboard.putData("Shooter SysId Quasistatic Rev",
+        m_shooter.sysIdQuasistaticReverse().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Quasistatic Rev"));
+    SmartDashboard.putData("Shooter SysId Dynamic Fwd",
+        m_shooter.sysIdDynamicForward().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Dynamic Fwd"));
+    SmartDashboard.putData("Shooter SysId Dynamic Rev",
+        m_shooter.sysIdDynamicReverse().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Dynamic Rev"));
   }
 
   private void configureBindings() {

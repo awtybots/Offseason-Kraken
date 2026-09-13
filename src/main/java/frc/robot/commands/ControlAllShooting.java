@@ -1,8 +1,10 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.Constants.TurretConstants;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -26,6 +28,7 @@ public class ControlAllShooting extends Command {
     private boolean isFiring = false;
     private boolean isAtSpeed = false;
     private boolean inShootingZone = true; // false in the opponent alliance zone
+    private double turretAimErrorDegrees = 180.0;
 
     public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Hood hood,
             Rollers rollers, Turret turret, SwerveSubsystem swerve) {
@@ -56,11 +59,18 @@ public class ControlAllShooting extends Command {
         return 1.0;
     }
 
-    private boolean isReadyToFire() { // must be at speed, turret at angle, and hood at angle to shoot
+    private double aimErrorTo(Translation2d target, Translation2d turretPos) {
+        double bearing = target.minus(turretPos).getAngle()
+                .minus(drivebase.getPose().getRotation()).getDegrees();
+        return Math.abs(MathUtil.inputModulus(
+                bearing - m_turret.getContinuousDegrees(), -180.0, 180.0));
+    }
+
+    private boolean isReadyToFire() {
         return inShootingZone
                 && isAtSpeed
                 && m_hood.isAtAngle()
-                && m_turret.isAtAngle()
+                && turretAimErrorDegrees <= TurretConstants.ANGLE_TOLERANCE_DEGREES
                 && m_turret.isTargetReachable();
     }
 
@@ -68,6 +78,7 @@ public class ControlAllShooting extends Command {
     public void initialize() {
         isFiring = false;
         isAtSpeed = false;
+        turretAimErrorDegrees = 180.0;
     }
 
     @Override
@@ -80,6 +91,8 @@ public class ControlAllShooting extends Command {
                     .getTranslation().minus(turretPos);
             double dist = turretToHub.getNorm();
             distance = dist;
+            turretAimErrorDegrees = aimErrorTo(
+                    drivebase.getCachedDynamicHubLocation().getTranslation(), turretPos);
 
             double targetRPM = ShooterConstants.hubShooterTable.get(dist);
             recordedTargetRPM = targetRPM;
@@ -95,6 +108,8 @@ public class ControlAllShooting extends Command {
                     .getTranslation().minus(turretPos);
             double dist = turretToFerry.getNorm();
             distance = dist;
+            turretAimErrorDegrees = aimErrorTo(
+                    drivebase.getCachedDynamicFerryLocation().getTranslation(), turretPos);
 
             double targetRPM = ShooterConstants.ferryShooterTable.get(dist);
             recordedTargetRPM = targetRPM;
@@ -109,6 +124,7 @@ public class ControlAllShooting extends Command {
             recordedTargetRPM = ShooterConstants.ALLIANCE_IDLE_RPM;
             m_shooter.setTargetRPM(ShooterConstants.ALLIANCE_IDLE_RPM);
             isAtSpeed = false;
+            turretAimErrorDegrees = 180.0;
             Logger.recordOutput("Shooting/Mode", "HoldOpponentZone");
         }
         
@@ -139,6 +155,7 @@ public class ControlAllShooting extends Command {
         Logger.recordOutput("Shooting/IsFiring", isFiring);
         Logger.recordOutput("Shooting/IsReadyToFire", isReadyToFire());
         Logger.recordOutput("Shooting/TurretAtAngle", m_turret.isAtAngle());
+        Logger.recordOutput("Shooting/TurretAimErrorDeg", turretAimErrorDegrees);
         Logger.recordOutput("Shooting/HoodAtAngle", m_hood.isAtAngle());
         Logger.recordOutput("Shooting/TurretAtCableLimit", m_turret.isAtCableLimit());
         Logger.recordOutput("Shooting/Distance", distance);
