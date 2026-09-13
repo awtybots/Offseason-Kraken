@@ -15,6 +15,12 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+
 import org.littletonrobotics.junction.Logger;
 
 import frc.robot.Constants.ShooterConstants;
@@ -29,6 +35,14 @@ public class Shooter extends SubsystemBase {
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
     private double targetRPS = 0.0;
+
+    private static final double SIM_FLYWHEEL_MOI = 0.004;
+    private static final DCMotor SIM_GEARBOX = DCMotor.getKrakenX60Foc(2);
+    private final FlywheelSim flywheelSim = RobotBase.isSimulation()
+            ? new FlywheelSim(
+                    LinearSystemId.createFlywheelSystem(SIM_GEARBOX, SIM_FLYWHEEL_MOI, 1.0),
+                    SIM_GEARBOX)
+            : null;
 
     private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(),
@@ -169,6 +183,22 @@ public class Shooter extends SubsystemBase {
     public Command idleCommand() {
     return this.run(() -> setTargetRPM(ShooterConstants.ALLIANCE_IDLE_RPM));
 }
+
+    @Override
+    public void simulationPeriodic() {
+        var rightSim = ShooterRightMotor.getSimState();
+        var leftSim = ShooterLeftMotor.getSimState();
+
+        rightSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+        leftSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+        flywheelSim.setInputVoltage(rightSim.getMotorVoltage());
+        flywheelSim.update(0.020);
+
+        double rps = flywheelSim.getAngularVelocityRPM() / 60.0;
+        rightSim.setRotorVelocity(rps);
+        leftSim.setRotorVelocity(rps);
+    }
 
     @Override
     public void periodic() {

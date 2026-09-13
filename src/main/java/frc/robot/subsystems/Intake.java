@@ -48,6 +48,10 @@ public class Intake extends SubsystemBase {
 
     }
 
+    public boolean isIntaking() {
+        return desiredPercent > 0.0;
+    }
+
     public Command runIntakeCommand() {
         return this.run(() -> {
             runIntake();

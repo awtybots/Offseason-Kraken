@@ -33,6 +33,8 @@ public class Kicker extends SubsystemBase {
 
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
+    private boolean feeding = false;
+
     public Kicker() {
         TalonFXConfiguration KickerConfig = new TalonFXConfiguration();
         KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -47,25 +49,33 @@ public class Kicker extends SubsystemBase {
                 PersistMode.kPersistParameters);
     }
 
+    public boolean isFeeding() {
+        return feeding;
+    }
+
     public void ReverseKicker() {
+        feeding = false;
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_REVERSE_SPEED);
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED).withEnableFOC(true));
     }
 
     public void ConveyorToShooter() {
+        feeding = true;
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
     }
 
     public void ClearBall() {
+        feeding = false;
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
     }
 
 
     public void stopKicker() {
+        feeding = false;
         // KickerMotor.setControl(dutyCycleRequest.withOutput(0));
         KickerMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(true));
         VerticalRollerMotor.set(0.0);
@@ -95,6 +105,7 @@ public class Kicker extends SubsystemBase {
 
     @Override
     public void periodic() {
+        Logger.recordOutput("Kicker/IsFeeding", feeding);
         Logger.recordOutput("Kicker/KickerDutyCycle", getDutyCycle(KickerMotor));
         Logger.recordOutput("Kicker/KickerVoltage", getAppliedVoltage(KickerMotor));
         Logger.recordOutput("Kicker/VerticalRoller/Voltage", getAppliedVoltage(VerticalRollerMotor));

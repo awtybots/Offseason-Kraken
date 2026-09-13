@@ -1,0 +1,49 @@
+{
+  "name": "Kraken 5829",
+  "sourceUrl": "PUT_YOUR_ONSHAPE_DOCUMENT_URL_HERE",
+  "disableSimplification": false,
+  "rotations": [
+    { "axis": "x", "degrees": 90 },
+    { "axis": "z", "degrees": 180 }
+  ],
+  "position": [0, 0, 0.101],
+  "cameras": [
+    {
+      "name": "limelight-right",
+      "rotations": [],
+      "position": [0, 0, 0.5],
+      "resolution": [1280, 800],
+      "fov": 82
+    },
+    {
+      "name": "limelight-back",
+      "rotations": [{ "axis": "z", "degrees": 180 }],
+      "position": [0, 0, 0.5],
+      "resolution": [1280, 800],
+      "fov": 82
+    },
+    {
+      "name": "limelight-left",
+      "rotations": [{ "axis": "z", "degrees": 90 }],
+      "position": [0, 0, 0.5],
+      "resolution": [1280, 800],
+      "fov": 82
+    }
+  ],
+  "components": [
+    {
+      "zeroedRotations": [
+        { "axis": "x", "degrees": 90 },
+        { "axis": "z", "degrees": 180 }
+      ],
+      "zeroedPosition": [0.1252, -0.2007, -0.361]
+    },
+    {
+      "zeroedRotations": [
+        { "axis": "x", "degrees": 90 },
+        { "axis": "z", "degrees": 180 }
+      ],
+      "zeroedPosition": [-0.015, 0.0, -0.162]
+    }
+  ]
+}

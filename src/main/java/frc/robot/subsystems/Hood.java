@@ -10,6 +10,11 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.sim.SparkMaxSim;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.RobotBase;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -25,6 +30,12 @@ public class Hood extends SubsystemBase {
     private RelativeEncoder HoodEncoder = HoodMotor.getEncoder();
 
     private double currentTargetDegrees = HoodConstants.HOOD_MIN_DEGREES; // tracks last commanded angle, used for isAtAngle check
+
+    private static final double SIM_MAX_DEG_PER_SEC = 400.0;
+    private final SparkMaxSim hoodSim = RobotBase.isSimulation()
+            ? new SparkMaxSim(HoodMotor, DCMotor.getNeo550(1))
+            : null;
+    private double simDegrees = HoodConstants.HOOD_MIN_DEGREES;
 
     public Hood() {
         HoodMotor.configure(Configs.HoodSubsystem.HoodMotorConfig, ResetMode.kResetSafeParameters,
@@ -111,6 +122,14 @@ public class Hood extends SubsystemBase {
         return this.run(() -> {
             goToMin(); // hold down position by default
         });
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        double step = SIM_MAX_DEG_PER_SEC * 0.020;
+        simDegrees += MathUtil.clamp(currentTargetDegrees - simDegrees, -step, step);
+        simDegrees = MathUtil.clamp(simDegrees, HoodConstants.HOOD_MIN_DEGREES, HoodConstants.HOOD_MAX_DEGREES);
+        hoodSim.getRelativeEncoderSim().setPosition(degreesToRotations(simDegrees));
     }
 
     @Override

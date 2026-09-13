@@ -393,7 +393,11 @@ public final class Constants {
     public static final double v = 0.004; // inert in kPosition
     public static final double a = 0.0003; // inert in kPosition
 
-    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
+    // A moving aim point sweeps the turret bearing at up to ~45 deg/s when strafing close to
+    // the hub, which is 0.9 deg per 20 ms loop - so a 0.5 deg window could never be satisfied
+    // while translating and the fire gate stayed shut. The hub allows far more than this:
+    // atan(0.56 m entry radius / 6 m) = 5.3 deg at the far end of the table, 15.6 deg at 2 m.
+    public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
 
     public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning use 0.88 after testing
   }

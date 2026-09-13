@@ -36,6 +36,7 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.AimTurret;
 import frc.robot.commands.AimHood;
 import frc.robot.commands.ControlAllShooting;
+import frc.robot.sim.SimRobot;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 
@@ -62,6 +63,8 @@ public class RobotContainer {
   private final Kicker m_kicker = new Kicker();
   @SuppressWarnings("unused")
   private final HubTrackerSubsystem m_hubtracker = new HubTrackerSubsystem(drivebase, driverXbox);
+
+  private SimRobot simRobot;
 
   // auto choosers
   private SendableChooser<Command> autoChooser;
@@ -186,6 +189,16 @@ public class RobotContainer {
     autoChooser.setDefaultOption("Do Nothing", Commands.none());
     SmartDashboard.putData("Auto Chooser", autoChooser);
     loggedAutoChooser = new LoggedDashboardChooser<>("Auto Routine", autoChooser);
+
+    if (RobotBase.isSimulation()) {
+      simRobot = new SimRobot(drivebase, m_turret, m_hood, m_shooter, m_intake, m_pushout, m_kicker);
+    }
+  }
+
+  public void simulationPeriodic() {
+    if (simRobot != null) {
+      simRobot.periodic();
+    }
   }
 
   private void configureBindings() {
@@ -248,12 +261,11 @@ public class RobotContainer {
     // m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase)); commented out for testing
     // m_hood.setDefaultCommand(m_hood.tuckCommand());
 
+    drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+
     if (RobotBase.isSimulation()) {
-      drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
-    } else {
-
-      drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
-
+      m_turret.setDefaultCommand(new AimTurret(m_turret, drivebase));
+      m_hood.setDefaultCommand(new AimHood(m_hood, drivebase));
     }
 
     // ==================== DRIVER BINDINGS ====================
@@ -359,11 +371,8 @@ public class RobotContainer {
           new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
           new ProfiledPIDController(5, 0, 0,
               new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
-      driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
-      driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
-      driverXbox.button(2).whileTrue(Commands.runEnd(
-          () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
-          () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
+      driverXbox.back().onTrue(Commands.runOnce(
+          () -> drivebase.resetOdometry(SimRobot.SimConstants.START_POSE)));
     }
 
     if (DriverStation.isTest()) {

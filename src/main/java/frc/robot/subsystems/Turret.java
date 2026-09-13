@@ -20,6 +20,10 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.sim.SparkMaxSim;
+
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.RobotBase;
 
 import static frc.robot.utils.utils.*;
 
@@ -47,6 +51,12 @@ public class Turret extends SubsystemBase {
     private double lastAbsolutePosition = 0.0; // last abs encoder reading in encoder degrees, used for tracking wraps
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
     private boolean setpointWasClamped = false; // last setAngle call hit a travel limit
+
+    private static final double SIM_MAX_DEG_PER_SEC = 170.0;
+    private final SparkMaxSim turretSim = RobotBase.isSimulation()
+            ? new SparkMaxSim(TurretMotor, DCMotor.getNEO(1))
+            : null;
+    private double simDegrees = TurretConstants.REFERENCE_TURRET_DEGREES;
 
     public Turret() {
         // TalonFXConfiguration motorConfig = new TalonFXConfiguration();
@@ -272,6 +282,18 @@ public class Turret extends SubsystemBase {
         return this.run(() -> {
             stopTurret();
         });
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        double step = SIM_MAX_DEG_PER_SEC * 0.020;
+        simDegrees += MathUtil.clamp(currentTargetDegrees - simDegrees, -step, step);
+        simDegrees = MathUtil.clamp(simDegrees, softMinDegrees(), softMaxDegrees());
+
+        double shaftDegrees = (simDegrees - TurretConstants.REFERENCE_TURRET_DEGREES)
+                * TurretConstants.ABSOLUTE_ENCODER_RATIO;
+        turretSim.getAbsoluteEncoderSim().setPosition(MathUtil.inputModulus(shaftDegrees, -180.0, 180.0));
+        turretSim.getRelativeEncoderSim().setPosition(degreesToRotations(simDegrees));
     }
 
     @Override

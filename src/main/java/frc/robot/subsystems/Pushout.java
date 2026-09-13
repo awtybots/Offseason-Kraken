@@ -13,6 +13,13 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+
 import frc.robot.Constants.PushoutConstants;
 
 import static frc.robot.utils.utils.*;
@@ -36,6 +43,12 @@ public class Pushout extends SubsystemBase {
     private PushoutMode mode = PushoutMode.IDLE;
     private final Timer stateTimer = new Timer();
     private double releasePosition = PushoutConstants.PUSHOUT_EXTENDED_POS;
+
+    private static final double SIM_MOI = 0.02;
+    private static final DCMotor SIM_GEARBOX = DCMotor.getKrakenX60Foc(1);
+    private final DCMotorSim pushoutSim = RobotBase.isSimulation()
+            ? new DCMotorSim(LinearSystemId.createDCMotorSystem(SIM_GEARBOX, SIM_MOI, 1.0), SIM_GEARBOX)
+            : null;
 
     public Pushout() {
         TalonFXConfiguration config = new TalonFXConfiguration();
@@ -328,6 +341,24 @@ public class Pushout extends SubsystemBase {
         return this.run(() -> {
             StopPushout();
         });
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        var sim = PushoutMotor.getSimState();
+        sim.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+        pushoutSim.setInputVoltage(sim.getMotorVoltage());
+        pushoutSim.update(0.020);
+
+        double rotations = MathUtil.clamp(pushoutSim.getAngularPositionRotations(),
+                PushoutConstants.FULLY_RETRACTED_POS, PushoutConstants.PUSHOUT_EXTENDED_POS + 1.0);
+        if (rotations != pushoutSim.getAngularPositionRotations()) {
+            pushoutSim.setState(rotations * 2.0 * Math.PI, 0.0);
+        }
+
+        sim.setRawRotorPosition(rotations);
+        sim.setRotorVelocity(pushoutSim.getAngularVelocityRPM() / 60.0);
     }
 
     @Override
