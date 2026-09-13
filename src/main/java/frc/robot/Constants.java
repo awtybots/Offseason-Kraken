@@ -34,6 +34,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
 
+  // Phoenix Pro licence. Flip to false and everything falls back to trapezoidal commutation:
+  // every withEnableFOC in the project reads this, and ShooterConstants.v switches with it
+  // because FOC free speed is 5800 RPM against 6000 without.
+  public static final boolean USE_FOC = true;
+
 
 
   public static final double MAX_SPEED = Units.feetToMeters(15.331);
@@ -232,7 +237,7 @@ public final class Constants {
                                         // 0 is the normal starting point for a flywheel.
 
     public static final double s = 0.0;
-    public static final double v = 0.12; // 12 V / 100 rps
+    public static final double v = USE_FOC ? 0.1241 : 0.12; // 12 V / 96.7 rps FOC, / 100 rps not
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----

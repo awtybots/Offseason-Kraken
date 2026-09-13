@@ -15,6 +15,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import frc.robot.Constants;
 import frc.robot.Constants.PushoutConstants;
 
 import static frc.robot.utils.utils.*;
@@ -63,19 +64,19 @@ public class Pushout extends SubsystemBase {
     public void PushIntake() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0));
         PushoutMotor.setControl(
-                positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0).withEnableFOC(true));
+                positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void RetractIntake() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0));
         PushoutMotor.setControl(
-                positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0).withEnableFOC(true));
+                positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void FullyRetract() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0));
         PushoutMotor.setControl(
-                positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0).withEnableFOC(true));
+                positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void ResetEncoder() {
@@ -84,15 +85,15 @@ public class Pushout extends SubsystemBase {
 
     public void StopPushout() {
         // PushoutMotor.setControl(voltageRequest.withOutput(0));
-        PushoutMotor.setControl(voltageRequest.withOutput(0).withEnableFOC(true));
+        PushoutMotor.setControl(voltageRequest.withOutput(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void PushoutDutyCycle(double output) {
-        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(true));
+        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(Constants.USE_FOC));
     }
 
     public void PushoutDutyCycleRetract(double output) {
-        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(true));
+        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(Constants.USE_FOC));
     }
 
     public double getPosition() {
@@ -142,7 +143,7 @@ public class Pushout extends SubsystemBase {
 
             case COMPLIANT:
                 PushoutMotor.setControl(
-                        voltageRequest.withOutput(PushoutConstants.PUSHOUT_HOLD_VOLTS).withEnableFOC(true));
+                        voltageRequest.withOutput(PushoutConstants.PUSHOUT_HOLD_VOLTS).withEnableFOC(Constants.USE_FOC));
                 if (wasKnockedBack()) {
                     setMode(PushoutMode.WAITING);
                 }
