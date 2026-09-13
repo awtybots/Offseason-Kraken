@@ -296,6 +296,9 @@ public class SwerveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("FrontMegatagNumber", frontMegatagNumber);
 
     updateOdometry();
+    if (RobotBase.isSimulation()) {
+      resolveFieldCollisions();
+    }
     // -----------------------
     // AdvantageKit Logging
     // -----------------------
@@ -778,31 +781,93 @@ public class SwerveSubsystem extends SubsystemBase {
    * just zeroes the OUTWARD velocity component at the boundary. Motion back into the field is
    * always allowed, and sliding along a wall is untouched.
    */
+  /**
+   * Field-frame {minX, maxX, minY, maxY} of the robot's footprint. NOT symmetric: the intake
+   * slide sticks out past the front bumper as it extends, and that is the corner that reaches
+   * an obstacle first.
+   */
+  private double[] robotFootprint(Pose2d pose) {
+    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
+    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
+    double side = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
+    double minX = 0;
+    double maxX = 0;
+    double minY = 0;
+    double maxY = 0;
+    for (double[] c : new double[][] {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}}) {
+      Translation2d corner = new Translation2d(c[0], c[1]).rotateBy(pose.getRotation());
+      maxX = Math.max(maxX, corner.getX());
+      minX = Math.min(minX, corner.getX());
+      maxY = Math.max(maxY, corner.getY());
+      minY = Math.min(minY, corner.getY());
+    }
+    return new double[] {pose.getX() + minX, pose.getX() + maxX,
+        pose.getY() + minY, pose.getY() + maxY};
+  }
+
+  /**
+   * Simulation-only, and the thing that actually stops the robot passing through solid objects.
+   *
+   * <p>Capping the COMMANDED velocity cannot do it: YAGSL's simulated modules lag the command
+   * badly - the chassis only reaches about a third of what it is told - so the pose keeps
+   * integrating forward long after the command went to zero, and the robot walks through the
+   * hub. This runs after odometry and pushes the pose back out along the shallowest axis, which
+   * is what a wall does. It is a no-op unless the footprint is genuinely overlapping.
+   */
+  private void resolveFieldCollisions() {
+    Pose2d pose = getPose();
+    double[] r = robotFootprint(pose);
+    double dx = 0;
+    double dy = 0;
+
+    if (r[0] < 0) {
+      dx = -r[0];
+    } else if (r[1] > SimRobot.SimConstants.FIELD_LENGTH_M) {
+      dx = SimRobot.SimConstants.FIELD_LENGTH_M - r[1];
+    }
+    if (r[2] < 0) {
+      dy = -r[2];
+    } else if (r[3] > SimRobot.SimConstants.FIELD_WIDTH_M) {
+      dy = SimRobot.SimConstants.FIELD_WIDTH_M - r[3];
+    }
+
+    for (double[] box : SimRobot.OBSTACLES) {
+      double left = r[1] - box[0];
+      double right = box[1] - r[0];
+      double down = r[3] - box[2];
+      double up = box[3] - r[2];
+      if (left <= 0 || right <= 0 || down <= 0 || up <= 0) {
+        continue; // not overlapping this one
+      }
+      double min = Math.min(Math.min(left, right), Math.min(down, up));
+      if (min == left) {
+        dx += -left;
+      } else if (min == right) {
+        dx += right;
+      } else if (min == down) {
+        dy += -down;
+      } else {
+        dy += up;
+      }
+    }
+
+    if (Math.hypot(dx, dy) > 0.001) {
+      resetOdometry(new Pose2d(pose.getX() + dx, pose.getY() + dy, pose.getRotation()));
+      Logger.recordOutput("Sim/CollisionPushM", Math.hypot(dx, dy));
+    }
+  }
+
   private ChassisSpeeds limitToField(ChassisSpeeds fieldSpeeds) {
     if (!RobotBase.isSimulation()) {
       return fieldSpeeds;
     }
 
     Pose2d pose = getPose();
-
-    // The footprint is NOT symmetric: the intake slide sticks out past the front bumper as it
-    // extends, and that is the corner that reaches the wall first. Build the actual box, rotate
-    // its four corners into the field frame, and use the real extremes.
-    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
-    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
-    double side = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
-
-    double aheadX = 0;
-    double behindX = 0;
-    double leftY = 0;
-    double rightY = 0;
-    for (double[] c : new double[][] {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}}) {
-      Translation2d corner = new Translation2d(c[0], c[1]).rotateBy(pose.getRotation());
-      aheadX = Math.max(aheadX, corner.getX());
-      behindX = Math.min(behindX, corner.getX());
-      leftY = Math.max(leftY, corner.getY());
-      rightY = Math.min(rightY, corner.getY());
-    }
+    double[] aabb = robotFootprint(pose);
+    double aheadX = aabb[1] - pose.getX();
+    double behindX = aabb[0] - pose.getX();
+    double leftY = aabb[3] - pose.getY();
+    double rightY = aabb[2] - pose.getY();
 
     // Limit the velocity so the leading corner lands ON the boundary next loop rather than
     // waiting until it is already through. At 4.7 m/s a purely reactive gate lets a corner

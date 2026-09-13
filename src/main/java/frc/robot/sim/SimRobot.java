@@ -120,11 +120,12 @@ public class SimRobot {
      * under them, so they are deliberately absent.
      */
     public static final double[][] OBSTACLES = {
-        // hubs: SIDE 1.2 m square centred on each hub
-        {4.61 - 0.6, 4.61 + 0.6, SimConstants.FIELD_WIDTH_M / 2 - 0.6, SimConstants.FIELD_WIDTH_M / 2 + 0.6},
-        {SimConstants.FIELD_LENGTH_M - 4.61 - 0.6, SimConstants.FIELD_LENGTH_M - 4.61 + 0.6,
-            SimConstants.FIELD_WIDTH_M / 2 - 0.6, SimConstants.FIELD_WIDTH_M / 2 + 0.6},
-        // trench side blocks, 0.305 m deep, both ends of both trenches
+        // Hubs, measured off AdvantageScope's own 2026 field model in the 0.4-1.0 m height
+        // band - i.e. the part a 0.57 m tall robot can actually hit. The TOWER above widens to
+        // 4.01-5.49 x 3.29-4.78 from 1.0 m up, but that overhangs; the legs are this box.
+        {4.02, 5.31, 3.43, 4.64},
+        {SimConstants.FIELD_LENGTH_M - 5.31, SimConstants.FIELD_LENGTH_M - 4.02, 3.43, 4.64},
+        // Trench side blocks, 0.305 m deep, both ends of both trenches.
         {3.96, 5.18, 1.265, 1.265 + 0.305},
         {3.96, 5.18, SimConstants.FIELD_WIDTH_M - 1.57, SimConstants.FIELD_WIDTH_M - 1.57 + 0.305},
         {SimConstants.FIELD_LENGTH_M - 5.18, SimConstants.FIELD_LENGTH_M - 3.96, 1.265, 1.265 + 0.305},
