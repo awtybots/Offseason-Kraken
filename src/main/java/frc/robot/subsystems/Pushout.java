@@ -249,16 +249,34 @@ public class Pushout extends SubsystemBase {
         PushoutMotor.setControl(positionRequest.withPosition(clamped).withSlot(0));
     }
 
+    private boolean isNear(double rotations) {
+        return Math.abs(getPosition() - rotations) <= PushoutConstants.PUSHOUT_AGITATE_TOLERANCE;
+    }
+
+    /**
+     * Steps between two positions, waiting for each move to ARRIVE before dwelling.
+     *
+     * <p>A fixed dwell alone cannot do this: the Motion Magic profile for the 3-rotation swing
+     * takes about 0.39 s at the configured 80 rot/s^2, so a 0.2 s dwell reversed the setpoint
+     * mid-flight. The slide never reached either end, and what came out was a wander around
+     * intermediate positions rather than a step between two of them.
+     */
     public Command AgitateCommand() {
         Command agitate = Commands.repeatingSequence(
-                runOnce(() -> goToPosition(PushoutConstants.PUSHOUT_FLUSH_WITH_BUMPER_POS)),
-                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT),
-                runOnce(() -> goToPosition(PushoutConstants.PUSHOUT_EXTENDED_POS)),
-                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT))
+                agitateTo(PushoutConstants.PUSHOUT_FLUSH_WITH_BUMPER_POS),
+                agitateTo(PushoutConstants.PUSHOUT_EXTENDED_POS))
                 .finallyDo(interrupted -> PushIntake());
 
         agitate.addRequirements(this);
         return agitate;
+    }
+
+    private Command agitateTo(double rotations) {
+        return Commands.sequence(
+                runOnce(() -> goToPosition(rotations)),
+                Commands.waitUntil(() -> isNear(rotations))
+                        .withTimeout(PushoutConstants.PUSHOUT_EXTEND_TIMEOUT),
+                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT));
     }
 
     public Command runDefaultCommand() {

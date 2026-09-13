@@ -49,6 +49,10 @@ public class SimRobot {
 
         /** Robot-relative box that swallows fuel while the intake is deployed and running. */
         public static final double INTAKE_REACH_M = Units.inchesToMeters(14.0); // ahead of the front bumper
+        // The intake slide is a smooth sheet, not bumper fabric, so it should skate along a
+        // structure rather than catch on it the way the bumper does. maple-sim's bumper runs at
+        // 0.65 (AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_FRICTION).
+        public static final double INTAKE_FRICTION = 0.40;
         public static final double INTAKE_HALF_WIDTH_M = 0.375;
 
         public static final int FUEL_CAPACITY = 45;
@@ -133,12 +137,18 @@ public class SimRobot {
         {SimConstants.FIELD_LENGTH_M - 5.21, SimConstants.FIELD_LENGTH_M - 4.01, 3.42, 4.62},
         // The climbing tower, which stands at the alliance wall and NOT beside the hub. The only
         // part of it at robot height is the pair of uprights on the line x 1.00-1.09, at
-        // y 3.86-3.90 and y 4.72-4.76; the 0.82 m gap between them is narrower than this 0.944 m
+        // y 3.28-3.32 and y 4.14-4.18; the 0.82 m gap between them is narrower than this 0.944 m
         // robot, so the pair behaves as one wall. Its rung is at 0.66 m and its base plate is
         // 0.06 m, so the robot passes under one and over the other. Widened ~5 cm a side because
         // a box thinner than one loop of travel can be tunnelled through.
-        {0.95, 1.14, 3.86, 4.76},
-        {SimConstants.FIELD_LENGTH_M - 1.14, SimConstants.FIELD_LENGTH_M - 0.95, 3.86, 4.76},
+        //
+        // NOTE the field model is Y-up with +X toward red, so model +Z is field MINUS Y:
+        // fieldY = 4.02 - modelZ. Getting that sign backwards put this box 0.58 m to the +y side
+        // - it was the RED tower's y span on the blue tower. The hub could never catch it,
+        // because the hub is symmetric about the field centreline and the tower is not.
+        {0.95, 1.14, 3.28, 4.18},
+        {SimConstants.FIELD_LENGTH_M - 1.14, SimConstants.FIELD_LENGTH_M - 0.95,
+            SimConstants.FIELD_WIDTH_M - 4.18, SimConstants.FIELD_WIDTH_M - 3.28},
         // Trench side blocks, 0.305 m deep, both ends of both trenches. These match FuelSim's
         // own trench geometry exactly. The trench BARS are overhead at 0.565 m and the robot
         // drives under them, so they are deliberately absent.

@@ -821,8 +821,7 @@ public class SwerveSubsystem extends SubsystemBase {
     if (out > 0.01) {
       Rectangle slide = Geometry.createRectangle(out, 2.0 * SimRobot.SimConstants.INTAKE_HALF_WIDTH_M);
       slide.translate(length / 2.0 + out / 2.0, 0);
-      body.addFixture(slide, 1e-4,
-          AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_FRICTION,
+      body.addFixture(slide, 1e-4, SimRobot.SimConstants.INTAKE_FRICTION,
           AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_RESTITUTION);
     }
     body.setMass(MassType.NORMAL);

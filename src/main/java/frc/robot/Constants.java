@@ -195,7 +195,8 @@ public final class Constants {
 
     public static final double PUSHOUT_FLUSH_WITH_BUMPER_POS = 5.0;
 
-    public static final double PUSHOUT_AGITATE_WAIT = 0.2; // seconds
+    public static final double PUSHOUT_AGITATE_WAIT = 0.1; // dwell AFTER arriving
+    public static final double PUSHOUT_AGITATE_TOLERANCE = 0.15; // rot, counts as arrived
     public static final double PUSHOUT_BETWEEN = 0.5; // seconds between in and out
 
     public static final double PUSHOUT_AT_TARGET_TOLERANCE = 0.5; // rot
