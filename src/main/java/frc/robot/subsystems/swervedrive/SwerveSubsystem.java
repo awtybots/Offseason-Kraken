@@ -20,6 +20,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -803,16 +804,41 @@ public class SwerveSubsystem extends SubsystemBase {
       rightY = Math.min(rightY, corner.getY());
     }
 
-    double vx = fieldSpeeds.vxMetersPerSecond;
-    double vy = fieldSpeeds.vyMetersPerSecond;
+    // Limit the velocity so the leading corner lands ON the boundary next loop rather than
+    // waiting until it is already through. At 4.7 m/s a purely reactive gate lets a corner
+    // travel most of 10 cm past the wall before it trips, which is the "phasing through" -
+    // and it never comes back, because the gate only blocks further outward motion.
+    double dt = 0.020;
+    double vx = MathUtil.clamp(fieldSpeeds.vxMetersPerSecond,
+        (0.0 - (pose.getX() + behindX)) / dt,
+        (SimRobot.SimConstants.FIELD_LENGTH_M - (pose.getX() + aheadX)) / dt);
+    double vy = MathUtil.clamp(fieldSpeeds.vyMetersPerSecond,
+        (0.0 - (pose.getY() + rightY)) / dt,
+        (SimRobot.SimConstants.FIELD_WIDTH_M - (pose.getY() + leftY)) / dt);
 
-    if ((pose.getX() + behindX <= 0.0 && vx < 0)
-        || (pose.getX() + aheadX >= SimRobot.SimConstants.FIELD_LENGTH_M && vx > 0)) {
-      vx = 0.0;
-    }
-    if ((pose.getY() + rightY <= 0.0 && vy < 0)
-        || (pose.getY() + leftY >= SimRobot.SimConstants.FIELD_WIDTH_M && vy > 0)) {
-      vy = 0.0;
+    // The perimeter is not the only solid thing out there: the hub structures and the trench
+    // side blocks are too, and nothing else in this stack collides the robot with them.
+    double minX = pose.getX() + behindX;
+    double maxX = pose.getX() + aheadX;
+    double minY = pose.getY() + rightY;
+    double maxY = pose.getY() + leftY;
+    for (double[] box : SimRobot.OBSTACLES) {
+      boolean spansX = maxX > box[0] && minX < box[1];
+      boolean spansY = maxY > box[2] && minY < box[3];
+      if (spansY) {
+        if (maxX <= box[0]) {
+          vx = Math.min(vx, (box[0] - maxX) / dt);
+        } else if (minX >= box[1]) {
+          vx = Math.max(vx, (box[1] - minX) / dt);
+        }
+      }
+      if (spansX) {
+        if (maxY <= box[2]) {
+          vy = Math.min(vy, (box[2] - maxY) / dt);
+        } else if (minY >= box[3]) {
+          vy = Math.max(vy, (box[3] - minY) / dt);
+        }
+      }
     }
 
     if (SimRobot.isOverBump(pose.getX(), pose.getY())) {

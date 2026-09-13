@@ -105,7 +105,7 @@ public class FuelSim {
         }
 
         protected void update(boolean simulateAirResistance, int subticks,
-                double linearDragK, double magnusLiftRatio) {
+                double linearDragK, double magnusLiftRatio, double groundFriction) {
             pos = pos.plus(vel.times(PERIOD / subticks));
             if (pos.getZ() > FUEL_RADIUS) {
                 Translation3d Fg = GRAVITY.times(FUEL_MASS);
@@ -126,7 +126,7 @@ public class FuelSim {
             }
             if (Math.abs(vel.getZ()) < 0.05 && pos.getZ() <= FUEL_RADIUS + 0.03) {
                 vel = new Translation3d(vel.getX(), vel.getY(), 0);
-                vel = vel.times(1 - FRICTION * PERIOD / subticks);
+                vel = vel.times(1 - groundFriction * PERIOD / subticks);
                 // pos = new Translation3d(pos.getX(), pos.getY(), FUEL_RADIUS);
             }
             handleFieldCollisions(subticks);
@@ -351,6 +351,7 @@ public class FuelSim {
     protected int subticks = 5;
     protected double linearDragK = 0.0;
     protected double magnusLiftRatio = 0.0;
+    protected double groundFriction = FRICTION;
     protected double loggingFreqHz = 10;
     protected Timer loggingTimer = new Timer();
 
@@ -437,6 +438,39 @@ public class FuelSim {
      */
     public int getFuelCount() {
         return fuels.size();
+    }
+
+    /**
+     * LOCAL ADDITION. Sets how fast a fuel on the ground sheds horizontal speed, as a fraction
+     * per second. Upstream's 0.1 loses under 10% per second, so a ball skates across the whole
+     * field before it settles. Higher is grippier.
+     *
+     * @param perSecond fraction of horizontal velocity lost per second while rolling
+     */
+    public void setGroundFriction(double perSecond) {
+        this.groundFriction = perSecond;
+    }
+
+    /**
+     * LOCAL ADDITION. Drops {@code count} fuel in a single grid pile centred on the given point,
+     * at rest on the floor. Upstream's spawnStartingFuel also stocks both depots; this is for
+     * when you only want one pile to drive into.
+     *
+     * @param centreX field X of the pile centre
+     * @param centreY field Y of the pile centre
+     * @param count how many fuel to place
+     * @param spacing centre-to-centre spacing in metres
+     */
+    public void spawnPile(double centreX, double centreY, int count, double spacing) {
+        int cols = (int) Math.ceil(Math.sqrt(count));
+        for (int i = 0; i < count; i++) {
+            int col = i % cols;
+            int row = i / cols;
+            fuels.add(new Fuel(new Translation3d(
+                    centreX + (col - (cols - 1) / 2.0) * spacing,
+                    centreY + (row - (Math.ceil((double) count / cols) - 1) / 2.0) * spacing,
+                    FUEL_RADIUS)));
+        }
     }
 
     /**
@@ -569,7 +603,7 @@ public class FuelSim {
         for (int i = 0; i < subticks; i++) {
             for (Fuel fuel : fuels) {
                 fuel.update(this.simulateAirResistance, this.subticks,
-                        this.linearDragK, this.magnusLiftRatio);
+                        this.linearDragK, this.magnusLiftRatio, this.groundFriction);
             }
 
             handleFuelCollisions(fuels);

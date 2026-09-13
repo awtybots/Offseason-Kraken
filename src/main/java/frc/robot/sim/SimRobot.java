@@ -54,7 +54,17 @@ public class SimRobot {
         public static final int FUEL_CAPACITY = 45;
 
         /** A full field is 408 fuel and every one is a drawn sphere. Thin it for the renderer. */
-        public static final int FUEL_ON_FIELD = 100;
+        public static final int FUEL_ON_FIELD = 200;
+
+        /**
+         * Fraction of horizontal speed a rolling fuel loses per second. FuelSim ships 0.1,
+         * which is under 10% per second - fuel skated across the field and never settled.
+         * Raise for grippier carpet, lower for an ice rink.
+         */
+        public static final double GROUND_FRICTION_PER_SEC = 1.6;
+
+        /** Centre-to-centre spacing of the starting pile, one fuel diameter plus a little. */
+        public static final double FUEL_PILE_SPACING_M = 0.16;
 
         /**
          * Pushout position past which the intake can collect. NOT PUSHOUT_RETRACTED_POS:
@@ -102,6 +112,25 @@ public class SimRobot {
         /** Fraction of commanded translation speed allowed while crossing a bump. */
         public static final double BUMP_SPEED_SCALE = 0.45;
     }
+
+    /**
+     * Solid things on the field the robot can run into, as {minX, maxX, minY, maxY} boxes.
+     * Taken from the same geometry FuelSim collides fuel against: the two hub structures and
+     * the four trench side blocks. The trench BARS are overhead at 0.565 m and the robot drives
+     * under them, so they are deliberately absent.
+     */
+    public static final double[][] OBSTACLES = {
+        // hubs: SIDE 1.2 m square centred on each hub
+        {4.61 - 0.6, 4.61 + 0.6, SimConstants.FIELD_WIDTH_M / 2 - 0.6, SimConstants.FIELD_WIDTH_M / 2 + 0.6},
+        {SimConstants.FIELD_LENGTH_M - 4.61 - 0.6, SimConstants.FIELD_LENGTH_M - 4.61 + 0.6,
+            SimConstants.FIELD_WIDTH_M / 2 - 0.6, SimConstants.FIELD_WIDTH_M / 2 + 0.6},
+        // trench side blocks, 0.305 m deep, both ends of both trenches
+        {3.96, 5.18, 1.265, 1.265 + 0.305},
+        {3.96, 5.18, SimConstants.FIELD_WIDTH_M - 1.57, SimConstants.FIELD_WIDTH_M - 1.57 + 0.305},
+        {SimConstants.FIELD_LENGTH_M - 5.18, SimConstants.FIELD_LENGTH_M - 3.96, 1.265, 1.265 + 0.305},
+        {SimConstants.FIELD_LENGTH_M - 5.18, SimConstants.FIELD_LENGTH_M - 3.96,
+            SimConstants.FIELD_WIDTH_M - 1.57, SimConstants.FIELD_WIDTH_M - 1.57 + 0.305},
+    };
 
     /**
      * How far the intake slide currently sticks out past the FRONT bumper, in metres. Zero when
@@ -173,11 +202,11 @@ public class SimRobot {
                 this::canIntake,
                 this::onFuelIntaked);
 
+        fuelSim.setGroundFriction(SimConstants.GROUND_FRICTION_PER_SEC);
         fuelSim.useLinearDragWithMagnus(
                 ShooterConstants.LINEAR_DRAG_K, ShooterConstants.MAGNUS_LIFT_RATIO);
         fuelSim.setLoggingFrequency(50.0);
-        fuelSim.spawnStartingFuel();
-        fuelSim.thinTo(SimConstants.FUEL_ON_FIELD);
+        spawnCentrePile();
         fuelSim.start();
 
         SmartDashboard.putData(Commands.runOnce(this::resetFuel)
@@ -200,8 +229,7 @@ public class SimRobot {
     /** Clears the field, re-spawns the starting fuel, empties the hopper and zeroes both scores. */
     public void resetFuel() {
         fuelSim.clearFuel();
-        fuelSim.spawnStartingFuel();
-        fuelSim.thinTo(SimConstants.FUEL_ON_FIELD);
+        spawnCentrePile();
         fuelStored = 0;
         FuelSim.Hub.BLUE_HUB.resetScore();
         FuelSim.Hub.RED_HUB.resetScore();
@@ -210,6 +238,15 @@ public class SimRobot {
     /** Fills the hopper so shooting can be tested without driving over the pile first. */
     public void preloadFuel() {
         fuelStored = SimConstants.FUEL_CAPACITY;
+    }
+
+    /** One pile at midfield, nothing in the depots. */
+    private void spawnCentrePile() {
+        fuelSim.spawnPile(
+                SimConstants.FIELD_LENGTH_M / 2.0,
+                SimConstants.FIELD_WIDTH_M / 2.0,
+                SimConstants.FUEL_ON_FIELD,
+                SimConstants.FUEL_PILE_SPACING_M);
     }
 
     public int getFuelStored() {
