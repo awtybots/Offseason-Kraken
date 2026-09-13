@@ -46,6 +46,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.sim.SimRobot;
+import swervelib.simulation.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
+import swervelib.simulation.ironmaple.simulation.SimulatedArena;
+import org.dyn4j.geometry.MassType;
+import org.dyn4j.geometry.Geometry;
+import org.dyn4j.geometry.Rectangle;
+import frc.robot.sim.Arena2026;
 import frc.robot.Constants.DrivebaseConstants;
 import frc.robot.Constants.LimelightConstants;
 import frc.robot.LimelightHelpers;
@@ -135,6 +141,9 @@ public class SwerveSubsystem extends SubsystemBase {
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
     // objects being created.
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+    if (RobotBase.isSimulation()) {
+      SimulatedArena.overrideInstance(new Arena2026());
+    }
     try {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED, startingPose);
       // Alternative method if you don't want to supply the conversion factor via JSON
@@ -143,6 +152,9 @@ public class SwerveSubsystem extends SubsystemBase {
       // angleConversionFactor, driveConversionFactor);
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+    if (RobotBase.isSimulation()) {
+      swerveDrive.getMapleSimDrive().ifPresent(SwerveSubsystem::useRealBumperSize);
     }
     swerveDrive.stopOdometryThread();
 
@@ -297,7 +309,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     updateOdometry();
     if (RobotBase.isSimulation()) {
-      resolveFieldCollisions();
+      swerveDrive.getMapleSimDrive().ifPresent(this::syncIntakeFixture);
     }
     // -----------------------
     // AdvantageKit Logging
@@ -781,280 +793,85 @@ public class SwerveSubsystem extends SubsystemBase {
    * just zeroes the OUTWARD velocity component at the boundary. Motion back into the field is
    * always allowed, and sliding along a wall is untouched.
    */
-  /**
-   * Field-frame {minX, maxX, minY, maxY} of the robot's footprint. NOT symmetric: the intake
-   * slide sticks out past the front bumper as it extends, and that is the corner that reaches
-   * an obstacle first.
-   */
-  private double[] robotFootprint(Pose2d pose) {
-    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
-    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
-    double side = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
-    double minX = 0;
-    double maxX = 0;
-    double minY = 0;
-    double maxY = 0;
-    for (double[] c : new double[][] {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}}) {
-      Translation2d corner = new Translation2d(c[0], c[1]).rotateBy(pose.getRotation());
-      maxX = Math.max(maxX, corner.getX());
-      minX = Math.min(minX, corner.getX());
-      maxY = Math.max(maxY, corner.getY());
-      minY = Math.min(minY, corner.getY());
-    }
-    return new double[] {pose.getX() + minX, pose.getX() + maxX,
-        pose.getY() + minY, pose.getY() + maxY};
-  }
+  private double simIntakeFixtureLength = -1;
 
   /**
-   * Minimum push that separates the robot from an axis-aligned obstacle, or {0,0} if they are
-   * already apart. Separating-axis test against the robot's ORIENTED box.
+   * Keep the physics body's shape in step with the intake slide.
    *
-   * <p>An axis-aligned bounding box will not do here. A 0.82 x 0.94 m robot at 30 degrees has
-   * an AABB 1.18 m long - 44% too big - so the robot would stop well short of anything it
-   * approached at an angle, with a visible gap. Only the four real axes matter: the world's two
-   * and the robot's two.
+   * <p>maple-sim collides the bumper rectangle only, but this intake reaches up to 14 in past
+   * the front bumper, and that is the part which gets to an obstacle first. Without this the
+   * robot buries the whole extended slide in the hub before the bumper touches it. The slide is
+   * a second fixture at near-zero density, so it collides without moving the mass or the centre
+   * of mass; the bumper fixture still carries the robot's whole weight.
    */
-  private double[] separate(Pose2d pose, double[] box) {
-    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
-    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
-    double halfL = (front + rear) / 2.0;
-    double halfW = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
-
-    // The intake makes the box asymmetric, so its centre is not the robot's origin.
-    Translation2d centre = pose.getTranslation()
-        .plus(new Translation2d((front - rear) / 2.0, 0).rotateBy(pose.getRotation()));
-    Translation2d u = new Translation2d(pose.getRotation().getCos(), pose.getRotation().getSin());
-    Translation2d v = new Translation2d(-pose.getRotation().getSin(), pose.getRotation().getCos());
-
-    Translation2d boxCentre = new Translation2d((box[0] + box[1]) / 2.0, (box[2] + box[3]) / 2.0);
-    double boxHalfX = (box[1] - box[0]) / 2.0;
-    double boxHalfY = (box[3] - box[2]) / 2.0;
-    Translation2d delta = centre.minus(boxCentre);
-
-    // All four axes decide WHETHER they touch - dropping the robot's own two would report a
-    // hit for a rotated robot that is merely near a corner. Only the world axes decide which
-    // way the push goes, because the obstacle is the static wall and its faces are the real
-    // surfaces. Taking the overall minimum instead lets the normal flip onto the robot's own
-    // edge mid-press, and since that edge is 20 degrees off the wall, projecting against it
-    // cancels a fifth of the slide along the face on every loop it happens.
-    Translation2d[] axes = {new Translation2d(1, 0), new Translation2d(0, 1), u, v};
-    double bestOverlap = Double.MAX_VALUE;
-    Translation2d bestAxis = null;
-    for (int ai = 0; ai < axes.length; ai++) {
-      Translation2d a = axes[ai];
-      double robotReach = Math.abs(halfL * (u.getX() * a.getX() + u.getY() * a.getY()))
-          + Math.abs(halfW * (v.getX() * a.getX() + v.getY() * a.getY()));
-      double boxReach = boxHalfX * Math.abs(a.getX()) + boxHalfY * Math.abs(a.getY());
-      double separation = delta.getX() * a.getX() + delta.getY() * a.getY();
-      double overlap = robotReach + boxReach - Math.abs(separation);
-      if (overlap <= 0) {
-        return new double[] {0, 0}; // this axis separates them, so they do not touch
-      }
-      if (ai < 2 && overlap < bestOverlap) {
-        bestOverlap = overlap;
-        bestAxis = separation < 0 ? new Translation2d(-a.getX(), -a.getY()) : a;
-      }
+  private void syncIntakeFixture(AbstractDriveTrainSimulation body) {
+    double out = SimRobot.intakeProtrusionM();
+    if (Math.abs(out - simIntakeFixtureLength) < 0.005) {
+      return;
     }
-    return new double[] {bestAxis.getX() * bestOverlap, bestAxis.getY() * bestOverlap};
+    simIntakeFixtureLength = out;
+
+    double length = SimRobot.SimConstants.BUMPER_LENGTH_M;
+    double width = SimRobot.SimConstants.BUMPER_WIDTH_M;
+    double massKg = body.getMass().getMass();
+    body.removeAllFixtures();
+    body.addFixture(Geometry.createRectangle(length, width), massKg / (length * width),
+        AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_FRICTION,
+        AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_RESTITUTION);
+    if (out > 0.01) {
+      Rectangle slide = Geometry.createRectangle(out, 2.0 * SimRobot.SimConstants.INTAKE_HALF_WIDTH_M);
+      slide.translate(length / 2.0 + out / 2.0, 0);
+      body.addFixture(slide, 1e-4,
+          AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_FRICTION,
+          AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_RESTITUTION);
+    }
+    body.setMass(MassType.NORMAL);
+    Logger.recordOutput("Sim/HitboxLengthM", length + out);
+    Logger.recordOutput("Sim/HitboxWidthM", width);
   }
 
   /**
-   * Simulation-only, and the thing that actually stops the robot passing through solid objects.
+   * Replace maple-sim's bumper with the real one, in metres, measured off the CAD.
    *
-   * <p>Capping the COMMANDED velocity cannot do it: YAGSL's simulated modules lag the command
-   * badly - the chassis only reaches about a third of what it is told - so the pose keeps
-   * integrating forward long after the command went to zero, and the robot walks through the
-   * hub. This runs after odometry and pushes the pose back out along the shallowest axis, which
-   * is what a wall does. It is a no-op unless the footprint is genuinely overlapping.
+   * <p>YAGSL sizes the simulated bumper as track + 5 in. Ours stands 12.1 in outside the track,
+   * so the physics body was 25.1 x 30.0 in against a real 32.2 x 37.2 in - about 18% short in
+   * each direction, which is why a robot that looked like it was touching a wall was not, and
+   * why a good part of it could sit past the field barrier. Density is set so the configured
+   * robot mass is preserved; dyn4j then derives the rotational inertia from the true rectangle.
    */
-  private void resolveFieldCollisions() {
-    Pose2d pose = getPose();
-    double[] r = robotFootprint(pose);
-    double dx = 0;
-    double dy = 0;
-
-    if (r[0] < 0) {
-      dx = -r[0];
-    } else if (r[1] > SimRobot.SimConstants.FIELD_LENGTH_M) {
-      dx = SimRobot.SimConstants.FIELD_LENGTH_M - r[1];
-    }
-    if (r[2] < 0) {
-      dy = -r[2];
-    } else if (r[3] > SimRobot.SimConstants.FIELD_WIDTH_M) {
-      dy = SimRobot.SimConstants.FIELD_WIDTH_M - r[3];
-    }
-
-    for (double[] box : SimRobot.OBSTACLES) {
-      double[] push = separate(pose, box);
-      dx += push[0];
-      dy += push[1];
-    }
-
-    // Only a backstop for what the velocity projection above did not catch. Firing on every
-    // sub-millimetre overlap re-seeds the pose estimator 50 times a second, and that is what
-    // made a robot pressed against a structure slide at 2% of its free-space speed.
-    if (Math.hypot(dx, dy) > 0.006) {
-      resetOdometry(new Pose2d(pose.getX() + dx, pose.getY() + dy, pose.getRotation()));
-      Logger.recordOutput("Sim/CollisionPushM", Math.hypot(dx, dy));
-    }
-    if (RobotBase.isSimulation()) {
-      Logger.recordOutput("Sim/HitboxLengthM",
-          SimRobot.SimConstants.BUMPER_LENGTH_M + SimRobot.intakeProtrusionM());
-      Logger.recordOutput("Sim/HitboxWidthM", SimRobot.SimConstants.BUMPER_WIDTH_M);
-    }
+  private static void useRealBumperSize(AbstractDriveTrainSimulation body) {
+    double length = SimRobot.SimConstants.BUMPER_LENGTH_M;
+    double width = SimRobot.SimConstants.BUMPER_WIDTH_M;
+    double massKg = body.getMass().getMass();
+    body.removeAllFixtures();
+    body.addFixture(Geometry.createRectangle(length, width), massKg / (length * width),
+        AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_FRICTION,
+        AbstractDriveTrainSimulation.BUMPER_COEFFICIENT_OF_RESTITUTION);
+    body.setMass(MassType.NORMAL);
+    Logger.recordOutput("Sim/HitboxLengthM", length);
+    Logger.recordOutput("Sim/HitboxWidthM", width);
   }
-
-  /** The field boundary as an obstacle box, so wall contacts use the same lever-arm rule. */
-  private double[] fieldBox(Pose2d pose) {
-    return new double[] {-1000, SimRobot.SimConstants.FIELD_LENGTH_M + 1000,
-        -1000, SimRobot.SimConstants.FIELD_WIDTH_M + 1000};
-  }
-
-  private final double[][] contactNormal = new double[SimRobot.OBSTACLES.length][2];
-  private final int[] contactHold = new int[SimRobot.OBSTACLES.length];
 
   /**
-   * Where the contact force acts, as a lever arm from the robot's centre of rotation.
-   *
-   * <p>The robot corners deepest along the contact normal, each slid sideways until it lies
-   * within the obstacle's own span, then averaged. Clamping is what separates the two cases
-   * that look identical from the robot's side: a flat face landing flush on a flat wall has
-   * both its corners tied AND both inside the wall's span, so they average to the face centre
-   * and produce no torque, which is what a distributed contact force does. A corner-first hit,
-   * or a robot face meeting the end of a wall, has the deep corners land outside that span and
-   * clamp onto the obstacle's corner instead - off-centre, so it spins the robot.
-   *
-   * <p>Picking one corner arbitrarily instead put a torque on every square hit. The robot drifted
-   * off square, that tilted the contact normal, and the tilted normal ate the slide along the
-   * face - which is where a robot pressed on a structure lost half its speed.
+   * Sim-only. Collision is maple-sim's job - it has the robot as a dyn4j rigid body and the
+   * field, hub, tower and trench blocks as obstacles, so sliding along a face and spinning off a
+   * corner fall out of the contact solver instead of being written by hand here. All that is
+   * left is the bump crossings, which are a terrain effect rather than a collision.
    */
-  private Translation2d contactLeverArm(Pose2d pose, double nx, double ny, double[] box) {
-    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
-    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
-    double side = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
-    double[][] offsets = {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}};
-
-    Translation2d[] corners = new Translation2d[offsets.length];
-    double least = Double.MAX_VALUE;
-    for (int i = 0; i < offsets.length; i++) {
-      corners[i] = new Translation2d(offsets[i][0], offsets[i][1]).rotateBy(pose.getRotation());
-      least = Math.min(least, corners[i].getX() * nx + corners[i].getY() * ny);
-    }
-
-    double px = -ny;
-    double py = nx;
-    double spanMin = Double.MAX_VALUE;
-    double spanMax = -Double.MAX_VALUE;
-    for (double bx : new double[] {box[0], box[1]}) {
-      for (double by : new double[] {box[2], box[3]}) {
-        double s = bx * px + by * py;
-        spanMin = Math.min(spanMin, s);
-        spanMax = Math.max(spanMax, s);
-      }
-    }
-
-    Translation2d sum = Translation2d.kZero;
-    int n = 0;
-    for (Translation2d corner : corners) {
-      if (corner.getX() * nx + corner.getY() * ny > least + SimRobot.SimConstants.CONTACT_TIE_M) {
-        continue;
-      }
-      double s = (pose.getX() + corner.getX()) * px + (pose.getY() + corner.getY()) * py;
-      double shift = MathUtil.clamp(s, spanMin, spanMax) - s;
-      sum = sum.plus(new Translation2d(corner.getX() + shift * px, corner.getY() + shift * py));
-      n++;
-    }
-    return sum.div(n);
-  }
-
   private ChassisSpeeds limitToField(ChassisSpeeds fieldSpeeds) {
     if (!RobotBase.isSimulation()) {
       return fieldSpeeds;
     }
-
     Pose2d pose = getPose();
-    double[] aabb = robotFootprint(pose);
-    double aheadX = aabb[1] - pose.getX();
-    double behindX = aabb[0] - pose.getX();
-    double leftY = aabb[3] - pose.getY();
-    double rightY = aabb[2] - pose.getY();
-
-    // Limit the velocity so the leading corner lands ON the boundary next loop rather than
-    // waiting until it is already through. At 4.7 m/s a purely reactive gate lets a corner
-    // travel most of 10 cm past the wall before it trips, which is the "phasing through" -
-    // and it never comes back, because the gate only blocks further outward motion.
-    double dt = 0.020;
-    double omega = fieldSpeeds.omegaRadiansPerSecond;
-    double vxIn = fieldSpeeds.vxMetersPerSecond;
-    double vyIn = fieldSpeeds.vyMetersPerSecond;
-    double vx = MathUtil.clamp(fieldSpeeds.vxMetersPerSecond,
-        (0.0 - (pose.getX() + behindX)) / dt,
-        (SimRobot.SimConstants.FIELD_LENGTH_M - (pose.getX() + aheadX)) / dt);
-    double vy = MathUtil.clamp(fieldSpeeds.vyMetersPerSecond,
-        (0.0 - (pose.getY() + rightY)) / dt,
-        (SimRobot.SimConstants.FIELD_WIDTH_M - (pose.getY() + leftY)) / dt);
-
-    if (vx != vxIn || vy != vyIn) {
-      double nx = vx != vxIn ? Math.signum(vx - vxIn) : 0;
-      double ny = vy != vyIn ? Math.signum(vy - vyIn) : 0;
-      double mag = Math.hypot(nx, ny);
-      if (mag > 0) {
-        nx /= mag;
-        ny /= mag;
-        Translation2d r = contactLeverArm(pose, nx, ny, fieldBox(pose));
-        omega += SimRobot.SimConstants.COLLISION_SPIN_GAIN
-            * (r.getX() * (vy - vyIn) - r.getY() * (vx - vxIn));
-      }
+    boolean overBump = SimRobot.isOverBump(pose.getX(), pose.getY());
+    Logger.recordOutput("Sim/OverBump", overBump);
+    if (!overBump) {
+      return fieldSpeeds;
     }
-
-    // Look one loop ahead: if the robot WOULD be inside an obstacle, remove only the component
-    // of velocity heading into it and keep the rest. Zeroing both axes makes the robot stick to
-    // whatever it touches; a real wall lets you slide along its face.
-    for (int b = 0; b < SimRobot.OBSTACLES.length; b++) {
-      double look = dt * SimRobot.SimConstants.CONTACT_LOOKAHEAD_LOOPS;
-      Pose2d next = new Pose2d(pose.getX() + vx * look, pose.getY() + vy * look, pose.getRotation());
-      double[] push = separate(next, SimRobot.OBSTACLES[b]);
-      double mag = Math.hypot(push[0], push[1]);
-      double nx;
-      double ny;
-      if (mag > 1e-9) {
-        nx = push[0] / mag;
-        ny = push[1] / mag;
-        contactNormal[b][0] = nx;
-        contactNormal[b][1] = ny;
-        contactHold[b] = SimRobot.SimConstants.CONTACT_HOLD_LOOPS;
-      } else if (contactHold[b] > 0) {
-        // Hold the face for a moment after the overlap clears. Testing on the actual overlap
-        // alone makes the projection alternate: it fires, the robot stops penetrating, so next
-        // loop it does not fire and the full diagonal command steers the wheels back into the
-        // wall. The azimuths then spend the whole press slewing between two angles and never
-        // settle, which is where half the slide speed went. A latched normal keeps the modules
-        // pointed along the face the way staying in contact with a real wall does. It only ever
-        // removes motion INTO the face, so driving away is unaffected, and it leaves the resting
-        // position alone because that is set by the real overlap in resolveFieldCollisions.
-        contactHold[b]--;
-        nx = contactNormal[b][0];
-        ny = contactNormal[b][1];
-      } else {
-        continue;
-      }
-      double into = vx * nx + vy * ny;
-      if (into < 0) {
-        vx -= into * nx;
-        vy -= into * ny;
-        Translation2d r = contactLeverArm(pose, nx, ny, SimRobot.OBSTACLES[b]);
-        omega += SimRobot.SimConstants.COLLISION_SPIN_GAIN
-            * (r.getX() * (-into * ny) - r.getY() * (-into * nx));
-      }
-    }
-
-    if (SimRobot.isOverBump(pose.getX(), pose.getY())) {
-      vx *= SimRobot.SimConstants.BUMP_SPEED_SCALE;
-      vy *= SimRobot.SimConstants.BUMP_SPEED_SCALE;
-    }
-
-    Logger.recordOutput("Sim/OverBump", SimRobot.isOverBump(pose.getX(), pose.getY()));
-    return new ChassisSpeeds(vx, vy, omega);
+    return new ChassisSpeeds(
+        fieldSpeeds.vxMetersPerSecond * SimRobot.SimConstants.BUMP_SPEED_SCALE,
+        fieldSpeeds.vyMetersPerSecond * SimRobot.SimConstants.BUMP_SPEED_SCALE,
+        fieldSpeeds.omegaRadiansPerSecond);
   }
 
 
@@ -1121,6 +938,9 @@ public class SwerveSubsystem extends SubsystemBase {
    * @return The robot's pose
    */
   public Pose2d getPose() {
+    if (RobotBase.isSimulation()) {
+      return swerveDrive.getSimulationDriveTrainPose().orElseGet(swerveDrive::getPose);
+    }
     return swerveDrive.getPose();
   }
 

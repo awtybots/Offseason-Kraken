@@ -115,13 +115,8 @@ public class SimRobot {
         /** Fraction of commanded translation speed allowed while crossing a bump. */
         public static final double BUMP_SPEED_SCALE = 0.45;
 
-        public static final double COLLISION_SPIN_GAIN = 0.8;
 
-        public static final double CONTACT_MARGIN_M = 0.01;
 
-        public static final double CONTACT_LOOKAHEAD_LOOPS = 1.0;
-        public static final int CONTACT_HOLD_LOOPS = 12;
-        public static final double CONTACT_TIE_M = 0.02;
     }
 
     /**
