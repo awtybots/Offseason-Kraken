@@ -883,7 +883,10 @@ public class SwerveSubsystem extends SubsystemBase {
       dy += push[1];
     }
 
-    if (Math.hypot(dx, dy) > 0.001) {
+    // Only a backstop for what the velocity projection above did not catch. Firing on every
+    // sub-millimetre overlap re-seeds the pose estimator 50 times a second, and that is what
+    // made a robot pressed against a structure slide at 2% of its free-space speed.
+    if (Math.hypot(dx, dy) > 0.006) {
       resetOdometry(new Pose2d(pose.getX() + dx, pose.getY() + dy, pose.getRotation()));
       Logger.recordOutput("Sim/CollisionPushM", Math.hypot(dx, dy));
     }
@@ -917,6 +920,25 @@ public class SwerveSubsystem extends SubsystemBase {
     double vy = MathUtil.clamp(fieldSpeeds.vyMetersPerSecond,
         (0.0 - (pose.getY() + rightY)) / dt,
         (SimRobot.SimConstants.FIELD_WIDTH_M - (pose.getY() + leftY)) / dt);
+
+    // Look one loop ahead: if the robot WOULD be inside an obstacle, remove only the component
+    // of velocity heading into it and keep the rest. Zeroing both axes makes the robot stick to
+    // whatever it touches; a real wall lets you slide along its face.
+    for (double[] box : SimRobot.OBSTACLES) {
+      Pose2d next = new Pose2d(pose.getX() + vx * dt, pose.getY() + vy * dt, pose.getRotation());
+      double[] push = separate(next, box);
+      double mag = Math.hypot(push[0], push[1]);
+      if (mag < 1e-9) {
+        continue;
+      }
+      double nx = push[0] / mag;
+      double ny = push[1] / mag;
+      double into = vx * nx + vy * ny;
+      if (into < 0) {
+        vx -= into * nx;
+        vy -= into * ny;
+      }
+    }
 
     if (SimRobot.isOverBump(pose.getX(), pose.getY())) {
       vx *= SimRobot.SimConstants.BUMP_SPEED_SCALE;
