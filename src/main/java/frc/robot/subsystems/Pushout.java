@@ -233,16 +233,26 @@ public class Pushout extends SubsystemBase {
         PushoutMotor.setControl(positionRequest.withPosition(clamped).withSlot(0));
     }
 
+    private boolean isNear(double rotations) {
+        return Math.abs(getPosition() - rotations) <= PushoutConstants.PUSHOUT_AGITATE_TOLERANCE;
+    }
+
     public Command AgitateCommand() {
         Command agitate = Commands.repeatingSequence(
-                runOnce(() -> goToPosition(PushoutConstants.PUSHOUT_FLUSH_WITH_BUMPER_POS)),
-                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT),
-                runOnce(() -> goToPosition(PushoutConstants.PUSHOUT_EXTENDED_POS)),
-                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT))
+                agitateTo(PushoutConstants.PUSHOUT_FLUSH_WITH_BUMPER_POS),
+                agitateTo(PushoutConstants.PUSHOUT_EXTENDED_POS))
                 .finallyDo(interrupted -> PushIntake());
 
         agitate.addRequirements(this);
         return agitate;
+    }
+
+    private Command agitateTo(double rotations) {
+        return Commands.sequence(
+                runOnce(() -> goToPosition(rotations)),
+                Commands.waitUntil(() -> isNear(rotations))
+                        .withTimeout(PushoutConstants.PUSHOUT_EXTEND_TIMEOUT),
+                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT));
     }
 
     public Command runDefaultCommand() {
