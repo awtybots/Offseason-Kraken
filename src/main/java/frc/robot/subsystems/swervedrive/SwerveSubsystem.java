@@ -831,10 +831,17 @@ public class SwerveSubsystem extends SubsystemBase {
     double boxHalfY = (box[3] - box[2]) / 2.0;
     Translation2d delta = centre.minus(boxCentre);
 
+    // All four axes decide WHETHER they touch - dropping the robot's own two would report a
+    // hit for a rotated robot that is merely near a corner. Only the world axes decide which
+    // way the push goes, because the obstacle is the static wall and its faces are the real
+    // surfaces. Taking the overall minimum instead lets the normal flip onto the robot's own
+    // edge mid-press, and since that edge is 20 degrees off the wall, projecting against it
+    // cancels a fifth of the slide along the face on every loop it happens.
     Translation2d[] axes = {new Translation2d(1, 0), new Translation2d(0, 1), u, v};
     double bestOverlap = Double.MAX_VALUE;
     Translation2d bestAxis = null;
-    for (Translation2d a : axes) {
+    for (int ai = 0; ai < axes.length; ai++) {
+      Translation2d a = axes[ai];
       double robotReach = Math.abs(halfL * (u.getX() * a.getX() + u.getY() * a.getY()))
           + Math.abs(halfW * (v.getX() * a.getX() + v.getY() * a.getY()));
       double boxReach = boxHalfX * Math.abs(a.getX()) + boxHalfY * Math.abs(a.getY());
@@ -843,7 +850,7 @@ public class SwerveSubsystem extends SubsystemBase {
       if (overlap <= 0) {
         return new double[] {0, 0}; // this axis separates them, so they do not touch
       }
-      if (overlap < bestOverlap) {
+      if (ai < 2 && overlap < bestOverlap) {
         bestOverlap = overlap;
         bestAxis = separation < 0 ? new Translation2d(-a.getX(), -a.getY()) : a;
       }
@@ -897,21 +904,67 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
-  private Translation2d deepestCorner(Pose2d pose, double nx, double ny) {
+  /** The field boundary as an obstacle box, so wall contacts use the same lever-arm rule. */
+  private double[] fieldBox(Pose2d pose) {
+    return new double[] {-1000, SimRobot.SimConstants.FIELD_LENGTH_M + 1000,
+        -1000, SimRobot.SimConstants.FIELD_WIDTH_M + 1000};
+  }
+
+  private final double[][] contactNormal = new double[SimRobot.OBSTACLES.length][2];
+  private final int[] contactHold = new int[SimRobot.OBSTACLES.length];
+
+  /**
+   * Where the contact force acts, as a lever arm from the robot's centre of rotation.
+   *
+   * <p>The robot corners deepest along the contact normal, each slid sideways until it lies
+   * within the obstacle's own span, then averaged. Clamping is what separates the two cases
+   * that look identical from the robot's side: a flat face landing flush on a flat wall has
+   * both its corners tied AND both inside the wall's span, so they average to the face centre
+   * and produce no torque, which is what a distributed contact force does. A corner-first hit,
+   * or a robot face meeting the end of a wall, has the deep corners land outside that span and
+   * clamp onto the obstacle's corner instead - off-centre, so it spins the robot.
+   *
+   * <p>Picking one corner arbitrarily instead put a torque on every square hit. The robot drifted
+   * off square, that tilted the contact normal, and the tilted normal ate the slide along the
+   * face - which is where a robot pressed on a structure lost half its speed.
+   */
+  private Translation2d contactLeverArm(Pose2d pose, double nx, double ny, double[] box) {
     double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
     double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
     double side = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
-    Translation2d best = null;
+    double[][] offsets = {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}};
+
+    Translation2d[] corners = new Translation2d[offsets.length];
     double least = Double.MAX_VALUE;
-    for (double[] c : new double[][] {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}}) {
-      Translation2d corner = new Translation2d(c[0], c[1]).rotateBy(pose.getRotation());
-      double along = corner.getX() * nx + corner.getY() * ny;
-      if (along < least) {
-        least = along;
-        best = corner;
+    for (int i = 0; i < offsets.length; i++) {
+      corners[i] = new Translation2d(offsets[i][0], offsets[i][1]).rotateBy(pose.getRotation());
+      least = Math.min(least, corners[i].getX() * nx + corners[i].getY() * ny);
+    }
+
+    double px = -ny;
+    double py = nx;
+    double spanMin = Double.MAX_VALUE;
+    double spanMax = -Double.MAX_VALUE;
+    for (double bx : new double[] {box[0], box[1]}) {
+      for (double by : new double[] {box[2], box[3]}) {
+        double s = bx * px + by * py;
+        spanMin = Math.min(spanMin, s);
+        spanMax = Math.max(spanMax, s);
       }
     }
-    return best;
+
+    Translation2d sum = Translation2d.kZero;
+    int n = 0;
+    for (Translation2d corner : corners) {
+      if (corner.getX() * nx + corner.getY() * ny > least + SimRobot.SimConstants.CONTACT_TIE_M) {
+        continue;
+      }
+      double s = (pose.getX() + corner.getX()) * px + (pose.getY() + corner.getY()) * py;
+      double shift = MathUtil.clamp(s, spanMin, spanMax) - s;
+      sum = sum.plus(new Translation2d(corner.getX() + shift * px, corner.getY() + shift * py));
+      n++;
+    }
+    return sum.div(n);
   }
 
   private ChassisSpeeds limitToField(ChassisSpeeds fieldSpeeds) {
@@ -948,7 +1001,7 @@ public class SwerveSubsystem extends SubsystemBase {
       if (mag > 0) {
         nx /= mag;
         ny /= mag;
-        Translation2d r = deepestCorner(pose, nx, ny);
+        Translation2d r = contactLeverArm(pose, nx, ny, fieldBox(pose));
         omega += SimRobot.SimConstants.COLLISION_SPIN_GAIN
             * (r.getX() * (vy - vyIn) - r.getY() * (vx - vxIn));
       }
@@ -957,20 +1010,39 @@ public class SwerveSubsystem extends SubsystemBase {
     // Look one loop ahead: if the robot WOULD be inside an obstacle, remove only the component
     // of velocity heading into it and keep the rest. Zeroing both axes makes the robot stick to
     // whatever it touches; a real wall lets you slide along its face.
-    for (double[] box : SimRobot.OBSTACLES) {
-      Pose2d next = new Pose2d(pose.getX() + vx * dt, pose.getY() + vy * dt, pose.getRotation());
-      double[] push = separate(next, box);
+    for (int b = 0; b < SimRobot.OBSTACLES.length; b++) {
+      double look = dt * SimRobot.SimConstants.CONTACT_LOOKAHEAD_LOOPS;
+      Pose2d next = new Pose2d(pose.getX() + vx * look, pose.getY() + vy * look, pose.getRotation());
+      double[] push = separate(next, SimRobot.OBSTACLES[b]);
       double mag = Math.hypot(push[0], push[1]);
-      if (mag < 1e-9) {
+      double nx;
+      double ny;
+      if (mag > 1e-9) {
+        nx = push[0] / mag;
+        ny = push[1] / mag;
+        contactNormal[b][0] = nx;
+        contactNormal[b][1] = ny;
+        contactHold[b] = SimRobot.SimConstants.CONTACT_HOLD_LOOPS;
+      } else if (contactHold[b] > 0) {
+        // Hold the face for a moment after the overlap clears. Testing on the actual overlap
+        // alone makes the projection alternate: it fires, the robot stops penetrating, so next
+        // loop it does not fire and the full diagonal command steers the wheels back into the
+        // wall. The azimuths then spend the whole press slewing between two angles and never
+        // settle, which is where half the slide speed went. A latched normal keeps the modules
+        // pointed along the face the way staying in contact with a real wall does. It only ever
+        // removes motion INTO the face, so driving away is unaffected, and it leaves the resting
+        // position alone because that is set by the real overlap in resolveFieldCollisions.
+        contactHold[b]--;
+        nx = contactNormal[b][0];
+        ny = contactNormal[b][1];
+      } else {
         continue;
       }
-      double nx = push[0] / mag;
-      double ny = push[1] / mag;
       double into = vx * nx + vy * ny;
       if (into < 0) {
         vx -= into * nx;
         vy -= into * ny;
-        Translation2d r = deepestCorner(pose, nx, ny);
+        Translation2d r = contactLeverArm(pose, nx, ny, SimRobot.OBSTACLES[b]);
         omega += SimRobot.SimConstants.COLLISION_SPIN_GAIN
             * (r.getX() * (-into * ny) - r.getY() * (-into * nx));
       }
