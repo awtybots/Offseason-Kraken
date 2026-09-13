@@ -51,7 +51,7 @@ public class SimRobot {
         public static final double INTAKE_REACH_M = Units.inchesToMeters(14.0); // ahead of the front bumper
         public static final double INTAKE_HALF_WIDTH_M = 0.375;
 
-        public static final int FUEL_CAPACITY = 50;
+        public static final int FUEL_CAPACITY = 45;
         public static final double SHOTS_PER_SECOND = 8.0;
 
         /**
@@ -73,6 +73,35 @@ public class SimRobot {
         /** Field extents used to keep the robot inside the guardrails. Matches FuelSim. */
         public static final double FIELD_LENGTH_M = 16.51;
         public static final double FIELD_WIDTH_M = 8.04;
+
+        /**
+         * The two BUMP crossings, taken from the same field geometry FuelSim collides fuel
+         * against: a pair of ramps either side of each hub, rising to 0.165 m. The hub sits in
+         * the gap between the two y bands, which is why this is not a band across the field.
+         */
+        public static final double BUMP_X_MIN = 3.96;
+        public static final double BUMP_X_MAX = 5.18;
+        public static final double BUMP_Y_LOW_MIN = 1.57;
+        public static final double BUMP_Y_LOW_MAX = 3.42;
+        public static final double BUMP_Y_HIGH_MIN = 4.62;
+        public static final double BUMP_Y_HIGH_MAX = 6.47;
+
+        /** Fraction of commanded translation speed allowed while crossing a bump. */
+        public static final double BUMP_SPEED_SCALE = 0.45;
+    }
+
+    /**
+     * True when the robot centre is over either bump crossing. Nothing simulates the ramp
+     * itself, so the drivetrain is slowed here instead - crossing a bump flat out is the one
+     * thing the sim would otherwise let you do that the real field will not.
+     */
+    public static boolean isOverBump(double x, double y) {
+        boolean inX = (x > SimConstants.BUMP_X_MIN && x < SimConstants.BUMP_X_MAX)
+                || (x > SimConstants.FIELD_LENGTH_M - SimConstants.BUMP_X_MAX
+                        && x < SimConstants.FIELD_LENGTH_M - SimConstants.BUMP_X_MIN);
+        boolean inY = (y > SimConstants.BUMP_Y_LOW_MIN && y < SimConstants.BUMP_Y_LOW_MAX)
+                || (y > SimConstants.BUMP_Y_HIGH_MIN && y < SimConstants.BUMP_Y_HIGH_MAX);
+        return inX && inY;
     }
 
     private final SwerveSubsystem drivebase;
@@ -119,15 +148,10 @@ public class SimRobot {
         fuelSim.spawnStartingFuel();
         fuelSim.start();
 
-        SmartDashboard.putData(Commands.runOnce(() -> {
-            fuelSim.clearFuel();
-            fuelSim.spawnStartingFuel();
-            fuelStored = 0;
-            FuelSim.Hub.BLUE_HUB.resetScore();
-            FuelSim.Hub.RED_HUB.resetScore();
-        }).withName("Reset Fuel").ignoringDisable(true));
+        SmartDashboard.putData(Commands.runOnce(this::resetFuel)
+                .withName("Reset Fuel").ignoringDisable(true));
 
-        SmartDashboard.putData(Commands.runOnce(() -> fuelStored = SimConstants.FUEL_CAPACITY)
+        SmartDashboard.putData(Commands.runOnce(this::preloadFuel)
                 .withName("Preload Fuel").ignoringDisable(true));
 
         SmartDashboard.putData(Commands.runOnce(() -> drivebase.resetOdometry(SimConstants.START_POSE))
@@ -139,6 +163,20 @@ public class SimRobot {
 
     public FuelSim getFuelSim() {
         return fuelSim;
+    }
+
+    /** Clears the field, re-spawns the starting fuel, empties the hopper and zeroes both scores. */
+    public void resetFuel() {
+        fuelSim.clearFuel();
+        fuelSim.spawnStartingFuel();
+        fuelStored = 0;
+        FuelSim.Hub.BLUE_HUB.resetScore();
+        FuelSim.Hub.RED_HUB.resetScore();
+    }
+
+    /** Fills the hopper so shooting can be tested without driving over the pile first. */
+    public void preloadFuel() {
+        fuelStored = SimConstants.FUEL_CAPACITY;
     }
 
     public int getFuelStored() {

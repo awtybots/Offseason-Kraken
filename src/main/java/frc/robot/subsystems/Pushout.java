@@ -44,7 +44,10 @@ public class Pushout extends SubsystemBase {
     private final Timer stateTimer = new Timer();
     private double releasePosition = PushoutConstants.PUSHOUT_EXTENDED_POS;
 
-    private static final double SIM_MOI = 0.02;
+    // Rotor-referenced inertia. 0.02 gave a damping ratio of 0.06 against kP = 6.0, so the
+    // slide rang for seconds after every move and took 2 s to extend. A Kraken rotor alone is
+    // ~3.7e-5; this is that plus a lead screw, and lands near critically damped.
+    private static final double SIM_MOI = 0.0002;
     private static final DCMotor SIM_GEARBOX = DCMotor.getKrakenX60Foc(1);
     private final DCMotorSim pushoutSim = RobotBase.isSimulation()
             ? new DCMotorSim(LinearSystemId.createDCMotorSystem(SIM_GEARBOX, SIM_MOI, 1.0), SIM_GEARBOX)

@@ -390,8 +390,14 @@ public class RobotContainer {
           new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
           new ProfiledPIDController(5, 0, 0,
               new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
+      // Sim-only conveniences, on the free D-pad directions. On the keyboard the POV is the
+      // NUMPAD (8 up, 6 right, 2 down), not the arrow keys.
       driverXbox.back().onTrue(Commands.runOnce(
-          () -> drivebase.resetOdometry(SimRobot.SimConstants.START_POSE)));
+          () -> drivebase.resetOdometry(SimRobot.SimConstants.START_POSE)).ignoringDisable(true));
+      driverXbox.povUp().onTrue(Commands.runOnce(
+          () -> { if (simRobot != null) simRobot.resetFuel(); }).ignoringDisable(true));
+      driverXbox.povRight().onTrue(Commands.runOnce(
+          () -> { if (simRobot != null) simRobot.preloadFuel(); }).ignoringDisable(true));
     }
 
     if (DriverStation.isTest()) {

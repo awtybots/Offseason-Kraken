@@ -409,6 +409,9 @@ public final class Constants {
     public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
 
     public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning use 0.88 after testing
+    // Simulation runs the turret at the post-tuning limit so sim aiming is not bottlenecked
+    // by a bench-safety number. Has no effect on the robot.
+    public static final double SIM_MAX_OUTPUT = 0.88;
   }
 
   public static final class HoodConstants {

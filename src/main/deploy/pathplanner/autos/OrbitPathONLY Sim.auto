@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sim Swipe1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sim OverBump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sim SOTM"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sim Swipe2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sim OverBump2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Sim RushIn"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Sim",
+  "choreoAuto": false
+}

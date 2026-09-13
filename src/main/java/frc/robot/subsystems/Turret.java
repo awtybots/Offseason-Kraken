@@ -52,7 +52,9 @@ public class Turret extends SubsystemBase {
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
     private boolean setpointWasClamped = false; // last setAngle call hit a travel limit
 
-    private static final double SIM_MAX_DEG_PER_SEC = 170.0;
+    private static final double SIM_MAX_DEG_PER_SEC =
+            DCMotor.getNEO(1).freeSpeedRadPerSec * 180.0 / Math.PI
+                    / TurretConstants.GEAR_RATIO * TurretConstants.SIM_MAX_OUTPUT;
     private final SparkMaxSim turretSim = RobotBase.isSimulation()
             ? new SparkMaxSim(TurretMotor, DCMotor.getNEO(1))
             : null;

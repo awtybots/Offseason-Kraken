@@ -802,6 +802,12 @@ public class SwerveSubsystem extends SubsystemBase {
       vy = 0.0;
     }
 
+    if (SimRobot.isOverBump(pose.getX(), pose.getY())) {
+      vx *= SimRobot.SimConstants.BUMP_SPEED_SCALE;
+      vy *= SimRobot.SimConstants.BUMP_SPEED_SCALE;
+    }
+
+    Logger.recordOutput("Sim/OverBump", SimRobot.isOverBump(pose.getX(), pose.getY()));
     return new ChassisSpeeds(vx, vy, fieldSpeeds.omegaRadiansPerSecond);
   }
 

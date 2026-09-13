@@ -102,14 +102,20 @@ Joystick 0.
 | `Z` | A | outtake |
 | `X` | B | aim the turret at the hub |
 | `O` | start | zero the gyro |
-| arrows | POV | left = drive-to-pose |
+| numpad `4` | POV left | drive-to-pose |
+| numpad `8` | POV up | **reset fuel** (respawn the field, empty the hopper, zero scores) |
+| numpad `6` | POV right | **preload fuel** (fill the hopper) |
+| `U` | back | reset the robot to its start pose |
+
+The POV on Keyboard 0 is the **numpad**, not the arrow keys. On an Xbox controller these three
+are just the D-pad and the Back button, and they work identically.
 
 The turret and hood aim at the hub on their own in simulation (they are set as default commands
 under `isSimulation()` only), so you do not have to hold `X` to shoot.
 
-**To test shooting:** press **Preload Fuel** on SmartDashboard to fill the hopper, drive into your
+**To test shooting:** press D-pad right (numpad `6`) to fill the hopper, drive into your
 alliance zone (blue is x < 4.01 m), and hold `Space`. Outside that zone `ControlAllShooting`
-switches to ferry mode and aims at the ferry target instead. **Reset Fuel** puts the field back.
+switches to ferry mode and aims at the ferry target instead. D-pad up (numpad `8`) puts the field back.
 
 **To test intaking:** hold `F` to extend the slide and run the intake, then drive over the fuel
 pile at midfield. `Sim/FuelStored` counts up.
