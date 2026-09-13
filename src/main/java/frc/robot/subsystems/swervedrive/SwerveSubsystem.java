@@ -783,22 +783,35 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     Pose2d pose = getPose();
-    double cos = Math.abs(pose.getRotation().getCos());
-    double sin = Math.abs(pose.getRotation().getSin());
-    double halfX = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 * cos
-        + SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0 * sin;
-    double halfY = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 * sin
-        + SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0 * cos;
+
+    // The footprint is NOT symmetric: the intake slide sticks out past the front bumper as it
+    // extends, and that is the corner that reaches the wall first. Build the actual box, rotate
+    // its four corners into the field frame, and use the real extremes.
+    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
+    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
+    double side = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
+
+    double aheadX = 0;
+    double behindX = 0;
+    double leftY = 0;
+    double rightY = 0;
+    for (double[] c : new double[][] {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}}) {
+      Translation2d corner = new Translation2d(c[0], c[1]).rotateBy(pose.getRotation());
+      aheadX = Math.max(aheadX, corner.getX());
+      behindX = Math.min(behindX, corner.getX());
+      leftY = Math.max(leftY, corner.getY());
+      rightY = Math.min(rightY, corner.getY());
+    }
 
     double vx = fieldSpeeds.vxMetersPerSecond;
     double vy = fieldSpeeds.vyMetersPerSecond;
 
-    if ((pose.getX() <= halfX && vx < 0)
-        || (pose.getX() >= SimRobot.SimConstants.FIELD_LENGTH_M - halfX && vx > 0)) {
+    if ((pose.getX() + behindX <= 0.0 && vx < 0)
+        || (pose.getX() + aheadX >= SimRobot.SimConstants.FIELD_LENGTH_M && vx > 0)) {
       vx = 0.0;
     }
-    if ((pose.getY() <= halfY && vy < 0)
-        || (pose.getY() >= SimRobot.SimConstants.FIELD_WIDTH_M - halfY && vy > 0)) {
+    if ((pose.getY() + rightY <= 0.0 && vy < 0)
+        || (pose.getY() + leftY >= SimRobot.SimConstants.FIELD_WIDTH_M && vy > 0)) {
       vy = 0.0;
     }
 

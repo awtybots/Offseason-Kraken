@@ -52,6 +52,16 @@ public class SimRobot {
         public static final double INTAKE_HALF_WIDTH_M = 0.375;
 
         public static final int FUEL_CAPACITY = 45;
+
+        /** A full field is 408 fuel and every one is a drawn sphere. Thin it for the renderer. */
+        public static final int FUEL_ON_FIELD = 100;
+
+        /**
+         * Pushout position past which the intake can collect. NOT PUSHOUT_RETRACTED_POS:
+         * AgitateCommand strokes the slide down to 3.0, well under that, so gating there
+         * silently stopped the intake working for the whole agitation cycle.
+         */
+        public static final double INTAKE_DEPLOYED_ROT = PushoutConstants.FULLY_RETRACTED_POS + 1.0;
         public static final double SHOTS_PER_SECOND = 8.0;
 
         /**
@@ -62,6 +72,9 @@ public class SimRobot {
                 DrivebaseConstants.TURRET_OFFSET.getX(),
                 DrivebaseConstants.TURRET_OFFSET.getY(),
                 0.361);
+
+        /** Front edge of the retracted intake in robot coordinates, read off the exported CAD. */
+        public static final double INTAKE_FRONT_EDGE_M = 0.332;
 
         /** Retracted position of the linear slide intake, and how far it travels when deployed. */
         public static final Translation3d INTAKE_HOME = new Translation3d(0.015, 0.0, 0.162);
@@ -89,6 +102,23 @@ public class SimRobot {
         /** Fraction of commanded translation speed allowed while crossing a bump. */
         public static final double BUMP_SPEED_SCALE = 0.45;
     }
+
+    /**
+     * How far the intake slide currently sticks out past the FRONT bumper, in metres. Zero when
+     * the slide is stowed inside the frame, which it is for most of its travel.
+     */
+    public static double intakeProtrusionM() {
+        if (livePushoutPosition == null) {
+            return 0.0;
+        }
+        double fraction = (livePushoutPosition.getAsDouble() - PushoutConstants.FULLY_RETRACTED_POS)
+                / (PushoutConstants.PUSHOUT_EXTENDED_POS - PushoutConstants.FULLY_RETRACTED_POS);
+        fraction = Math.max(0.0, Math.min(1.0, fraction));
+        double tip = SimConstants.INTAKE_FRONT_EDGE_M + fraction * SimConstants.INTAKE_TRAVEL_M;
+        return Math.max(0.0, tip - SimConstants.BUMPER_LENGTH_M / 2.0);
+    }
+
+    private static java.util.function.DoubleSupplier livePushoutPosition = null;
 
     /**
      * True when the robot centre is over either bump crossing. Nothing simulates the ramp
@@ -126,6 +156,7 @@ public class SimRobot {
         this.intake = intake;
         this.pushout = pushout;
         this.kicker = kicker;
+        livePushoutPosition = pushout::getPosition;
 
         fuelSim.registerRobot(
                 SimConstants.BUMPER_WIDTH_M,
@@ -146,6 +177,7 @@ public class SimRobot {
                 ShooterConstants.LINEAR_DRAG_K, ShooterConstants.MAGNUS_LIFT_RATIO);
         fuelSim.setLoggingFrequency(50.0);
         fuelSim.spawnStartingFuel();
+        fuelSim.thinTo(SimConstants.FUEL_ON_FIELD);
         fuelSim.start();
 
         SmartDashboard.putData(Commands.runOnce(this::resetFuel)
@@ -169,6 +201,7 @@ public class SimRobot {
     public void resetFuel() {
         fuelSim.clearFuel();
         fuelSim.spawnStartingFuel();
+        fuelSim.thinTo(SimConstants.FUEL_ON_FIELD);
         fuelStored = 0;
         FuelSim.Hub.BLUE_HUB.resetScore();
         FuelSim.Hub.RED_HUB.resetScore();
@@ -186,7 +219,7 @@ public class SimRobot {
     private boolean canIntake() {
         return fuelStored < SimConstants.FUEL_CAPACITY
                 && intake.isIntaking()
-                && pushout.getPosition() > PushoutConstants.PUSHOUT_RETRACTED_POS;
+                && pushout.getPosition() > SimConstants.INTAKE_DEPLOYED_ROT;
     }
 
     private void onFuelIntaked() {

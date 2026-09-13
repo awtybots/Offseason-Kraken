@@ -440,6 +440,25 @@ public class FuelSim {
     }
 
     /**
+     * LOCAL ADDITION. Thins the field down to at most {@code count} fuel, keeping an evenly
+     * spaced subset so the depots and the neutral pile stay proportionally represented.
+     * A full field is 408 fuel, and every one of them is a sphere the renderer has to draw.
+     *
+     * @param count maximum fuel to leave on the field
+     */
+    public void thinTo(int count) {
+        if (count >= fuels.size() || count < 0) {
+            return;
+        }
+        ArrayList<Fuel> kept = new ArrayList<>(count);
+        double stride = (double) fuels.size() / count;
+        for (int i = 0; i < count; i++) {
+            kept.add(fuels.get((int) (i * stride)));
+        }
+        fuels = kept;
+    }
+
+    /**
      * Start the simulation. `updateSim` must still be called every loop
      */
     public void start() {

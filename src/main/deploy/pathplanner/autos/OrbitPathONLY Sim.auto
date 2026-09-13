@@ -37,6 +37,12 @@
         {
           "type": "path",
           "data": {
+            "pathName": "Sim SOTM"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
             "pathName": "Sim RushIn"
           }
         }
