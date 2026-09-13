@@ -53,7 +53,10 @@ public class SimRobot {
 
         public static final int FUEL_CAPACITY = 45;
 
-        /** A full field is 408 fuel and every one is a drawn sphere. Thin it for the renderer. */
+        /**
+         * Only used by the single-pile helper. The default layout is FuelSim's full 408-fuel
+         * field stock; every fuel is a drawn sphere, so lower this if rendering struggles.
+         */
         public static final int FUEL_ON_FIELD = 200;
 
         /**
@@ -176,6 +179,7 @@ public class SimRobot {
 
     private int fuelStored = 0;
     private double shotAccumulator = 0.0;
+    private int hubShotsFired = 0;
 
     public SimRobot(SwerveSubsystem drivebase, Turret turret, Hood hood, Shooter shooter,
             Intake intake, Pushout pushout, Kicker kicker) {
@@ -232,8 +236,17 @@ public class SimRobot {
         fuelSim.clearFuel();
         spawnCentrePile();
         fuelStored = 0;
+        hubShotsFired = 0;
         FuelSim.Hub.BLUE_HUB.resetScore();
         FuelSim.Hub.RED_HUB.resetScore();
+    }
+
+    /** Our own hub, so the tally follows the alliance rather than always reading blue. */
+    private static FuelSim.Hub ourHub() {
+        return edu.wpi.first.wpilibj.DriverStation.getAlliance()
+                .orElse(edu.wpi.first.wpilibj.DriverStation.Alliance.Blue)
+                == edu.wpi.first.wpilibj.DriverStation.Alliance.Red
+                ? FuelSim.Hub.RED_HUB : FuelSim.Hub.BLUE_HUB;
     }
 
     /** Fills the hopper so shooting can be tested without driving over the pile first. */
@@ -241,13 +254,12 @@ public class SimRobot {
         fuelStored = SimConstants.FUEL_CAPACITY;
     }
 
-    /** One pile at midfield, nothing in the depots. */
+    /**
+     * The normal field layout: FuelSim's own starting stock, 408 fuel across the neutral-zone
+     * pile and both depots. {@code spawnPile} is still there if a single pile is wanted.
+     */
     private void spawnCentrePile() {
-        fuelSim.spawnPile(
-                SimConstants.FIELD_LENGTH_M / 2.0,
-                SimConstants.FIELD_WIDTH_M / 2.0,
-                SimConstants.FUEL_ON_FIELD,
-                SimConstants.FUEL_PILE_SPACING_M);
+        fuelSim.spawnStartingFuel();
     }
 
     public int getFuelStored() {
@@ -286,6 +298,16 @@ public class SimRobot {
         Logger.recordOutput("Sim/BlueHubScore", FuelSim.Hub.BLUE_HUB.getScore());
         Logger.recordOutput("Sim/RedHubScore", FuelSim.Hub.RED_HUB.getScore());
         Logger.recordOutput("Sim/BallSpeed", ballSpeedMetersPerSecond(RPSToRPM(shooter.getRPS())));
+        Logger.recordOutput("Sim/AimTrajectory", aimTrajectory());
+
+        // Hub accuracy while aiming at the hub from inside our own alliance zone. Misses lag by
+        // roughly one flight time, because a shot counts as fired the instant it leaves.
+        int scored = ourHub().getScore();
+        Logger.recordOutput("Sim/HubShotsFired", hubShotsFired);
+        Logger.recordOutput("Sim/HubShotsScored", scored);
+        Logger.recordOutput("Sim/HubShotsMissed", Math.max(0, hubShotsFired - scored));
+        Logger.recordOutput("Sim/HubAccuracyPct",
+                hubShotsFired == 0 ? 0.0 : 100.0 * scored / hubShotsFired);
     }
 
     private void updateShots() {
@@ -297,8 +319,60 @@ public class SimRobot {
         while (shotAccumulator >= 1.0 && fuelStored > 0) {
             shotAccumulator -= 1.0;
             fuelStored--;
+            if (drivebase.isInAllianceZone()) {
+                hubShotsFired++;
+            }
             launchOne();
         }
+    }
+
+    /**
+     * The shot the robot would take right now, sampled as a ballistic arc from the TURRET
+     * rather than from the robot origin. Add it in AdvantageScope as a Trajectory and the line
+     * stems from the shooter itself, which is both better looking and more honest than a
+     * vision-target line anchored at the robot centre.
+     */
+    private Pose3d[] aimTrajectory() {
+        Translation2d turretPos = drivebase.getTurretFieldPosition();
+        Translation2d turretVel = drivebase.getTurretFieldVelocity();
+        double exitRad = Math.toRadians(90.0 - hood.getAngleDegrees());
+        double yawRad = Math.toRadians(turret.getContinuousDegrees())
+                + drivebase.getPose().getRotation().getRadians();
+        double speed = ballSpeedMetersPerSecond(RPSToRPM(shooter.getRPS()));
+        if (speed < 0.5) {
+            return new Pose3d[0];
+        }
+
+        double horizontal = speed * Math.cos(exitRad);
+        double vx = horizontal * Math.cos(yawRad) + turretVel.getX();
+        double vy = horizontal * Math.sin(yawRad) + turretVel.getY();
+        double vz = speed * Math.sin(exitRad);
+        double x = turretPos.getX();
+        double y = turretPos.getY();
+        double z = DrivebaseConstants.SHOOTER_HEIGHT_M;
+
+        java.util.List<Pose3d> points = new java.util.ArrayList<>();
+        double step = 0.02;
+        for (int i = 0; i < 150 && z > 0.0; i++) {
+            points.add(new Pose3d(x, y, z, Rotation3d.kZero));
+            double vh = Math.hypot(vx, vy);
+            double kM = ShooterConstants.LINEAR_DRAG_K * ShooterConstants.MAGNUS_LIFT_RATIO;
+            double ax = -ShooterConstants.LINEAR_DRAG_K * vx;
+            double ay = -ShooterConstants.LINEAR_DRAG_K * vy;
+            double az = -ShooterConstants.LINEAR_DRAG_K * vz - 9.81;
+            if (vh > 1e-6) {
+                ax += -kM * vz * vx / vh;
+                ay += -kM * vz * vy / vh;
+                az += kM * vh;
+            }
+            x += vx * step;
+            y += vy * step;
+            z += vz * step;
+            vx += ax * step;
+            vy += ay * step;
+            vz += az * step;
+        }
+        return points.toArray(new Pose3d[0]);
     }
 
     private void launchOne() {

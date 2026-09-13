@@ -806,6 +806,52 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   /**
+   * Minimum push that separates the robot from an axis-aligned obstacle, or {0,0} if they are
+   * already apart. Separating-axis test against the robot's ORIENTED box.
+   *
+   * <p>An axis-aligned bounding box will not do here. A 0.82 x 0.94 m robot at 30 degrees has
+   * an AABB 1.18 m long - 44% too big - so the robot would stop well short of anything it
+   * approached at an angle, with a visible gap. Only the four real axes matter: the world's two
+   * and the robot's two.
+   */
+  private double[] separate(Pose2d pose, double[] box) {
+    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
+    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
+    double halfL = (front + rear) / 2.0;
+    double halfW = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
+
+    // The intake makes the box asymmetric, so its centre is not the robot's origin.
+    Translation2d centre = pose.getTranslation()
+        .plus(new Translation2d((front - rear) / 2.0, 0).rotateBy(pose.getRotation()));
+    Translation2d u = new Translation2d(pose.getRotation().getCos(), pose.getRotation().getSin());
+    Translation2d v = new Translation2d(-pose.getRotation().getSin(), pose.getRotation().getCos());
+
+    Translation2d boxCentre = new Translation2d((box[0] + box[1]) / 2.0, (box[2] + box[3]) / 2.0);
+    double boxHalfX = (box[1] - box[0]) / 2.0;
+    double boxHalfY = (box[3] - box[2]) / 2.0;
+    Translation2d delta = centre.minus(boxCentre);
+
+    Translation2d[] axes = {new Translation2d(1, 0), new Translation2d(0, 1), u, v};
+    double bestOverlap = Double.MAX_VALUE;
+    Translation2d bestAxis = null;
+    for (Translation2d a : axes) {
+      double robotReach = Math.abs(halfL * (u.getX() * a.getX() + u.getY() * a.getY()))
+          + Math.abs(halfW * (v.getX() * a.getX() + v.getY() * a.getY()));
+      double boxReach = boxHalfX * Math.abs(a.getX()) + boxHalfY * Math.abs(a.getY());
+      double separation = delta.getX() * a.getX() + delta.getY() * a.getY();
+      double overlap = robotReach + boxReach - Math.abs(separation);
+      if (overlap <= 0) {
+        return new double[] {0, 0}; // this axis separates them, so they do not touch
+      }
+      if (overlap < bestOverlap) {
+        bestOverlap = overlap;
+        bestAxis = separation < 0 ? new Translation2d(-a.getX(), -a.getY()) : a;
+      }
+    }
+    return new double[] {bestAxis.getX() * bestOverlap, bestAxis.getY() * bestOverlap};
+  }
+
+  /**
    * Simulation-only, and the thing that actually stops the robot passing through solid objects.
    *
    * <p>Capping the COMMANDED velocity cannot do it: YAGSL's simulated modules lag the command
@@ -832,28 +878,19 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     for (double[] box : SimRobot.OBSTACLES) {
-      double left = r[1] - box[0];
-      double right = box[1] - r[0];
-      double down = r[3] - box[2];
-      double up = box[3] - r[2];
-      if (left <= 0 || right <= 0 || down <= 0 || up <= 0) {
-        continue; // not overlapping this one
-      }
-      double min = Math.min(Math.min(left, right), Math.min(down, up));
-      if (min == left) {
-        dx += -left;
-      } else if (min == right) {
-        dx += right;
-      } else if (min == down) {
-        dy += -down;
-      } else {
-        dy += up;
-      }
+      double[] push = separate(pose, box);
+      dx += push[0];
+      dy += push[1];
     }
 
     if (Math.hypot(dx, dy) > 0.001) {
       resetOdometry(new Pose2d(pose.getX() + dx, pose.getY() + dy, pose.getRotation()));
       Logger.recordOutput("Sim/CollisionPushM", Math.hypot(dx, dy));
+    }
+    if (RobotBase.isSimulation()) {
+      Logger.recordOutput("Sim/HitboxLengthM",
+          SimRobot.SimConstants.BUMPER_LENGTH_M + SimRobot.intakeProtrusionM());
+      Logger.recordOutput("Sim/HitboxWidthM", SimRobot.SimConstants.BUMPER_WIDTH_M);
     }
   }
 
@@ -880,31 +917,6 @@ public class SwerveSubsystem extends SubsystemBase {
     double vy = MathUtil.clamp(fieldSpeeds.vyMetersPerSecond,
         (0.0 - (pose.getY() + rightY)) / dt,
         (SimRobot.SimConstants.FIELD_WIDTH_M - (pose.getY() + leftY)) / dt);
-
-    // The perimeter is not the only solid thing out there: the hub structures and the trench
-    // side blocks are too, and nothing else in this stack collides the robot with them.
-    double minX = pose.getX() + behindX;
-    double maxX = pose.getX() + aheadX;
-    double minY = pose.getY() + rightY;
-    double maxY = pose.getY() + leftY;
-    for (double[] box : SimRobot.OBSTACLES) {
-      boolean spansX = maxX > box[0] && minX < box[1];
-      boolean spansY = maxY > box[2] && minY < box[3];
-      if (spansY) {
-        if (maxX <= box[0]) {
-          vx = Math.min(vx, (box[0] - maxX) / dt);
-        } else if (minX >= box[1]) {
-          vx = Math.max(vx, (box[1] - minX) / dt);
-        }
-      }
-      if (spansX) {
-        if (maxY <= box[2]) {
-          vy = Math.min(vy, (box[2] - maxY) / dt);
-        } else if (minY >= box[3]) {
-          vy = Math.max(vy, (box[3] - minY) / dt);
-        }
-      }
-    }
 
     if (SimRobot.isOverBump(pose.getX(), pose.getY())) {
       vx *= SimRobot.SimConstants.BUMP_SPEED_SCALE;
