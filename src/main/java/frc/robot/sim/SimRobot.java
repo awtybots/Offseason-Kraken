@@ -1,6 +1,5 @@
 package frc.robot.sim;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -114,7 +113,8 @@ public class SimRobot {
                 this::canIntake,
                 this::onFuelIntaked);
 
-        fuelSim.enableAirResistance();
+        fuelSim.useLinearDragWithMagnus(
+                ShooterConstants.LINEAR_DRAG_K, ShooterConstants.MAGNUS_LIFT_RATIO);
         fuelSim.setLoggingFrequency(50.0);
         fuelSim.spawnStartingFuel();
         fuelSim.start();
@@ -136,25 +136,6 @@ public class SimRobot {
         drivebase.resetOdometry(SimConstants.START_POSE);
     }
 
-    /**
-     * Nothing in YAGSL or FuelSim collides the ROBOT with the field - the pose is integrated
-     * odometry, so it will happily drive through the guardrail. Clamp it back inside, using a
-     * yaw-aware half-extent so the corners stay in too.
-     */
-    private void keepInsideField() {
-        Pose2d pose = drivebase.getPose();
-        double cos = Math.abs(pose.getRotation().getCos());
-        double sin = Math.abs(pose.getRotation().getSin());
-        double halfX = SimConstants.BUMPER_LENGTH_M / 2.0 * cos + SimConstants.BUMPER_WIDTH_M / 2.0 * sin;
-        double halfY = SimConstants.BUMPER_LENGTH_M / 2.0 * sin + SimConstants.BUMPER_WIDTH_M / 2.0 * cos;
-
-        double x = MathUtil.clamp(pose.getX(), halfX, SimConstants.FIELD_LENGTH_M - halfX);
-        double y = MathUtil.clamp(pose.getY(), halfY, SimConstants.FIELD_WIDTH_M - halfY);
-
-        if (x != pose.getX() || y != pose.getY()) {
-            drivebase.resetOdometry(new Pose2d(x, y, pose.getRotation()));
-        }
-    }
 
     public FuelSim getFuelSim() {
         return fuelSim;
@@ -187,7 +168,6 @@ public class SimRobot {
 
     /** Called from {@code Robot.simulationPeriodic()}. */
     public void periodic() {
-        keepInsideField();
         updateShots();
         fuelSim.updateSim();
         publishComponents();

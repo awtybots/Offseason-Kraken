@@ -214,7 +214,11 @@ public final class Constants {
                                         // 0 is the normal starting point for a flywheel.
 
     public static final double s = 0.0;
-    public static final double v = 0.12; // 12 V / 100 rps
+    // 12 V / 96.7 rps. The old 0.12 came from a 6000 RPM free speed, but the shooter runs FOC
+    // (VelocityVoltage defaults EnableFOC true) and the Kraken x60's FOC free speed is 5800 RPM.
+    // That 3.3% shortfall showed up as the flywheel settling a constant 2.5% under every
+    // setpoint, which kP is far too small to remove. Replace with the SysId value when measured.
+    public static final double v = 0.1241;
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----
@@ -311,6 +315,11 @@ public final class Constants {
       // Magnus is worth under 1% here. 4604 RPM at 6 m is 77% of Kraken x60 free
       // speed, so expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
+      //
+      // This table, hubHoodTable and TOF are ONE self-consistent set - BallisticsModelTest
+      // asserts each entry reaches dz on its hood angle AND that TOF equals that flight
+      // time. TOF feeds the shoot-on-the-move lead, so changing RPM here without
+      // re-deriving TOF makes the turret lead by the wrong amount. Change all three or none.
       for (var entry : List.of(
           Pair.of(Meters.of(2.0), RPM.of(3065)),
           Pair.of(Meters.of(2.5), RPM.of(3262)),

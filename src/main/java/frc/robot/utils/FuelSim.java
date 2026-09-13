@@ -104,7 +104,8 @@ public class FuelSim {
             this(pos, new Translation3d());
         }
 
-        protected void update(boolean simulateAirResistance, int subticks) {
+        protected void update(boolean simulateAirResistance, int subticks,
+                double linearDragK, double magnusLiftRatio) {
             pos = pos.plus(vel.times(PERIOD / subticks));
             if (pos.getZ() > FUEL_RADIUS) {
                 Translation3d Fg = GRAVITY.times(FUEL_MASS);
@@ -118,6 +119,9 @@ public class FuelSim {
                 }
 
                 Translation3d accel = Fg.plus(Fd).div(FUEL_MASS);
+                if (linearDragK > 0.0) {
+                    accel = GRAVITY.plus(linearDragWithMagnus(vel, linearDragK, magnusLiftRatio));
+                }
                 vel = vel.plus(accel.times(PERIOD / subticks));
             }
             if (Math.abs(vel.getZ()) < 0.05 && pos.getZ() <= FUEL_RADIUS + 0.03) {
@@ -243,6 +247,31 @@ public class FuelSim {
         }
     }
 
+    /**
+     * LOCAL CHANGE. Upstream models quadratic drag on a smooth sphere and no Magnus effect.
+     * The robot's shooter tables are solved with LINEAR drag plus Magnus lift, and the two
+     * disagree by roughly a factor of two in drag - enough that a table which is exact under
+     * one model sits near the edge of the other's scoring band. Since the robot's tables,
+     * hood angles and time-of-flight map are one self-consistent set that also drives the
+     * shoot-on-the-move lead, the simulation is the thing that should move.
+     *
+     * <p>Acceleration, not force: k is in 1/s. Magnus is the velocity rotated 90 degrees in
+     * its own vertical plane, scaled by k * liftRatio, which is the backspin case.
+     */
+    protected static Translation3d linearDragWithMagnus(
+            Translation3d v, double linearDragK, double magnusLiftRatio) {
+        double kM = linearDragK * magnusLiftRatio;
+        double vh = Math.hypot(v.getX(), v.getY());
+        Translation3d drag = v.times(-linearDragK);
+        if (vh < 1e-6) {
+            return drag;
+        }
+        return drag.plus(new Translation3d(
+                -kM * v.getZ() * v.getX() / vh,
+                -kM * v.getZ() * v.getY() / vh,
+                kM * vh));
+    }
+
     protected static void handleFuelCollision(Fuel a, Fuel b) {
         Translation3d normal = a.pos.minus(b.pos);
         double distance = normal.getNorm();
@@ -320,6 +349,8 @@ public class FuelSim {
     protected double bumperHeight;
     protected ArrayList<SimIntake> intakes = new ArrayList<>();
     protected int subticks = 5;
+    protected double linearDragK = 0.0;
+    protected double magnusLiftRatio = 0.0;
     protected double loggingFreqHz = 10;
     protected Timer loggingTimer = new Timer();
 
@@ -430,6 +461,20 @@ public class FuelSim {
     }
 
     /**
+     * LOCAL ADDITION. Swaps the upstream quadratic-drag model for linear drag plus Magnus lift,
+     * so the simulation agrees with whatever aero the robot's shooter tables were solved with.
+     * Also enables air resistance. Pass k = 0 to go back to the upstream model.
+     *
+     * @param k linear drag coefficient, 1/s
+     * @param liftRatio Magnus lift as a fraction of drag (C_L / C_D)
+     */
+    public void useLinearDragWithMagnus(double k, double liftRatio) {
+        this.linearDragK = k;
+        this.magnusLiftRatio = liftRatio;
+        this.simulateAirResistance = k > 0.0;
+    }
+
+    /**
      * Sets the number of physics iterations per loop (0.02s)
      * @param subticks physics iteration per loop (default: 5)
      */
@@ -504,7 +549,8 @@ public class FuelSim {
     public void stepSim() {
         for (int i = 0; i < subticks; i++) {
             for (Fuel fuel : fuels) {
-                fuel.update(this.simulateAirResistance, this.subticks);
+                fuel.update(this.simulateAirResistance, this.subticks,
+                        this.linearDragK, this.magnusLiftRatio);
             }
 
             handleFuelCollisions(fuels);
