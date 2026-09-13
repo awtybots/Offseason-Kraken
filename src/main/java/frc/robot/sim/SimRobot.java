@@ -352,8 +352,8 @@ public class SimRobot {
         double z = DrivebaseConstants.SHOOTER_HEIGHT_M;
 
         java.util.List<Pose3d> points = new java.util.ArrayList<>();
-        double step = 0.02;
-        for (int i = 0; i < 150 && z > 0.0; i++) {
+        double step = 0.04;
+        for (int i = 0; i < 60 && z > 0.0; i++) {
             points.add(new Pose3d(x, y, z, Rotation3d.kZero));
             double vh = Math.hypot(vx, vy);
             double kM = ShooterConstants.LINEAR_DRAG_K * ShooterConstants.MAGNUS_LIFT_RATIO;
