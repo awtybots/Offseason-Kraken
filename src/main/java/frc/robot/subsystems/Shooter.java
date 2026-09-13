@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
 import org.littletonrobotics.junction.Logger;
 
+import frc.robot.Constants;
 import frc.robot.Constants.ShooterConstants;
 import static frc.robot.utils.utils.*;
 
@@ -31,8 +32,10 @@ public class Shooter extends SubsystemBase {
     private TalonFX ShooterRightMotor = new TalonFX(ShooterConstants.SHOOTER_R_ID);
     private TalonFX ShooterLeftMotor = new TalonFX(ShooterConstants.SHOOTER_L_ID);
 
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
-    private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
+    private final VelocityVoltage velocityRequest =
+            new VelocityVoltage(0).withEnableFOC(Constants.USE_FOC);
+    private final DutyCycleOut dutyCycleRequest =
+            new DutyCycleOut(0).withEnableFOC(Constants.USE_FOC);
 
     private double targetRPS = 0.0;
 

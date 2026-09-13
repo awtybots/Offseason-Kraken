@@ -34,6 +34,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
 
+  // Phoenix Pro licence. Flip to false and everything falls back to trapezoidal commutation:
+  // every withEnableFOC in the project reads this, and ShooterConstants.v switches with it
+  // because FOC free speed is 5800 RPM against 6000 without.
+  public static final boolean USE_FOC = true;
+
 
 
   public static final double MAX_SPEED = Units.feetToMeters(15.331);
@@ -114,6 +119,22 @@ public final class Constants {
     public static final String LIMELIGHT_RIGHT = "limelight-right";  //10.58.29.15
     public static final String LIMELIGHT_BACK = "limelight-back"; //10.58.29.16
     public static final String LIMELIGHT_LEFT = "limelight-left"; //10.58.29.17
+
+    // Was 3 m for both, but the hub shot table spans 2-6 m, so every estimate was discarded
+    // exactly when pose matters most. Single tag stays tighter; it has no geometry to check.
+    public static final double MAX_SINGLE_TAG_DIST_M = 4.0;
+    public static final double MAX_MULTI_TAG_DIST_M = 6.0;
+
+    // xyStd = base + coeff * dist^2, in metres. Starting points for Limelight 4, NOT measured.
+    // To measure: park disabled at taped distances, log botpose_orb_wpiblue, and the scatter at
+    // each distance is the std dev - fit base + coeff * d^2 to it.
+    public static final double MT1_STD_BASE = 0.12;
+    public static final double MT1_STD_DIST_COEFF = 0.06;
+    public static final double MT2_STD_BASE = 0.06; // MT2 takes heading from the gyro, so trust it more
+    public static final double MT2_STD_DIST_COEFF = 0.03;
+    public static final double SINGLE_TAG_STD_SCALE = 2.0; // multi-tag is the baseline above
+    public static final double DISABLED_STD_SCALE = 0.5; // not moving, so lock the pose in harder
+    public static final double THETA_STD_IGNORE = 9999999; // Pigeon beats any vision heading solve
   }
 
   public static class OperatorConstants {
@@ -172,6 +193,8 @@ public final class Constants {
     public static final double v = 0.12;
     public static final double a = 0.0;
 
+    public static final double PUSHOUT_FLUSH_WITH_BUMPER_POS = 5.0;
+
     public static final double PUSHOUT_AGITATE_WAIT = 0.2; // seconds
     public static final double PUSHOUT_BETWEEN = 0.5; // seconds between in and out
 
@@ -214,11 +237,7 @@ public final class Constants {
                                         // 0 is the normal starting point for a flywheel.
 
     public static final double s = 0.0;
-    // 12 V / 96.7 rps. The old 0.12 came from a 6000 RPM free speed, but the shooter runs FOC
-    // (VelocityVoltage defaults EnableFOC true) and the Kraken x60's FOC free speed is 5800 RPM.
-    // That 3.3% shortfall showed up as the flywheel settling a constant 2.5% under every
-    // setpoint, which kP is far too small to remove. Replace with the SysId value when measured.
-    public static final double v = 0.1241;
+    public static final double v = USE_FOC ? 0.1241 : 0.12; // 12 V / 96.7 rps FOC, / 100 rps not
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----
@@ -402,10 +421,6 @@ public final class Constants {
     public static final double v = 0.004; // inert in kPosition
     public static final double a = 0.0003; // inert in kPosition
 
-    // A moving aim point sweeps the turret bearing at up to ~45 deg/s when strafing close to
-    // the hub, which is 0.9 deg per 20 ms loop - so a 0.5 deg window could never be satisfied
-    // while translating and the fire gate stayed shut. The hub allows far more than this:
-    // atan(0.56 m entry radius / 6 m) = 5.3 deg at the far end of the table, 15.6 deg at 2 m.
     public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
 
     public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning use 0.88 after testing

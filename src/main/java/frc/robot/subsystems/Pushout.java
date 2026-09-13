@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import edu.wpi.first.math.MathUtil;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -20,6 +22,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
+import frc.robot.Constants;
 import frc.robot.Constants.PushoutConstants;
 
 import static frc.robot.utils.utils.*;
@@ -77,19 +80,19 @@ public class Pushout extends SubsystemBase {
     public void PushIntake() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0));
         PushoutMotor.setControl(
-                positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0).withEnableFOC(true));
+                positionRequest.withPosition(PushoutConstants.PUSHOUT_EXTENDED_POS).withSlot(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void RetractIntake() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0));
         PushoutMotor.setControl(
-                positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0).withEnableFOC(true));
+                positionRequest.withPosition(PushoutConstants.PUSHOUT_RETRACTED_POS).withSlot(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void FullyRetract() {
         // PushoutMotor.setControl(positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0));
         PushoutMotor.setControl(
-                positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0).withEnableFOC(true));
+                positionRequest.withPosition(PushoutConstants.FULLY_RETRACTED_POS).withSlot(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void ResetEncoder() {
@@ -98,15 +101,15 @@ public class Pushout extends SubsystemBase {
 
     public void StopPushout() {
         // PushoutMotor.setControl(voltageRequest.withOutput(0));
-        PushoutMotor.setControl(voltageRequest.withOutput(0).withEnableFOC(true));
+        PushoutMotor.setControl(voltageRequest.withOutput(0).withEnableFOC(Constants.USE_FOC));
     }
 
     public void PushoutDutyCycle(double output) {
-        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(true));
+        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(Constants.USE_FOC));
     }
 
     public void PushoutDutyCycleRetract(double output) {
-        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(true));
+        PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(Constants.USE_FOC));
     }
 
     public double getPosition() {
@@ -156,7 +159,7 @@ public class Pushout extends SubsystemBase {
 
             case COMPLIANT:
                 PushoutMotor.setControl(
-                        voltageRequest.withOutput(PushoutConstants.PUSHOUT_HOLD_VOLTS).withEnableFOC(true));
+                        voltageRequest.withOutput(PushoutConstants.PUSHOUT_HOLD_VOLTS).withEnableFOC(Constants.USE_FOC));
                 if (wasKnockedBack()) {
                     setMode(PushoutMode.WAITING);
                 }
@@ -186,18 +189,6 @@ public class Pushout extends SubsystemBase {
                     mode = PushoutMode.IDLE;
                     StopPushout();
                 });
-    }
-
-    public void AgitateStep(boolean retract) {
-        double extendedPos = PushoutConstants.PUSHOUT_EXTENDED_POS;
-        double agitatePos = extendedPos - (extendedPos * 0.25);
-        // PushoutMotor.setControl(positionRequest
-        // .withPosition(retract ? agitatePos : extendedPos)
-        // .withSlot(0));
-        PushoutMotor.setControl(positionRequest
-                .withPosition(retract ? agitatePos : extendedPos)
-                .withSlot(0)
-                .withEnableFOC(true));
     }
 
     public Command PushoutDutyCycleCommand() {
@@ -252,92 +243,22 @@ public class Pushout extends SubsystemBase {
         return PushoutDutyCycleRetractCommand(PushoutConstants.cheesySpeed);
     }
 
+    private void goToPosition(double rotations) {
+        double clamped = MathUtil.clamp(rotations,
+                PushoutConstants.FULLY_RETRACTED_POS, PushoutConstants.PUSHOUT_EXTENDED_POS);
+        PushoutMotor.setControl(positionRequest.withPosition(clamped).withSlot(0));
+    }
+
     public Command AgitateCommand() {
-        final double[] pullPositions = { 12.5, 10, 7, 5, 3 };
-        final double[] pushPositions = { 15, 13.5, 10, 8.5, 6 };
-        final double finalPos = 4;
-        final double waitTime = PushoutConstants.PUSHOUT_AGITATE_WAIT;
-        final double waitBetween = PushoutConstants.PUSHOUT_BETWEEN;
-
-        Command agitate = Commands.sequence(
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pullPositions[0]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pushPositions[0]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pullPositions[1]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pushPositions[1]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pullPositions[2]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pushPositions[2]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pullPositions[3]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pushPositions[3]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pullPositions[4]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(pushPositions[4]).withSlot(0).withEnableFOC(true))),
-                Commands.waitSeconds(waitTime),
-                Commands.waitSeconds(waitBetween),
-
-                // runOnce(() ->
-                // PushoutMotor.setControl(positionRequest.withPosition(finalPos).withSlot(0))),
-                runOnce(() -> PushoutMotor
-                        .setControl(positionRequest.withPosition(finalPos).withSlot(0).withEnableFOC(true))),
-                Commands.idle(this)
-
-        ).finallyDo(interrupted -> PushIntake());
+        Command agitate = Commands.repeatingSequence(
+                runOnce(() -> goToPosition(PushoutConstants.PUSHOUT_FLUSH_WITH_BUMPER_POS)),
+                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT),
+                runOnce(() -> goToPosition(PushoutConstants.PUSHOUT_EXTENDED_POS)),
+                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT))
+                .finallyDo(interrupted -> PushIntake());
 
         agitate.addRequirements(this);
         return agitate;
-    }
-
-    public Command AgitateWhileIntakingCommand() {
-        return Commands.repeatingSequence(
-                runOnce(() -> AgitateStep(true)),
-                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT),
-                runOnce(() -> AgitateStep(false)),
-                Commands.waitSeconds(PushoutConstants.PUSHOUT_AGITATE_WAIT)).finallyDo(interrupted -> PushIntake());
     }
 
     public Command runDefaultCommand() {

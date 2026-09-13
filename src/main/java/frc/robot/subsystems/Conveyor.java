@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import org.littletonrobotics.junction.Logger;
 import static frc.robot.utils.utils.*;
 
+import frc.robot.Constants;
 import frc.robot.Constants.ConveyorConstants;
 public class Conveyor extends SubsystemBase {
 
@@ -48,18 +49,18 @@ public class Conveyor extends SubsystemBase {
 
     public void ReverseConveyor() {
         // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED));
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED).withEnableFOC(true));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_REVERSE_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
     public void HopperToShooter() {
         // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED).withEnableFOC(true));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
 
     public void stopConveyor() {
         // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0));
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(true));
+        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(Constants.USE_FOC));
         // bottom follows for all the voids
     }
     

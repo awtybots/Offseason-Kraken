@@ -197,21 +197,20 @@ public class RobotContainer {
     }
   }
 
-  /**
-   * The shooter SysId routines exist in Shooter.java but were bound to nothing, so there was no
-   * way to run a characterization. These put them on the dashboard, refusing to start outside
-   * Test mode so a stray click during a match cannot spin the flywheel up.
-   */
+
   private void configureSysIdDashboard() {
-    record Routine(String name, Command command) {}
-    for (Routine r : new Routine[] {
-        new Routine("Shooter SysId Quasistatic Fwd", m_shooter.sysIdQuasistaticForward()),
-        new Routine("Shooter SysId Quasistatic Rev", m_shooter.sysIdQuasistaticReverse()),
-        new Routine("Shooter SysId Dynamic Fwd", m_shooter.sysIdDynamicForward()),
-        new Routine("Shooter SysId Dynamic Rev", m_shooter.sysIdDynamicReverse())}) {
-      SmartDashboard.putData(r.name(),
-          r.command().unless(() -> !DriverStation.isTest()).withName(r.name()));
-    }
+    SmartDashboard.putData("Shooter SysId Quasistatic Fwd",
+        m_shooter.sysIdQuasistaticForward().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Quasistatic Fwd"));
+    SmartDashboard.putData("Shooter SysId Quasistatic Rev",
+        m_shooter.sysIdQuasistaticReverse().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Quasistatic Rev"));
+    SmartDashboard.putData("Shooter SysId Dynamic Fwd",
+        m_shooter.sysIdDynamicForward().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Dynamic Fwd"));
+    SmartDashboard.putData("Shooter SysId Dynamic Rev",
+        m_shooter.sysIdDynamicReverse().unless(() -> !DriverStation.isTest())
+            .withName("Shooter SysId Dynamic Rev"));
   }
 
   public void simulationPeriodic() {

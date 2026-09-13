@@ -18,6 +18,7 @@ import com.revrobotics.spark.SparkMax;
 // import com.revrobotics.spark.SparkBase.ControlType;
 
 import frc.robot.Configs;
+import frc.robot.Constants;
 import frc.robot.Constants.KickerConstants;
 import org.littletonrobotics.junction.Logger;
 import static frc.robot.utils.utils.*;
@@ -57,27 +58,27 @@ public class Kicker extends SubsystemBase {
         feeding = false;
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_REVERSE_SPEED);
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED).withEnableFOC(true));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
     public void ConveyorToShooter() {
         feeding = true;
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
     public void ClearBall() {
         feeding = false;
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
-        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(true));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
 
     public void stopKicker() {
         feeding = false;
         // KickerMotor.setControl(dutyCycleRequest.withOutput(0));
-        KickerMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(true));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(Constants.USE_FOC));
         VerticalRollerMotor.set(0.0);
     }
 

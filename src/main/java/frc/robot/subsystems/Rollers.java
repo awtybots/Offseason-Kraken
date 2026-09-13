@@ -10,6 +10,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import frc.robot.Constants;
 import frc.robot.Constants.RollersConstants;
 
 import static frc.robot.utils.utils.*;
@@ -43,20 +44,20 @@ public class Rollers extends SubsystemBase {
     public void ReverseRollers() {
         // RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.REVERSE_ROLLERS_RPS).withSlot(0));
         // RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.REVERSE_ROLLERS_SPEED));
-        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.REVERSE_ROLLERS_SPEED).withEnableFOC(true));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.REVERSE_ROLLERS_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
     public void RollersToConveyor() {
         // RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.ROLLERS_RPS).withSlot(0));
         // RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED));
-        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED).withEnableFOC(true));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
     
 
     public void stopRollers() {
         // RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));
-        RollersMotor.setControl(dutyCycleRequest.withOutput(0.0).withEnableFOC(true));
+        RollersMotor.setControl(dutyCycleRequest.withOutput(0.0).withEnableFOC(Constants.USE_FOC));
     }
 
 
