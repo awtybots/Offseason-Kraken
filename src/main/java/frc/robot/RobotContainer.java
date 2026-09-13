@@ -190,8 +190,27 @@ public class RobotContainer {
     SmartDashboard.putData("Auto Chooser", autoChooser);
     loggedAutoChooser = new LoggedDashboardChooser<>("Auto Routine", autoChooser);
 
+    configureSysIdDashboard();
+
     if (RobotBase.isSimulation()) {
       simRobot = new SimRobot(drivebase, m_turret, m_hood, m_shooter, m_intake, m_pushout, m_kicker);
+    }
+  }
+
+  /**
+   * The shooter SysId routines exist in Shooter.java but were bound to nothing, so there was no
+   * way to run a characterization. These put them on the dashboard, refusing to start outside
+   * Test mode so a stray click during a match cannot spin the flywheel up.
+   */
+  private void configureSysIdDashboard() {
+    record Routine(String name, Command command) {}
+    for (Routine r : new Routine[] {
+        new Routine("Shooter SysId Quasistatic Fwd", m_shooter.sysIdQuasistaticForward()),
+        new Routine("Shooter SysId Quasistatic Rev", m_shooter.sysIdQuasistaticReverse()),
+        new Routine("Shooter SysId Dynamic Fwd", m_shooter.sysIdDynamicForward()),
+        new Routine("Shooter SysId Dynamic Rev", m_shooter.sysIdDynamicReverse())}) {
+      SmartDashboard.putData(r.name(),
+          r.command().unless(() -> !DriverStation.isTest()).withName(r.name()));
     }
   }
 
