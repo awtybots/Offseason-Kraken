@@ -121,17 +121,27 @@ public class SimRobot {
 
     /**
      * Solid things on the field the robot can run into, as {minX, maxX, minY, maxY} boxes.
-     * Taken from the same geometry FuelSim collides fuel against: the two hub structures and
-     * the four trench side blocks. The trench BARS are overhead at 0.565 m and the robot drives
-     * under them, so they are deliberately absent.
+     * Every number here was measured off AdvantageScope's own 2026 field model by height band -
+     * compose the node transforms, then keep only what reaches below the robot's ~0.6 m.
      */
     public static final double[][] OBSTACLES = {
-        // Hub plus TOWER, measured off AdvantageScope's own 2026 field model. The hub alone is
-        // 4.02-5.31 x 3.43-4.64 at robot height; the tower above widens to this, and the robot
-        // is meant to hit it rather than drive under.
-        {4.01, 5.49, 3.29, 4.78},
-        {SimConstants.FIELD_LENGTH_M - 5.49, SimConstants.FIELD_LENGTH_M - 4.01, 3.29, 4.78},
-        // Trench side blocks, 0.305 m deep, both ends of both trenches.
+        // The hub is a 1.2 m square, solid from the floor to 1.27 m: "Hub Side Panel" spans
+        // x 4.02-5.20 and "Hub Rear Panel" sits at x 5.20-5.21. FuelSim agrees independently -
+        // Hub.SIDE = 1.2 centred on (4.61, 4.02). An earlier box ran to x 5.49, which put 0.28 m
+        // of invisible wall behind each hub.
+        {4.01, 5.21, 3.42, 4.62},
+        {SimConstants.FIELD_LENGTH_M - 5.21, SimConstants.FIELD_LENGTH_M - 4.01, 3.42, 4.62},
+        // The climbing tower, which stands at the alliance wall and NOT beside the hub. The only
+        // part of it at robot height is the pair of uprights on the line x 1.00-1.09, at
+        // y 3.86-3.90 and y 4.72-4.76; the 0.82 m gap between them is narrower than this 0.944 m
+        // robot, so the pair behaves as one wall. Its rung is at 0.66 m and its base plate is
+        // 0.06 m, so the robot passes under one and over the other. Widened ~5 cm a side because
+        // a box thinner than one loop of travel can be tunnelled through.
+        {0.95, 1.14, 3.86, 4.76},
+        {SimConstants.FIELD_LENGTH_M - 1.14, SimConstants.FIELD_LENGTH_M - 0.95, 3.86, 4.76},
+        // Trench side blocks, 0.305 m deep, both ends of both trenches. These match FuelSim's
+        // own trench geometry exactly. The trench BARS are overhead at 0.565 m and the robot
+        // drives under them, so they are deliberately absent.
         {3.96, 5.18, 1.265, 1.265 + 0.305},
         {3.96, 5.18, SimConstants.FIELD_WIDTH_M - 1.57, SimConstants.FIELD_WIDTH_M - 1.57 + 0.305},
         {SimConstants.FIELD_LENGTH_M - 5.18, SimConstants.FIELD_LENGTH_M - 3.96, 1.265, 1.265 + 0.305},
