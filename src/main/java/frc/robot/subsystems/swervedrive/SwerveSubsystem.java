@@ -897,6 +897,23 @@ public class SwerveSubsystem extends SubsystemBase {
     }
   }
 
+  private Translation2d deepestCorner(Pose2d pose, double nx, double ny) {
+    double front = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 + SimRobot.intakeProtrusionM();
+    double rear = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0;
+    double side = SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0;
+    Translation2d best = null;
+    double least = Double.MAX_VALUE;
+    for (double[] c : new double[][] {{front, side}, {front, -side}, {-rear, side}, {-rear, -side}}) {
+      Translation2d corner = new Translation2d(c[0], c[1]).rotateBy(pose.getRotation());
+      double along = corner.getX() * nx + corner.getY() * ny;
+      if (along < least) {
+        least = along;
+        best = corner;
+      }
+    }
+    return best;
+  }
+
   private ChassisSpeeds limitToField(ChassisSpeeds fieldSpeeds) {
     if (!RobotBase.isSimulation()) {
       return fieldSpeeds;
@@ -914,12 +931,28 @@ public class SwerveSubsystem extends SubsystemBase {
     // travel most of 10 cm past the wall before it trips, which is the "phasing through" -
     // and it never comes back, because the gate only blocks further outward motion.
     double dt = 0.020;
+    double omega = fieldSpeeds.omegaRadiansPerSecond;
+    double vxIn = fieldSpeeds.vxMetersPerSecond;
+    double vyIn = fieldSpeeds.vyMetersPerSecond;
     double vx = MathUtil.clamp(fieldSpeeds.vxMetersPerSecond,
         (0.0 - (pose.getX() + behindX)) / dt,
         (SimRobot.SimConstants.FIELD_LENGTH_M - (pose.getX() + aheadX)) / dt);
     double vy = MathUtil.clamp(fieldSpeeds.vyMetersPerSecond,
         (0.0 - (pose.getY() + rightY)) / dt,
         (SimRobot.SimConstants.FIELD_WIDTH_M - (pose.getY() + leftY)) / dt);
+
+    if (vx != vxIn || vy != vyIn) {
+      double nx = vx != vxIn ? Math.signum(vx - vxIn) : 0;
+      double ny = vy != vyIn ? Math.signum(vy - vyIn) : 0;
+      double mag = Math.hypot(nx, ny);
+      if (mag > 0) {
+        nx /= mag;
+        ny /= mag;
+        Translation2d r = deepestCorner(pose, nx, ny);
+        omega += SimRobot.SimConstants.COLLISION_SPIN_GAIN
+            * (r.getX() * (vy - vyIn) - r.getY() * (vx - vxIn));
+      }
+    }
 
     // Look one loop ahead: if the robot WOULD be inside an obstacle, remove only the component
     // of velocity heading into it and keep the rest. Zeroing both axes makes the robot stick to
@@ -937,6 +970,9 @@ public class SwerveSubsystem extends SubsystemBase {
       if (into < 0) {
         vx -= into * nx;
         vy -= into * ny;
+        Translation2d r = deepestCorner(pose, nx, ny);
+        omega += SimRobot.SimConstants.COLLISION_SPIN_GAIN
+            * (r.getX() * (-into * ny) - r.getY() * (-into * nx));
       }
     }
 
@@ -946,7 +982,7 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     Logger.recordOutput("Sim/OverBump", SimRobot.isOverBump(pose.getX(), pose.getY()));
-    return new ChassisSpeeds(vx, vy, fieldSpeeds.omegaRadiansPerSecond);
+    return new ChassisSpeeds(vx, vy, omega);
   }
 
 
