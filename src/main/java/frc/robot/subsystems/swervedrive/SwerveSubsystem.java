@@ -33,6 +33,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -43,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+import frc.robot.sim.SimRobot;
 import frc.robot.Constants.DrivebaseConstants;
 import frc.robot.Constants.LimelightConstants;
 import frc.robot.LimelightHelpers;
@@ -765,9 +767,45 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param velocity Velocity according to the field.
    */
   public void driveFieldOriented(ChassisSpeeds velocity) {
-    swerveDrive.driveFieldOriented(velocity);
+    swerveDrive.driveFieldOriented(limitToField(velocity));
   }
-  
+
+  /**
+   * Simulation-only soft wall. Nothing collides the robot with the field, so odometry will
+   * happily integrate straight through the guardrail. Rather than teleporting the pose back -
+   * which fights YAGSL's own odometry thread and makes the robot judder along the wall - this
+   * just zeroes the OUTWARD velocity component at the boundary. Motion back into the field is
+   * always allowed, and sliding along a wall is untouched.
+   */
+  private ChassisSpeeds limitToField(ChassisSpeeds fieldSpeeds) {
+    if (!RobotBase.isSimulation()) {
+      return fieldSpeeds;
+    }
+
+    Pose2d pose = getPose();
+    double cos = Math.abs(pose.getRotation().getCos());
+    double sin = Math.abs(pose.getRotation().getSin());
+    double halfX = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 * cos
+        + SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0 * sin;
+    double halfY = SimRobot.SimConstants.BUMPER_LENGTH_M / 2.0 * sin
+        + SimRobot.SimConstants.BUMPER_WIDTH_M / 2.0 * cos;
+
+    double vx = fieldSpeeds.vxMetersPerSecond;
+    double vy = fieldSpeeds.vyMetersPerSecond;
+
+    if ((pose.getX() <= halfX && vx < 0)
+        || (pose.getX() >= SimRobot.SimConstants.FIELD_LENGTH_M - halfX && vx > 0)) {
+      vx = 0.0;
+    }
+    if ((pose.getY() <= halfY && vy < 0)
+        || (pose.getY() >= SimRobot.SimConstants.FIELD_WIDTH_M - halfY && vy > 0)) {
+      vy = 0.0;
+    }
+
+    return new ChassisSpeeds(vx, vy, fieldSpeeds.omegaRadiansPerSecond);
+  }
+
+
 
   /**
    * Drive the robot given a chassis field oriented velocity.
@@ -776,7 +814,7 @@ public class SwerveSubsystem extends SubsystemBase {
    */
   public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity) {
     return run(() -> {
-      ChassisSpeeds field = velocity.get();
+      ChassisSpeeds field = limitToField(velocity.get());
       lastCommandedFieldVelocity = field;
       lastCommandedRobotVelocity = ChassisSpeeds.fromFieldRelativeSpeeds(
           field.vxMetersPerSecond,
