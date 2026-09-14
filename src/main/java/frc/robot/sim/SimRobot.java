@@ -62,7 +62,11 @@ public class SimRobot {
         // robotZ = glbY + 0.101. Side walls (right hopper / Part 9) land at Y = +/-0.38, the back
         // wall at X = -0.09, the lid (small top hopper) at Z = 0.571, interior floor at Z = 0.054.
         public static final double HOPPER_X_MIN = -0.09;
-        public static final double HOPPER_X_MAX = 0.31;
+        // Carried out to the inside of the front bumper rather than stopping at the hopper's
+        // own front edge (0.31). That is still inside the frame - it is the space the intake
+        // slide retracts into - and it is what turns 2 rows into 3, giving 3 x 5 x 3 = 45
+        // slots, exactly FUEL_CAPACITY, so a full hopper needs no layer compression at all.
+        public static final double HOPPER_X_MAX = BUMPER_LENGTH_M / 2.0;
         public static final double HOPPER_Y_HALF = 0.38;
         public static final double HOPPER_Z_MIN = 0.054;
         public static final double HOPPER_Z_MAX = 0.571;
@@ -253,8 +257,8 @@ public class SimRobot {
         // 408 fuel logged as Translation3d is ~9.6 KB a sample, so 50 Hz was pushing half a
         // megabyte a second into a history AdvantageScope keeps in memory for scrubbing -
         // that, not the reset itself, is what makes a long session go sluggish. Upstream
-        // defaults to 10 Hz; 25 halves the rate and still updates faster than the eye.
-        fuelSim.setLoggingFrequency(25.0);
+        // defaults to 10 Hz. 15 cuts the rate to under a third of 50.
+        fuelSim.setLoggingFrequency(15.0);
         spawnCentrePile();
         fuelSim.start();
 
