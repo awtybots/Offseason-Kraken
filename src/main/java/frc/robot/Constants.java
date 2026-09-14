@@ -149,6 +149,11 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
     public static final int kOperatorControllerPort = 1;
 
+    // Slow mode while RT is held. Shooting wants a settled chassis, and the turret's aim point
+    // moves with chassis speed, so backing both off makes the fire gate reachable while moving.
+    public static final double SHOOTING_TRANSLATION_SCALE = 0.35;
+    public static final double SHOOTING_ROTATION_SCALE = 0.5;
+
   }
 
   public static class IntakeConstants {

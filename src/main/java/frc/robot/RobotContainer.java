@@ -226,7 +226,10 @@ public class RobotContainer {
         () -> driverXbox.getLeftX() * -1)
         .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
         .deadband(OperatorConstants.DEADBAND)
-        .scaleTranslation(1.0)
+        .scaleTranslation(RobotBase.isSimulation()
+            ? SimRobot.SimConstants.SIM_TRANSLATION_SCALE : 1.0)
+        .scaleRotation(RobotBase.isSimulation()
+            ? SimRobot.SimConstants.SIM_ROTATION_SCALE : 1.0)
         .allianceRelativeControl(true);
 
     driveDirectAngle = driveAngularVelocity.copy()

@@ -57,6 +57,23 @@ public class SimRobot {
 
         public static final int FUEL_CAPACITY = 45;
 
+        // Hopper interior in ROBOT frame, taken from the model's own hopper walls. The glb is
+        // Y-up and AdvantageScope rotates it x:90 then z:180, so robotX = -glbX, robotY = glbZ,
+        // robotZ = glbY + 0.101. Side walls (right hopper / Part 9) land at Y = +/-0.38, the back
+        // wall at X = -0.09, the lid (small top hopper) at Z = 0.571, interior floor at Z = 0.054.
+        public static final double HOPPER_X_MIN = -0.09;
+        public static final double HOPPER_X_MAX = 0.31;
+        public static final double HOPPER_Y_HALF = 0.38;
+        public static final double HOPPER_Z_MIN = 0.054;
+        public static final double HOPPER_Z_MAX = 0.571;
+        public static final double FUEL_RADIUS_M = 0.075;
+
+        // Teleop feel in simulation only; the real robot keeps full stick authority. Translation
+        // was outrunning the field, and with it backed off the rotation axis gets a small boost
+        // so turning still feels quick relative to driving.
+        public static final double SIM_TRANSLATION_SCALE = 0.70;
+        public static final double SIM_ROTATION_SCALE = 1.10;
+
         /**
          * Only used by the single-pile helper. The default layout is FuelSim's full 408-fuel
          * field stock; every fuel is a drawn sphere, so lower this if rendering struggles.
@@ -233,7 +250,11 @@ public class SimRobot {
         fuelSim.setGroundFriction(SimConstants.GROUND_FRICTION_PER_SEC);
         fuelSim.useLinearDragWithMagnus(
                 ShooterConstants.LINEAR_DRAG_K, ShooterConstants.MAGNUS_LIFT_RATIO);
-        fuelSim.setLoggingFrequency(50.0);
+        // 408 fuel logged as Translation3d is ~9.6 KB a sample, so 50 Hz was pushing half a
+        // megabyte a second into a history AdvantageScope keeps in memory for scrubbing -
+        // that, not the reset itself, is what makes a long session go sluggish. Upstream
+        // defaults to 10 Hz; 25 halves the rate and still updates faster than the eye.
+        fuelSim.setLoggingFrequency(25.0);
         spawnCentrePile();
         fuelSim.start();
 
@@ -317,6 +338,7 @@ public class SimRobot {
         publishComponents();
 
         Logger.recordOutput("Sim/FuelStored", fuelStored);
+        Logger.recordOutput("Sim/HeldFuel", heldFuelPositions());
         Logger.recordOutput("Sim/FuelOnField", fuelSim.getFuelCount());
         Logger.recordOutput("Sim/BlueHubScore", FuelSim.Hub.BLUE_HUB.getScore());
         Logger.recordOutput("Sim/RedHubScore", FuelSim.Hub.RED_HUB.getScore());
@@ -331,6 +353,51 @@ public class SimRobot {
         Logger.recordOutput("Sim/HubShotsMissed", Math.max(0, hubShotsFired - scored));
         Logger.recordOutput("Sim/HubAccuracyPct",
                 hubShotsFired == 0 ? 0.0 : 100.0 * scored / hubShotsFired);
+    }
+
+    /**
+     * Where the carried fuel sits inside the hopper, in field coordinates.
+     *
+     * <p>Published as {@code Translation3d[]}, the same shape FuelSim uses for loose fuel, so the
+     * held balls can be dropped into the 3D field with the same game-piece setup and the hopper
+     * fills up as the robot intakes.
+     *
+     * <p>Columns are sized from the real hopper volume at one ball diameter, but the LAYER
+     * spacing compresses once the count outgrows the box. The alternative is balls stacked up
+     * through the lid, and a hopper that reads as visibly packed is the useful signal here.
+     */
+    public Translation3d[] heldFuelPositions() {
+        if (fuelStored <= 0) {
+            return new Translation3d[0];
+        }
+        double r = SimConstants.FUEL_RADIUS_M;
+        double xLo = SimConstants.HOPPER_X_MIN + r;
+        double xHi = SimConstants.HOPPER_X_MAX - r;
+        double yLo = -SimConstants.HOPPER_Y_HALF + r;
+        double yHi = SimConstants.HOPPER_Y_HALF - r;
+        double zLo = SimConstants.HOPPER_Z_MIN + r;
+        double zHi = SimConstants.HOPPER_Z_MAX - r;
+
+        int nx = Math.max(1, (int) Math.floor((xHi - xLo) / (2.0 * r)) + 1);
+        int ny = Math.max(1, (int) Math.floor((yHi - yLo) / (2.0 * r)) + 1);
+        int perLayer = nx * ny;
+        int layers = Math.max(1, (int) Math.ceil((double) fuelStored / perLayer));
+
+        Pose2d pose = drivebase.getPose();
+        Translation3d[] out = new Translation3d[fuelStored];
+        for (int i = 0; i < fuelStored; i++) {
+            int layer = i / perLayer;
+            int slot = i % perLayer;
+            int ix = slot % nx;
+            int iy = slot / nx;
+            double x = nx == 1 ? (xLo + xHi) / 2.0 : xLo + ix * (xHi - xLo) / (nx - 1);
+            double y = ny == 1 ? (yLo + yHi) / 2.0 : yLo + iy * (yHi - yLo) / (ny - 1);
+            double z = layers == 1 ? zLo : zLo + layer * (zHi - zLo) / (layers - 1);
+            Translation2d inField = new Translation2d(x, y).rotateBy(pose.getRotation());
+            out[i] = new Translation3d(
+                    pose.getX() + inField.getX(), pose.getY() + inField.getY(), z);
+        }
+        return out;
     }
 
     private void updateShots() {
