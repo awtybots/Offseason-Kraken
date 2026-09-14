@@ -1127,7 +1127,11 @@ public class SwerveSubsystem extends SubsystemBase {
         double leftMag = Math.hypot(leftX.getAsDouble(), leftY.getAsDouble());
         double rightMag = Math.abs(rightX.getAsDouble());
         if ((leftMag + rightMag) > Constants.OperatorConstants.DEADBAND) {
-            driveFieldOriented(fieldOrientedSpeeds.get());
+            ChassisSpeeds wanted = fieldOrientedSpeeds.get();
+            driveFieldOriented(new ChassisSpeeds(
+                wanted.vxMetersPerSecond * Constants.OperatorConstants.SHOOTING_TRANSLATION_SCALE,
+                wanted.vyMetersPerSecond * Constants.OperatorConstants.SHOOTING_TRANSLATION_SCALE,
+                wanted.omegaRadiansPerSecond * Constants.OperatorConstants.SHOOTING_ROTATION_SCALE));
             locked = false;
         } 
         else {
