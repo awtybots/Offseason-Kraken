@@ -1436,17 +1436,36 @@ public class SwerveSubsystem extends SubsystemBase {
     return DriverStation.getAlliance().orElse(Alliance.Red);
   }
 
+  private boolean inAllianceZone = true;
+  private boolean inNeutralZone = false;
+
+  /**
+   * Latched either side of the zone line, not a bare threshold.
+   *
+   * <p>This is what chooses the HUB or the FERRY target for the turret and hood, and the blue
+   * line sits inside the bump, so a robot crossing it swapped between two completely different
+   * bearings every loop. The line has to be cleared by ZONE_HYSTERESIS_M before the answer moves.
+   */
   public boolean isInAllianceZone() {
-    Alliance alliance = getAlliance();
     double x = getPose().getX();
+    double margin = Constants.DrivebaseConstants.ZONE_HYSTERESIS_M;
 
-    if (alliance == Alliance.Blue && x < Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M) {
-      return true;
-    } else if (alliance == Alliance.Red && x > Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M) {
-      return true;
+    if (getAlliance() == Alliance.Blue) {
+      double line = Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M;
+      if (x < line - margin) {
+        inAllianceZone = true;
+      } else if (x > line + margin) {
+        inAllianceZone = false;
+      }
+    } else {
+      double line = Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M;
+      if (x > line + margin) {
+        inAllianceZone = true;
+      } else if (x < line - margin) {
+        inAllianceZone = false;
+      }
     }
-
-    return false;
+    return inAllianceZone;
   }
 
   /**
@@ -1456,8 +1475,16 @@ public class SwerveSubsystem extends SubsystemBase {
    */
   public boolean isInNeutralZone() {
     double x = getPose().getX();
-    return x > Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M
-        && x < Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M;
+    double margin = Constants.DrivebaseConstants.ZONE_HYSTERESIS_M;
+    double blue = Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M;
+    double red = Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M;
+
+    if (x > blue + margin && x < red - margin) {
+      inNeutralZone = true;
+    } else if (x < blue - margin || x > red + margin) {
+      inNeutralZone = false;
+    }
+    return inNeutralZone;
   }
 
   /** True when the robot is deep in the opponent's alliance zone, where we never shoot. */

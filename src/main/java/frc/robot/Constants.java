@@ -111,6 +111,12 @@ public final class Constants {
     public static final double BLUE_ALLIANCE_ZONE_X_M = 4.0079;
     public static final double RED_ALLIANCE_ZONE_X_M = 12.5052;
 
+    // Hysteresis on the zone lines. These decide whether the turret aims at the HUB or the FERRY
+    // target, and the blue line (4.0079) falls inside the bump (x 3.96-5.18) - so a robot working
+    // over the bump straddles it and, on a bare threshold, swaps target every loop. Measured 19
+    // swaps in one crossing with only 5 cm of rock.
+    public static final double ZONE_HYSTERESIS_M = 0.25;
+
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
   }

@@ -410,15 +410,11 @@ public class RobotContainer {
   }
 
 
+  // Delegates so the log matches what the turret actually aimed at. This used to be a second,
+  // un-latched copy of the same threshold, which would have reported a target the turret was not
+  // using once the drivebase version gained hysteresis.
   private boolean isInAllianceZone() {
-    Alliance alliance = getAlliance();
-    double x = drivebase.getPose().getX();
-
-    if (alliance == Alliance.Blue && x < Constants.DrivebaseConstants.BLUE_ALLIANCE_ZONE_X_M)
-      return true;
-    else if (alliance == Alliance.Red && x > Constants.DrivebaseConstants.RED_ALLIANCE_ZONE_X_M)
-      return true;
-    return false;
+    return drivebase.isInAllianceZone();
   }
 
   @SuppressWarnings("unused")
