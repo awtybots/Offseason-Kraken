@@ -179,8 +179,8 @@ public final class Constants {
     public static final int PUSHOUT_ID = 19; // set CAN ID
 
     // Positions in rotations (tune these to match your old encoder values)
-    public static final double PUSHOUT_EXTENDED_POS = 8.0;
-    public static final double PUSHOUT_RETRACTED_POS = 5.0;
+    public static final double PUSHOUT_EXTENDED_POS = 17.0;
+    public static final double PUSHOUT_RETRACTED_POS = 8.0;
     public static final double FULLY_RETRACTED_POS = 0.0;
 
 

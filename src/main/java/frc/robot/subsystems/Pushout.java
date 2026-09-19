@@ -43,7 +43,7 @@ public class Pushout extends SubsystemBase {
     public Pushout() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         config.CurrentLimits.StatorCurrentLimit = 120.0;
         config.CurrentLimits.SupplyCurrentLimit = 40.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
