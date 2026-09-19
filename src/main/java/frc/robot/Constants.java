@@ -461,7 +461,7 @@ public final class Constants {
     public static final double v = 0.0; // inert in kPosition
     public static final double a = 0.0; // inert in kPosition
 
-    public static final double MAX_OUTPUT = 0.5; // limit speed for safety while tuning
+    public static final double MAX_OUTPUT = 1; // limit speed for safety while tuning
 
     public static final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryHoodTable = new InterpolatingDoubleTreeMap();
