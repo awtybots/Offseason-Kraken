@@ -431,12 +431,9 @@ public final class Constants {
     public static final double HOOD_MIN_DEGREES = 21.0; // down pos (starting pos)
     public static final double HOOD_MAX_DEGREES = 47.0; // up position
 
-    // 60:1 motor -> hood. At the old 5:1 the NEO's 42-count encoder gave only 0.58
-    // counts per hood degree, so ANGLE_TOLERANCE_DEGREES = 0.5 was finer than the
-    // sensor could resolve and isAtAngle() was effectively noise. At 60:1 it is
-    // 7.0 counts/degree, so half a degree is a real measurement.
-    public static final double GEAR_RATIO = 60.0;
-    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
+    public static final double GEAR_RATIO = 20.0;
+    public static final double ANGLE_TOLERANCE_DEGREES = 1.0;
+    public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.5;
 
     // The TRENCH sits at the HUB's x, so these double as the trench x band.
     public static final double TRENCH_X_BLUE = 4.611; // blue side trench x coordinate
@@ -453,9 +450,6 @@ public final class Constants {
     public static final double TRENCH_Y_LEFT_MIN = 6.777; // opening on the y=8.043 guardrail
 
     // Same units as the turret: error in motor rotations, output in duty cycle.
-    // p = 0.15 -> 2.50% duty/deg, saturating MAX_OUTPUT at 20 deg, against 26 deg of total
-    // travel. A NEO 550 at 60:1 is ~1100 deg/s unloaded, so expect to fight overshoot
-    // rather than sluggishness.
     public static final double p = 0.15;
     public static final double i = 0.0;
     public static final double d = 0.0; // if it overshoots try 0.0005; ~0.001 is the ceiling
