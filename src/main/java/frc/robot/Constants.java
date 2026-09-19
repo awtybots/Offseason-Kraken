@@ -385,15 +385,15 @@ public final class Constants {
 
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
     public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions per one full turret revolution
-    public static final double ABSOLUTE_ENCODER_OFFSET = 0.125805;
+    public static final double ABSOLUTE_ENCODER_OFFSET = 0.074053;
     public static final boolean ABSOLUTE_ENCODER_INVERTED = true; // flip if the encoder counts down when the turret
                                                                    // goes counterclockwise
 
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
-
-    public static final double MIN_CONTINUOUS_DEGREES = -170.0; // 435 deg CW from forward
-    public static final double MAX_CONTINUOUS_DEGREES = 370.0;  // 180 deg CCW from forward
+    
+    public static final double MIN_CONTINUOUS_DEGREES = -330.0; // 435 deg CW from forward
+    public static final double MAX_CONTINUOUS_DEGREES = 150.0;  // 180 deg CCW from forward
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
