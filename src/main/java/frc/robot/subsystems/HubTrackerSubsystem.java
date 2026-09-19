@@ -79,7 +79,7 @@ public class HubTrackerSubsystem extends SubsystemBase
 
         if (DriverStation.isAutonomousEnabled()) // Always enabled in auton
         {
-            int seconds = (20 - (int)matchTime);
+            int seconds = ((int)matchTime);
             SmartDashboard.putNumber("TimeLeft", seconds);
             vibrate(seconds / 20.0);
             return true;

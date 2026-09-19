@@ -333,7 +333,7 @@ public class RobotContainer {
     operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPMCommand(RPSToRPM(30)));
     // LB - hood to 33.2 deg. Check it against a protractor, and measure the ball exit
     //      height here and at HOOD_MIN: SHOOTER_HEIGHT_M assumes it does not move.
-    operatorXbox.leftBumper().whileTrue(m_hood.justmoveHooCommandd());
+    operatorXbox.leftBumper().whileTrue(m_hood.setAngleCommand(35));
     // RB - turret to 45 deg. A real arc, so Turret/FrameDisagreementDeg should stay near
     //      zero the whole way if GEAR_RATIO = 50 is right.
     operatorXbox.rightBumper().whileTrue(m_turret.goToAngleCommand(45.0));
