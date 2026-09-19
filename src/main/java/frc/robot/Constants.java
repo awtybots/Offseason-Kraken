@@ -422,7 +422,7 @@ public final class Constants {
 
     public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
 
-    public static final double MAX_OUTPUT = 0.25; // speed limit to keep it safe for tuning use 0.88 after testing
+    public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
   }
 
   public static final class HoodConstants {
