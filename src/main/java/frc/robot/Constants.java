@@ -116,9 +116,9 @@ public final class Constants {
   }
 
   public static class LimelightConstants {
-    public static final String LIMELIGHT_RIGHT = "limelight-right";  //10.58.29.15
-    public static final String LIMELIGHT_BACK = "limelight-back"; //10.58.29.16
-    public static final String LIMELIGHT_LEFT = "limelight-left"; //10.58.29.17
+    public static final String LIMELIGHT_RIGHT = "limelight-right";  //10.99.95.15
+    public static final String LIMELIGHT_BACK = "limelight-back"; //10.99.95.16
+    public static final String LIMELIGHT_LEFT = "limelight-left"; //10.99.95.17
 
     // Was 3 m for both, but the hub shot table spans 2-6 m, so every estimate was discarded
     // exactly when pose matters most. Single tag stays tighter; it has no geometry to check.
