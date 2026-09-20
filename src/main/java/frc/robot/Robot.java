@@ -101,7 +101,7 @@ public class Robot extends LoggedRobot {
             }
         }
 
-        // Logger.start();
+        Logger.start();
     }
 
     public static Robot getInstance() {
