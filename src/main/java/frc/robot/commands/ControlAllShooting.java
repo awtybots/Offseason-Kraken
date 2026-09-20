@@ -69,7 +69,7 @@ public class ControlAllShooting extends Command {
     private boolean isReadyToFire() {
         return inShootingZone
                 && isAtSpeed
-                && m_hood.isAtAngle()
+                // && m_hood.isAtAngle()
                 && turretAimErrorDegrees <= TurretConstants.ANGLE_TOLERANCE_DEGREES
                 && m_turret.isTargetReachable();
     }
@@ -174,6 +174,7 @@ public class ControlAllShooting extends Command {
         m_kicker.stopKicker();
         // m_intake.stopIntake();
         m_rollers.stopRollers();
+        m_shooter.stopShooting();
         isFiring = false;
         isAtSpeed = false;
     }

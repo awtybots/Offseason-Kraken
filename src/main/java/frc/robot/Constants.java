@@ -206,7 +206,7 @@ public final class Constants {
     public static final double PUSHOUT_KNOCKED_BACK = 1.5;        // rot pushed in before we call it a hit
     public static final double PUSHOUT_REEXTEND_DELAY = 1.0;      // s to wait before driving back out
     public static final double PUSHOUT_EXTEND_TIMEOUT = 2.0;
-    public static final double PUSHOUT_CRUISE_VELOCITY = 20.0; // rot/s
+    public static final double PUSHOUT_CRUISE_VELOCITY = 80.0; // rot/s
     public static final double PUSHOUT_ACCELERATION = 80.0;    // rot/s^2
     public static final double PUSHOUT_HOLD_VOLTS = 1.5;
   }
@@ -450,7 +450,7 @@ public final class Constants {
     public static final double TRENCH_Y_LEFT_MIN = 6.777; // opening on the y=8.043 guardrail
 
     // Same units as the turret: error in motor rotations, output in duty cycle.
-    public static final double p = 0.15;
+    public static final double p = 0.35;
     public static final double i = 0.0;
     public static final double d = 0.0; // if it overshoots try 0.0005; ~0.001 is the ceiling
 
