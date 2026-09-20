@@ -68,7 +68,7 @@ public class ControlAllShooting extends Command {
 
     private boolean isReadyToFire() {
         return inShootingZone
-                && isAtSpeed
+                // && isAtSpeed
                 // && m_hood.isAtAngle()
                 && turretAimErrorDegrees <= TurretConstants.ANGLE_TOLERANCE_DEGREES
                 && m_turret.isTargetReachable();

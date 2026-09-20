@@ -241,7 +241,7 @@ public final class Constants {
                                         // 0 is the normal starting point for a flywheel.
 
     public static final double s = 0.0;
-    public static final double v = USE_FOC ? 0.11 : 0.11; // 12 V / 96.7 rps FOC, / 100 rps not
+    public static final double v = USE_FOC ? 0.115 : 0.115; // 12 V / 96.7 rps FOC, / 100 rps not
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----
