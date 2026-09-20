@@ -420,7 +420,7 @@ public final class Constants {
     public static final double v = 0.004; // inert in kPosition
     public static final double a = 0.0003; // inert in kPosition
 
-    public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
+    public static final double ANGLE_TOLERANCE_DEGREES = 10.0;
 
     public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
   }

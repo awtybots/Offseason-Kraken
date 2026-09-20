@@ -78,6 +78,7 @@ public class ControlAllShooting extends Command {
     public void initialize() {
         isFiring = false;
         isAtSpeed = false;
+        
         turretAimErrorDegrees = 180.0;
     }
 
