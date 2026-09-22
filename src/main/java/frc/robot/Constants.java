@@ -399,6 +399,7 @@ public final class Constants {
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
     // pushing into it forever.
     public static final double CABLE_LIMIT_MARGIN_DEGREES = 7.0;
+    public static final double BOOT_RESYNC_DELAY_SECONDS = 1.0;
 
     // Position loop on the SPARK: error is in MOTOR ROTATIONS (no positionConversionFactor
     // on the primary encoder) and the output is duty cycle, so

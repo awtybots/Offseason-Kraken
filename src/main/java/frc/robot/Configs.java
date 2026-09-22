@@ -84,6 +84,8 @@ public final class Configs
                         TurretMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12)
                         .inverted(true);
 
+                        TurretMotorConfig.signals.absoluteEncoderPositionAlwaysOn(true);
+
                         // REV Through Bore on the data port. Reported in encoder shaft degrees,
                         // zero centered so the range is (-180, 180] instead of [0, 360).
                         TurretMotorConfig.absoluteEncoder
