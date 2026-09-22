@@ -306,15 +306,15 @@ public final class Constants {
     public final static InterpolatingDoubleTreeMap ferryTOF = new InterpolatingDoubleTreeMap();
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Seconds.of(0.674)),
-          Pair.of(Meters.of(2.0), Seconds.of(0.762)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.919)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.06)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.19)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.312)),
-          Pair.of(Meters.of(7.0), Seconds.of(1.429)),
-          Pair.of(Meters.of(8.0), Seconds.of(1.545)),
-          Pair.of(Meters.of(9.0), Seconds.of(1.660)),
+          Pair.of(Meters.of(1.5), Seconds.of(0.678)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.766)),
+          Pair.of(Meters.of(3.0), Seconds.of(0.924)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.067)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.198)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.322)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.439)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.553)),
+          Pair.of(Meters.of(9.0), Seconds.of(1.662)),
           Pair.of(Meters.of(10.0), Seconds.of(1.771)),
           Pair.of(Meters.of(11.0), Seconds.of(1.88)))) {
         ferryTOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
@@ -359,15 +359,15 @@ public final class Constants {
       // The far end will droop under load. Longest pass the neutral zone allows is
       // ~10.6 m, so treat anything past ~9 m as best-effort.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), RPM.of(1616)),
-          Pair.of(Meters.of(2.0), RPM.of(1953)),
-          Pair.of(Meters.of(3.0), RPM.of(2528)),
-          Pair.of(Meters.of(4.0), RPM.of(3025)),
-          Pair.of(Meters.of(5.0), RPM.of(3475)),
-          Pair.of(Meters.of(6.0), RPM.of(3892)),
-          Pair.of(Meters.of(7.0), RPM.of(4284)),
-          Pair.of(Meters.of(8.0), RPM.of(4663)),
-          Pair.of(Meters.of(9.0), RPM.of(5031)),
+          Pair.of(Meters.of(1.5), RPM.of(1619)),
+          Pair.of(Meters.of(2.0), RPM.of(1957)),
+          Pair.of(Meters.of(3.0), RPM.of(2533)),
+          Pair.of(Meters.of(4.0), RPM.of(3031)),
+          Pair.of(Meters.of(5.0), RPM.of(3482)),
+          Pair.of(Meters.of(6.0), RPM.of(3900)),
+          Pair.of(Meters.of(7.0), RPM.of(4294)),
+          Pair.of(Meters.of(8.0), RPM.of(4670)),
+          Pair.of(Meters.of(9.0), RPM.of(5032)),
           Pair.of(Meters.of(10.0), RPM.of(5387)),
           Pair.of(Meters.of(11.0), RPM.of(5734)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
@@ -429,10 +429,10 @@ public final class Constants {
   public static final class HoodConstants {
     public static final int HOOD_ID = 18; // set ts
 
-    public static final double HOOD_MIN_DEGREES = 21.0; // down pos (starting pos)
-    public static final double HOOD_MAX_DEGREES = 47.0; // up position
+    public static final double HOOD_MIN_DEGREES = 20.6; // down pos (starting pos)
+    public static final double HOOD_MAX_DEGREES = 46.6; // up position
 
-    public static final double GEAR_RATIO = 20.0;
+    public static final double GEAR_RATIO = 240.0;
     public static final double ANGLE_TOLERANCE_DEGREES = 1.0;
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.5;
 
@@ -491,14 +491,14 @@ public final class Constants {
       // reach, so the hood sits pinned at its 47 deg maximum below about 7 m. If ferry
       // shots come out too lofted, that is the hood running out of travel, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Degrees.of(47.0)),
-          Pair.of(Meters.of(2.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(3.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(4.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(5.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(6.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(7.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(8.0), Degrees.of(46.9)),
+          Pair.of(Meters.of(1.5), Degrees.of(46.6)),
+          Pair.of(Meters.of(2.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(3.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(4.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(5.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(6.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(7.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(8.0), Degrees.of(46.6)),
           Pair.of(Meters.of(9.0), Degrees.of(46.6)),
           Pair.of(Meters.of(10.0), Degrees.of(46.5)),
           Pair.of(Meters.of(11.0), Degrees.of(46.3)))) {
