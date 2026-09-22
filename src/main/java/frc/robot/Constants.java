@@ -335,8 +335,7 @@ public final class Constants {
       // drag plus Magnus lift. Ball speed from the MECHANISM block above.
       //
       // Nearly all of the rise over the old 1:1 table is the pulley change, not aero:
-      // Magnus is worth under 1% here. 4604 RPM at 6 m is 77% of Kraken x60 free
-      // speed, so expect the far end to droop under load - if long shots land low
+      // Magnus is worth under 1% here. Expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
           Pair.of(Meters.of(2.0), RPM.of(3065)),
@@ -392,8 +391,8 @@ public final class Constants {
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
     
-    public static final double MIN_CONTINUOUS_DEGREES = -330.0; // 435 deg CW from forward
-    public static final double MAX_CONTINUOUS_DEGREES = 150.0;  // 180 deg CCW from forward
+    public static final double MIN_CONTINUOUS_DEGREES = -330.0;
+    public static final double MAX_CONTINUOUS_DEGREES = 150.0;
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
@@ -433,8 +432,8 @@ public final class Constants {
     public static final double HOOD_MAX_DEGREES = 46.6; // up position
 
     public static final double GEAR_RATIO = 240.0;
-    public static final double ANGLE_TOLERANCE_DEGREES = 1.0;
-    public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.5;
+    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
+    public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.2;
 
     // The TRENCH sits at the HUB's x, so these double as the trench x band.
     public static final double TRENCH_X_BLUE = 4.611; // blue side trench x coordinate
@@ -470,8 +469,7 @@ public final class Constants {
     static {
       // aim at hub LUT
       // Hood angle = 90 - ball_exit_angle. Exit angle chosen as the min-launch-speed
-      // angle: theta_opt = 45 + 0.5 * atan(dz/d), with dz = 1.296 m (72" hub - 21"
-      // shooter).
+      // angle: theta_opt = 45 + 0.5 * atan(dz/d).
       for (var entry : List.of(
           Pair.of(Meters.of(2.0), Degrees.of(28.4)),
           Pair.of(Meters.of(2.5), Degrees.of(31.2)),
@@ -488,7 +486,7 @@ public final class Constants {
       // aim at ferry LUT. Min-launch-speed angle for a floor target, clamped to the
       // hood's travel: exit = 90 - hood, so the hood can only produce 43-69 deg of exit
       // angle. Min-energy ferry wants 35-44 deg, which is FLATTER than the mechanism can
-      // reach, so the hood sits pinned at its 47 deg maximum below about 7 m. If ferry
+      // reach. If ferry
       // shots come out too lofted, that is the hood running out of travel, not the table.
       for (var entry : List.of(
           Pair.of(Meters.of(1.5), Degrees.of(46.6)),
