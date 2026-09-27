@@ -67,7 +67,7 @@ public class Kicker extends SubsystemBase {
     }
 
     public void ConveyorToShooter() {
-        if(getSupplyCurrent(VerticalRollerMotor) > KickerConstants.JAMCURRENT)
+        if(getStatorCurrent(VerticalRollerMotor) > KickerConstants.JAMCURRENT)
         {
             ReverseKicker();
         }
@@ -78,7 +78,7 @@ public class Kicker extends SubsystemBase {
     }
 
     public void ConveyorToShooter(double kickerSpeed) {
-        if(getSupplyCurrent(VerticalRollerMotor) > KickerConstants.JAMCURRENT)
+        if(getStatorCurrent(VerticalRollerMotor) > KickerConstants.JAMCURRENT)
         {
             ReverseKicker();
         }

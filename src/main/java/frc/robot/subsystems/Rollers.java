@@ -58,7 +58,7 @@ public class Rollers extends SubsystemBase {
 
     public void RunRollers()
     {
-        if(getSupplyCurrent(RollersMotor) > RollersConstants.JAMCURRENT)
+        if(getStatorCurrent(RollersMotor) > RollersConstants.JAMCURRENT)
         {
             RollersToConveyor();
         }
