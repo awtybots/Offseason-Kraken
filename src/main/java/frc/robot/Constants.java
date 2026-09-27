@@ -513,6 +513,7 @@ public final class Constants {
     public static final double KICKER_SPEED = 1.0;
 
     public static final double MIN_SPEED = 0.5;
+    public static final double JAMCURRENT = 100; // Current in Amps that determines if there is a jam
 
     public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
     public static final double VERT_ROLLER_SPEED = 0.85;
@@ -566,6 +567,8 @@ public final class Constants {
 
   public static class RollersConstants {
     public static final int ROLLERS_ID = 10;
+
+    public static final double JAMCURRENT = 100;
 
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;

@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants;
+import frc.robot.Constants.KickerConstants;
 import frc.robot.Constants.RollersConstants;
 
 import static frc.robot.utils.utils.*;
@@ -24,7 +25,7 @@ public class Rollers extends SubsystemBase {
    
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
-    private double jamCurrent = 100; // Current in Amps that determines if there is a jam
+    
 
     public Rollers() {
         TalonFXConfiguration RollersConfig = new TalonFXConfiguration();
@@ -57,7 +58,7 @@ public class Rollers extends SubsystemBase {
 
     public void RunRollers()
     {
-        if(getSupplyCurrent(RollersMotor) > jamCurrent)
+        if(getSupplyCurrent(RollersMotor) > RollersConstants.JAMCURRENT)
         {
             RollersToConveyor();
         }

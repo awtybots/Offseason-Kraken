@@ -34,8 +34,6 @@ public class Kicker extends SubsystemBase {
 
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
-    private double jamCurrent = 100; // Current in Amps that determines if there is a jam
-
     public Kicker() {
         TalonFXConfiguration KickerConfig = new TalonFXConfiguration();
         KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -69,7 +67,7 @@ public class Kicker extends SubsystemBase {
     }
 
     public void ConveyorToShooter() {
-        if(getSupplyCurrent(VerticalRollerMotor) > jamCurrent)
+        if(getSupplyCurrent(VerticalRollerMotor) > KickerConstants.JAMCURRENT)
         {
             ReverseKicker();
         }
@@ -80,7 +78,7 @@ public class Kicker extends SubsystemBase {
     }
 
     public void ConveyorToShooter(double kickerSpeed) {
-        if(getSupplyCurrent(VerticalRollerMotor) > jamCurrent)
+        if(getSupplyCurrent(VerticalRollerMotor) > KickerConstants.JAMCURRENT)
         {
             ReverseKicker();
         }
