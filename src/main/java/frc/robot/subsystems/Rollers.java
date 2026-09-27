@@ -24,6 +24,8 @@ public class Rollers extends SubsystemBase {
    
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
+    private double jamCurrent = 100; // Current in Amps that determines if there is a jam
+
     public Rollers() {
         TalonFXConfiguration RollersConfig = new TalonFXConfiguration();
         RollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -53,7 +55,17 @@ public class Rollers extends SubsystemBase {
         RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
-    
+    public void RunRollers()
+    {
+        if(getSupplyCurrent(RollersMotor) > jamCurrent)
+        {
+            RollersToConveyor();
+        }
+        else
+        {
+            ReverseRollers();
+        }
+    }
 
     public void stopRollers() {
         // RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));

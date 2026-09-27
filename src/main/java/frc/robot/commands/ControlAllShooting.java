@@ -133,9 +133,9 @@ public class ControlAllShooting extends Command {
         if (isReadyToFire()) {
             if (!m_turret.isAtCableLimit()) {
                 isFiring = true;
-                m_kicker.ConveyorToShooter();
+                m_kicker.ConveyorToShooter(recordedTargetRPM*.6);
                 m_conveyor.HopperToShooter();
-                m_rollers.RollersToConveyor();
+                m_rollers.RunRollers();
             } else {
                 isFiring = false;
                 m_kicker.ClearBall();

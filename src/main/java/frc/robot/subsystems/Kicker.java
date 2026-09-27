@@ -34,6 +34,8 @@ public class Kicker extends SubsystemBase {
 
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
+    private double jamCurrent = 100; // Current in Amps that determines if there is a jam
+
     public Kicker() {
         TalonFXConfiguration KickerConfig = new TalonFXConfiguration();
         KickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -54,11 +56,40 @@ public class Kicker extends SubsystemBase {
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED).withEnableFOC(Constants.USE_FOC));
     }
 
-    public void ConveyorToShooter() {
+    public void RunKicker() {
         VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED).withEnableFOC(Constants.USE_FOC));
     }
+
+    public void RunKicker(double kickerSpeed) {
+        VerticalRollerMotor.set(KickerConstants.VERT_ROLLER_SPEED);
+        // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
+        KickerMotor.setControl(dutyCycleRequest.withOutput(Math.max(KickerConstants.MIN_SPEED, RPMToRPS(kickerSpeed))).withEnableFOC(Constants.USE_FOC));
+    }
+
+    public void ConveyorToShooter() {
+        if(getSupplyCurrent(VerticalRollerMotor) > jamCurrent)
+        {
+            ReverseKicker();
+        }
+        else
+        {
+            RunKicker();
+        }
+    }
+
+    public void ConveyorToShooter(double kickerSpeed) {
+        if(getSupplyCurrent(VerticalRollerMotor) > jamCurrent)
+        {
+            ReverseKicker();
+        }
+        else
+        {
+            RunKicker(kickerSpeed);
+        }
+    }
+    
 
     public void ClearBall() {
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));

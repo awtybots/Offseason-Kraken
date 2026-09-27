@@ -512,6 +512,8 @@ public final class Constants {
     public static final double KICKER_REVERSE_SPEED = -0.85; // adjust speeds
     public static final double KICKER_SPEED = 1.0;
 
+    public static final double MIN_SPEED = 0.5;
+
     public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
     public static final double VERT_ROLLER_SPEED = 0.85;
     // PID Constants
@@ -542,8 +544,8 @@ public final class Constants {
     public static final int CONVEYOR_TOP_ID = 12;
     public static final int CONVEYOR_BOTTOM_ID = 13;
 
-    public static final double CONVEYOR_REVERSE_SPEED = -0.85;
-    public static final double CONVEYOR_SPEED = 1.0;
+    public static final double CONVEYOR_REVERSE_SPEED = -0.95;
+    public static final double CONVEYOR_SPEED = 0.95;
 
     public static final double CONVEYOR_RPS = 75;
     public static final double CONVEYOR_REVERSE_RPS = -75;
@@ -568,8 +570,8 @@ public final class Constants {
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;
 
-    public static final double ROLLERS_SPEED = 1;
-    public static final double REVERSE_ROLLERS_SPEED = -1;
+    public static final double ROLLERS_SPEED = 0.75;
+    public static final double REVERSE_ROLLERS_SPEED = -0.75;
 
     // PID Constants
     public static final double p = 0.0002;
