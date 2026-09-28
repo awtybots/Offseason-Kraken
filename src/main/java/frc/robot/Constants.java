@@ -577,7 +577,7 @@ public final class Constants {
   public static class RollersConstants {
     public static final int ROLLERS_ID = 10;
 
-    public static final double JAMCURRENT = 80;
+    public static final double JAMCURRENT = 40;
     public static final double JAM_IGNORE_SECONDS = 0.25;
     public static final double JAM_DEBOUNCE_SECONDS = 0.25;
     public static final double JAM_REVERSE_SECONDS = 0.3;
