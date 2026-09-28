@@ -214,7 +214,7 @@ public final class Constants {
 
     public static final double SHOOTER_SPEED = 1000;
     public static final double SHOOTER_PASSING_SPEED = 1200;
-    public static final double ERROR_MARGIN = 100.0 / 60.0; // 100 RPM, expressed in RPS
+    public static final double ERROR_MARGIN = 300.0 / 60.0; // 100 RPM, expressed in RPS
     public static final double STOP = 0;
     public static final double IDLE = 0.1;
 
