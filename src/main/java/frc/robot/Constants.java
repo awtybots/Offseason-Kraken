@@ -34,10 +34,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
 
-  // Phoenix Pro licence. Flip to false and everything falls back to trapezoidal commutation:
-  // every withEnableFOC in the project reads this, and ShooterConstants.v switches with it
-  // because FOC free speed is 5800 RPM against 6000 without.
-  public static final boolean USE_FOC = true;
+  public static final boolean USE_FOC = false;
 
 
 
@@ -158,14 +155,14 @@ public final class Constants {
     public static final int INTAKE_ID = 9; // unknown
 
     // PID Constants
-    public static final double p = 0.006155;
+    public static final double p = 0.0002;
     public static final double i = 0.000;
-    public static final double d = 0.01;
+    public static final double d = 0.0;
 
     // Feed-Forward Constants
-    public static final double s = 1.25;
-    public static final double v = 0.5;
-    public static final double a = 0.75;
+    public static final double s = 0.1;
+    public static final double v = 12.0 / 6784.0;
+    public static final double a = 0.0;
 
     public static final double INTAKE_RPM = 2000;
     public static final double OUTTAKE_RPM = -2000;
@@ -241,7 +238,7 @@ public final class Constants {
                                         // 0 is the normal starting point for a flywheel.
 
     public static final double s = 0.0;
-    public static final double v = USE_FOC ? 0.115 : 0.115; // 12 V / 96.7 rps FOC, / 100 rps not
+    public static final double v = 0.115;
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----
@@ -306,15 +303,15 @@ public final class Constants {
     public final static InterpolatingDoubleTreeMap ferryTOF = new InterpolatingDoubleTreeMap();
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Seconds.of(0.674)),
-          Pair.of(Meters.of(2.0), Seconds.of(0.762)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.919)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.06)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.19)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.312)),
-          Pair.of(Meters.of(7.0), Seconds.of(1.429)),
-          Pair.of(Meters.of(8.0), Seconds.of(1.545)),
-          Pair.of(Meters.of(9.0), Seconds.of(1.660)),
+          Pair.of(Meters.of(1.5), Seconds.of(0.678)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.766)),
+          Pair.of(Meters.of(3.0), Seconds.of(0.924)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.067)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.198)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.322)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.439)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.553)),
+          Pair.of(Meters.of(9.0), Seconds.of(1.662)),
           Pair.of(Meters.of(10.0), Seconds.of(1.771)),
           Pair.of(Meters.of(11.0), Seconds.of(1.88)))) {
         ferryTOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
@@ -335,8 +332,7 @@ public final class Constants {
       // drag plus Magnus lift. Ball speed from the MECHANISM block above.
       //
       // Nearly all of the rise over the old 1:1 table is the pulley change, not aero:
-      // Magnus is worth under 1% here. 4604 RPM at 6 m is 77% of Kraken x60 free
-      // speed, so expect the far end to droop under load - if long shots land low
+      // Magnus is worth under 1% here. Expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
           Pair.of(Meters.of(2.0), RPM.of(3065)),
@@ -359,15 +355,15 @@ public final class Constants {
       // The far end will droop under load. Longest pass the neutral zone allows is
       // ~10.6 m, so treat anything past ~9 m as best-effort.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), RPM.of(1616)),
-          Pair.of(Meters.of(2.0), RPM.of(1953)),
-          Pair.of(Meters.of(3.0), RPM.of(2528)),
-          Pair.of(Meters.of(4.0), RPM.of(3025)),
-          Pair.of(Meters.of(5.0), RPM.of(3475)),
-          Pair.of(Meters.of(6.0), RPM.of(3892)),
-          Pair.of(Meters.of(7.0), RPM.of(4284)),
-          Pair.of(Meters.of(8.0), RPM.of(4663)),
-          Pair.of(Meters.of(9.0), RPM.of(5031)),
+          Pair.of(Meters.of(1.5), RPM.of(1619)),
+          Pair.of(Meters.of(2.0), RPM.of(1957)),
+          Pair.of(Meters.of(3.0), RPM.of(2533)),
+          Pair.of(Meters.of(4.0), RPM.of(3031)),
+          Pair.of(Meters.of(5.0), RPM.of(3482)),
+          Pair.of(Meters.of(6.0), RPM.of(3900)),
+          Pair.of(Meters.of(7.0), RPM.of(4294)),
+          Pair.of(Meters.of(8.0), RPM.of(4670)),
+          Pair.of(Meters.of(9.0), RPM.of(5032)),
           Pair.of(Meters.of(10.0), RPM.of(5387)),
           Pair.of(Meters.of(11.0), RPM.of(5734)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
@@ -392,13 +388,14 @@ public final class Constants {
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
     
-    public static final double MIN_CONTINUOUS_DEGREES = -330.0; // 435 deg CW from forward
-    public static final double MAX_CONTINUOUS_DEGREES = 150.0;  // 180 deg CCW from forward
+    public static final double MIN_CONTINUOUS_DEGREES = -330.0;
+    public static final double MAX_CONTINUOUS_DEGREES = 150.0;
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
     // pushing into it forever.
     public static final double CABLE_LIMIT_MARGIN_DEGREES = 7.0;
+    public static final double BOOT_RESYNC_DELAY_SECONDS = 1.0;
 
     // Position loop on the SPARK: error is in MOTOR ROTATIONS (no positionConversionFactor
     // on the primary encoder) and the output is duty cycle, so
@@ -428,12 +425,12 @@ public final class Constants {
   public static final class HoodConstants {
     public static final int HOOD_ID = 18; // set ts
 
-    public static final double HOOD_MIN_DEGREES = 21.0; // down pos (starting pos)
-    public static final double HOOD_MAX_DEGREES = 47.0; // up position
+    public static final double HOOD_MIN_DEGREES = 20.6; // down pos (starting pos)
+    public static final double HOOD_MAX_DEGREES = 46.6; // up position
 
-    public static final double GEAR_RATIO = 20.0;
-    public static final double ANGLE_TOLERANCE_DEGREES = 1.0;
-    public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.5;
+    public static final double GEAR_RATIO = 240.0;
+    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
+    public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.2;
 
     // The TRENCH sits at the HUB's x, so these double as the trench x band.
     public static final double TRENCH_X_BLUE = 4.611; // blue side trench x coordinate
@@ -469,8 +466,7 @@ public final class Constants {
     static {
       // aim at hub LUT
       // Hood angle = 90 - ball_exit_angle. Exit angle chosen as the min-launch-speed
-      // angle: theta_opt = 45 + 0.5 * atan(dz/d), with dz = 1.296 m (72" hub - 21"
-      // shooter).
+      // angle: theta_opt = 45 + 0.5 * atan(dz/d).
       for (var entry : List.of(
           Pair.of(Meters.of(2.0), Degrees.of(28.4)),
           Pair.of(Meters.of(2.5), Degrees.of(31.2)),
@@ -487,17 +483,17 @@ public final class Constants {
       // aim at ferry LUT. Min-launch-speed angle for a floor target, clamped to the
       // hood's travel: exit = 90 - hood, so the hood can only produce 43-69 deg of exit
       // angle. Min-energy ferry wants 35-44 deg, which is FLATTER than the mechanism can
-      // reach, so the hood sits pinned at its 47 deg maximum below about 7 m. If ferry
+      // reach. If ferry
       // shots come out too lofted, that is the hood running out of travel, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Degrees.of(47.0)),
-          Pair.of(Meters.of(2.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(3.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(4.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(5.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(6.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(7.0), Degrees.of(47.0)),
-          Pair.of(Meters.of(8.0), Degrees.of(46.9)),
+          Pair.of(Meters.of(1.5), Degrees.of(46.6)),
+          Pair.of(Meters.of(2.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(3.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(4.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(5.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(6.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(7.0), Degrees.of(46.6)),
+          Pair.of(Meters.of(8.0), Degrees.of(46.6)),
           Pair.of(Meters.of(9.0), Degrees.of(46.6)),
           Pair.of(Meters.of(10.0), Degrees.of(46.5)),
           Pair.of(Meters.of(11.0), Degrees.of(46.3)))) {
@@ -513,17 +509,29 @@ public final class Constants {
     public static final double KICKER_REVERSE_SPEED = -0.85; // adjust speeds
     public static final double KICKER_SPEED = 1.0;
 
+    public static final double MIN_SPEED = 0.5;
+    public static final double JAMCURRENT = 30; // Current in Amps that determines if there is a jam
+    public static final double JAM_IGNORE_SECONDS = 0.6;
+    public static final double JAM_DEBOUNCE_SECONDS = 0.1;
+    public static final double JAM_REVERSE_SECONDS = 0.3;
+
     public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
     public static final double VERT_ROLLER_SPEED = 0.85;
+    public static final double VERT_ROLLER_RPM = 3600;
+
+    public static final double FEEDER_WHEEL_DIAMETER_M = Units.inchesToMeters(2.0);
+    public static final double FEEDER_GEAR_RATIO = 3.0;
+    public static final double FEEDER_SHOOTER_SURFACE_RATIO = 0.6;
+    public static final double FEEDER_MIN_SURFACE_MPS = 5.0;
     // PID Constants
-    public static final double p = 0.000236;
+    public static final double p = 0.1;
     public static final double i = 0.000;
     public static final double d = 0.000;
 
     // Feed-Forward Constants
     public static final double s = 0.100;
-    public static final double v = 0.004;
-    public static final double a = 0.0003;
+    public static final double v = 0.12;
+    public static final double a = 0.0;
 
     // PID Constants
     public static final double VRp = 0.000236;
@@ -532,7 +540,7 @@ public final class Constants {
 
     // Feed-Forward Constants
     public static final double VRs = 0.100;
-    public static final double VRv = 0.004;
+    public static final double VRv = 12.0 / 5676.0;
     public static final double VRa = 0.0003;
 
     public static final double STOP = 0;
@@ -543,21 +551,24 @@ public final class Constants {
     public static final int CONVEYOR_TOP_ID = 12;
     public static final int CONVEYOR_BOTTOM_ID = 13;
 
-    public static final double CONVEYOR_REVERSE_SPEED = -0.85;
-    public static final double CONVEYOR_SPEED = 1.0;
+    public static final double CONVEYOR_REVERSE_SPEED = -0.95;
+    public static final double CONVEYOR_SPEED = 0.95;
 
     public static final double CONVEYOR_RPS = 75;
     public static final double CONVEYOR_REVERSE_RPS = -75;
 
+    public static final double CONVEYOR_SCORING_RPS = 95;
+    public static final double CONVEYOR_PASSING_RPS = 100;
+
     // PID Constants
-    public static final double p = 0.000236;
+    public static final double p = 0.1;
     public static final double i = 0.000;
     public static final double d = 0.000;
 
     // Feed-Forward Constants
     public static final double s = 0.100;
-    public static final double v = 0.004;
-    public static final double a = 0.0003;
+    public static final double v = 0.12;
+    public static final double a = 0.0;
 
     public static final double STOP = 0;
     public static final double IDLE = 0; // % voltage -1 --> 1
@@ -566,21 +577,29 @@ public final class Constants {
   public static class RollersConstants {
     public static final int ROLLERS_ID = 10;
 
+    public static final double JAMCURRENT = 80;
+    public static final double JAM_IGNORE_SECONDS = 0.25;
+    public static final double JAM_DEBOUNCE_SECONDS = 0.25;
+    public static final double JAM_REVERSE_SECONDS = 0.3;
+
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;
 
-    public static final double ROLLERS_SPEED = 1;
-    public static final double REVERSE_ROLLERS_SPEED = -1;
+    public static final double ROLLERS_SCORING_RPS = 75;
+    public static final double ROLLERS_PASSING_RPS = 85;
+
+    public static final double ROLLERS_SPEED = 0.75;
+    public static final double REVERSE_ROLLERS_SPEED = -0.75;
 
     // PID Constants
-    public static final double p = 0.0002;
+    public static final double p = 0.1;
     public static final double i = 0.000;
     public static final double d = 0.000;
 
     // Feed-Forward Constants
     public static final double s = 0.100;
-    public static final double v = 0.00177;
-    public static final double a = 0.00017;
+    public static final double v = 0.12;
+    public static final double a = 0.0;
 
   }
 

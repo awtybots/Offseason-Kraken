@@ -20,7 +20,7 @@ public final class Configs
                 public static final SparkMaxConfig HoodMotorConfig = new SparkMaxConfig();
 
                 static {
-                        HoodMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(30).voltageCompensation(12);
+                        HoodMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12);
 
                         HoodMotorConfig.closedLoop
                         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
@@ -83,6 +83,8 @@ public final class Configs
                 static {
                         TurretMotorConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(40).voltageCompensation(12)
                         .inverted(true);
+
+                        TurretMotorConfig.signals.absoluteEncoderPositionAlwaysOn(true);
 
                         // REV Through Bore on the data port. Reported in encoder shaft degrees,
                         // zero centered so the range is (-180, 180] instead of [0, 360).

@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -47,6 +49,8 @@ public class Turret extends SubsystemBase {
     private double lastAbsolutePosition = 0.0; // last abs encoder reading in encoder degrees, used for tracking wraps
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
     private boolean setpointWasClamped = false; // last setAngle call hit a travel limit
+    private final Timer bootTimer = new Timer();
+    private boolean bootResyncDone = false;
 
     public Turret() {
         // TalonFXConfiguration motorConfig = new TalonFXConfiguration();
@@ -72,6 +76,7 @@ public class Turret extends SubsystemBase {
         TurretMotor.clearFaults();
 
         resyncFromAbsolute(); // assumes the turret booted parked at the reference spot
+        bootTimer.start();
     }
 
     public double getAbsoluteDegrees() { // through bore shaft angle, (-180, 180]. NOT the turret angle, it spins 10x
@@ -276,6 +281,11 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (!bootResyncDone && DriverStation.isDisabled()
+                && bootTimer.hasElapsed(TurretConstants.BOOT_RESYNC_DELAY_SECONDS)) {
+            resyncFromAbsolute();
+            bootResyncDone = true;
+        }
         updateWrapCount(); // must run every loop for it to not blow up
 
         Logger.recordOutput("Turret/AbsoluteDegrees", getAbsoluteDegrees());

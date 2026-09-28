@@ -69,6 +69,7 @@ public class Shooter extends SubsystemBase {
         shooterConfig.Slot0.kA = ShooterConstants.a;
         ShooterRightMotor.getConfigurator().apply(shooterConfig);
         ShooterLeftMotor.getConfigurator().apply(shooterConfig);
+        trimCanBus(ShooterRightMotor, ShooterLeftMotor);
 
         // Follow the right motor
         ShooterLeftMotor.setControl(new Follower(ShooterRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
