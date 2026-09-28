@@ -1,5 +1,6 @@
 package frc.robot.utils;
 
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
@@ -98,6 +99,11 @@ public class utils {
     public static double getDutyCycle(TalonFX motor)
     {
         return motor.getDutyCycle().getValueAsDouble();
+    }
+
+    public static double getTargetRPS(TalonFX motor)
+    {
+        return motor.getAppliedControl() instanceof VelocityVoltage request ? request.Velocity : 0.0;
     }
 
     public static Alliance getAlliance() 

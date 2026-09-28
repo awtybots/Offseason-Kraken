@@ -34,10 +34,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 public final class Constants {
   public static final boolean SIM_REPLAY_MODE = false;
 
-  // Phoenix Pro licence. Flip to false and everything falls back to trapezoidal commutation:
-  // every withEnableFOC in the project reads this, and ShooterConstants.v switches with it
-  // because FOC free speed is 5800 RPM against 6000 without.
-  public static final boolean USE_FOC = true;
+  public static final boolean USE_FOC = false;
 
 
 
@@ -158,14 +155,14 @@ public final class Constants {
     public static final int INTAKE_ID = 9; // unknown
 
     // PID Constants
-    public static final double p = 0.006155;
+    public static final double p = 0.0002;
     public static final double i = 0.000;
-    public static final double d = 0.01;
+    public static final double d = 0.0;
 
     // Feed-Forward Constants
-    public static final double s = 1.25;
-    public static final double v = 0.5;
-    public static final double a = 0.75;
+    public static final double s = 0.1;
+    public static final double v = 12.0 / 6784.0;
+    public static final double a = 0.0;
 
     public static final double INTAKE_RPM = 2000;
     public static final double OUTTAKE_RPM = -2000;
@@ -241,7 +238,7 @@ public final class Constants {
                                         // 0 is the normal starting point for a flywheel.
 
     public static final double s = 0.0;
-    public static final double v = USE_FOC ? 0.1241 : 0.12; // 12 V / 96.7 rps FOC, / 100 rps not
+    public static final double v = 0.115;
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----
@@ -513,19 +510,28 @@ public final class Constants {
     public static final double KICKER_SPEED = 1.0;
 
     public static final double MIN_SPEED = 0.5;
-    public static final double JAMCURRENT = 100; // Current in Amps that determines if there is a jam
+    public static final double JAMCURRENT = 30; // Current in Amps that determines if there is a jam
+    public static final double JAM_IGNORE_SECONDS = 0.6;
+    public static final double JAM_DEBOUNCE_SECONDS = 0.1;
+    public static final double JAM_REVERSE_SECONDS = 0.3;
 
     public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
     public static final double VERT_ROLLER_SPEED = 0.85;
+    public static final double VERT_ROLLER_RPM = 3600;
+
+    public static final double FEEDER_WHEEL_DIAMETER_M = Units.inchesToMeters(2.0);
+    public static final double FEEDER_GEAR_RATIO = 3.0;
+    public static final double FEEDER_SHOOTER_SURFACE_RATIO = 0.6;
+    public static final double FEEDER_MIN_SURFACE_MPS = 5.0;
     // PID Constants
-    public static final double p = 0.000236;
+    public static final double p = 0.1;
     public static final double i = 0.000;
     public static final double d = 0.000;
 
     // Feed-Forward Constants
     public static final double s = 0.100;
-    public static final double v = 0.004;
-    public static final double a = 0.0003;
+    public static final double v = 0.12;
+    public static final double a = 0.0;
 
     // PID Constants
     public static final double VRp = 0.000236;
@@ -534,7 +540,7 @@ public final class Constants {
 
     // Feed-Forward Constants
     public static final double VRs = 0.100;
-    public static final double VRv = 0.004;
+    public static final double VRv = 12.0 / 5676.0;
     public static final double VRa = 0.0003;
 
     public static final double STOP = 0;
@@ -551,15 +557,18 @@ public final class Constants {
     public static final double CONVEYOR_RPS = 75;
     public static final double CONVEYOR_REVERSE_RPS = -75;
 
+    public static final double CONVEYOR_SCORING_RPS = 95;
+    public static final double CONVEYOR_PASSING_RPS = 100;
+
     // PID Constants
-    public static final double p = 0.000236;
+    public static final double p = 0.1;
     public static final double i = 0.000;
     public static final double d = 0.000;
 
     // Feed-Forward Constants
     public static final double s = 0.100;
-    public static final double v = 0.004;
-    public static final double a = 0.0003;
+    public static final double v = 0.12;
+    public static final double a = 0.0;
 
     public static final double STOP = 0;
     public static final double IDLE = 0; // % voltage -1 --> 1
@@ -568,23 +577,29 @@ public final class Constants {
   public static class RollersConstants {
     public static final int ROLLERS_ID = 10;
 
-    public static final double JAMCURRENT = 100;
+    public static final double JAMCURRENT = 80;
+    public static final double JAM_IGNORE_SECONDS = 0.25;
+    public static final double JAM_DEBOUNCE_SECONDS = 0.25;
+    public static final double JAM_REVERSE_SECONDS = 0.3;
 
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;
+
+    public static final double ROLLERS_SCORING_RPS = 75;
+    public static final double ROLLERS_PASSING_RPS = 85;
 
     public static final double ROLLERS_SPEED = 0.75;
     public static final double REVERSE_ROLLERS_SPEED = -0.75;
 
     // PID Constants
-    public static final double p = 0.0002;
+    public static final double p = 0.1;
     public static final double i = 0.000;
     public static final double d = 0.000;
 
     // Feed-Forward Constants
     public static final double s = 0.100;
-    public static final double v = 0.00177;
-    public static final double a = 0.00017;
+    public static final double v = 0.12;
+    public static final double a = 0.0;
 
   }
 

@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-// import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -13,6 +13,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.robot.Constants;
 import frc.robot.Constants.KickerConstants;
 import frc.robot.Constants.RollersConstants;
+
+import frc.robot.utils.JamDetector;
 
 import static frc.robot.utils.utils.*;
 
@@ -24,8 +26,12 @@ public class Rollers extends SubsystemBase {
 
    
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
+    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
-    
+    private final JamDetector jamDetector = new JamDetector(RollersConstants.JAMCURRENT,
+            RollersConstants.JAM_IGNORE_SECONDS, RollersConstants.JAM_DEBOUNCE_SECONDS,
+            RollersConstants.JAM_REVERSE_SECONDS);
+
 
     public Rollers() {
         TalonFXConfiguration RollersConfig = new TalonFXConfiguration();
@@ -42,6 +48,7 @@ public class Rollers extends SubsystemBase {
         RollersConfig.Slot0.kV = RollersConstants.v; 
         RollersConfig.Slot0.kA = RollersConstants.a;
         RollersMotor.getConfigurator().apply(RollersConfig);
+        RollersMotor.getStatorCurrent().setUpdateFrequency(50);
     }
 
     public void ReverseRollers() {
@@ -51,24 +58,28 @@ public class Rollers extends SubsystemBase {
     }
 
     public void RollersToConveyor() {
-        // RollersMotor.setControl(velocityRequest.withVelocity(RollersConstants.ROLLERS_RPS).withSlot(0));
-        // RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED));
-        RollersMotor.setControl(dutyCycleRequest.withOutput(RollersConstants.ROLLERS_SPEED).withEnableFOC(Constants.USE_FOC));
+        RollersToConveyor(false);
     }
 
-    public void RunRollers()
+    public void RollersToConveyor(boolean passing) {
+        double rps = passing ? RollersConstants.ROLLERS_PASSING_RPS : RollersConstants.ROLLERS_SCORING_RPS;
+        RollersMotor.setControl(velocityRequest.withVelocity(rps).withEnableFOC(Constants.USE_FOC));
+    }
+
+    public void RunRollers(boolean passing)
     {
-        if(getStatorCurrent(RollersMotor) > RollersConstants.JAMCURRENT)
+        if(jamDetector.shouldReverse(getStatorCurrent(RollersMotor)))
         {
-            RollersToConveyor();
+            ReverseRollers();
         }
         else
         {
-            ReverseRollers();
+            RollersToConveyor(passing);
         }
     }
 
     public void stopRollers() {
+        jamDetector.reset();
         // RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));
         RollersMotor.setControl(dutyCycleRequest.withOutput(0.0).withEnableFOC(Constants.USE_FOC));
     }
@@ -89,11 +100,12 @@ public class Rollers extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("Rollers/DesiredRPS", RollersMotor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Rollers/TargetRPS", getTargetRPS(RollersMotor));
         Logger.recordOutput("Rollers/Voltage", getAppliedVoltage(RollersMotor));
         Logger.recordOutput("Rollers/CurrentDraw", getSupplyCurrent(RollersMotor));
         Logger.recordOutput("Rollers/StatorCurrent", getStatorCurrent(RollersMotor));
         Logger.recordOutput("Rollers/RPS", RollersMotor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Rollers/Unjamming", jamDetector.isReversing());
 
         logFOC("Rollers", RollersMotor);
     }

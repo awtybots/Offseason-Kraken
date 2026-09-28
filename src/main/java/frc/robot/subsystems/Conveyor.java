@@ -53,8 +53,12 @@ public class Conveyor extends SubsystemBase {
     }
 
     public void HopperToShooter() {
-        // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED));
-        ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(ConveyorConstants.CONVEYOR_SPEED).withEnableFOC(Constants.USE_FOC));
+        HopperToShooter(false);
+    }
+
+    public void HopperToShooter(boolean passing) {
+        double rps = passing ? ConveyorConstants.CONVEYOR_PASSING_RPS : ConveyorConstants.CONVEYOR_SCORING_RPS;
+        ConveyorTopMotor.setControl(velocityRequest.withVelocity(rps).withEnableFOC(Constants.USE_FOC));
     }
 
 
@@ -90,6 +94,7 @@ public class Conveyor extends SubsystemBase {
         Logger.recordOutput("Conveyor/BottomVoltage", getAppliedVoltage(ConveyorBottomMotor));
         Logger.recordOutput("Conveyor/TopCurrentDraw", getSupplyCurrent(ConveyorTopMotor));
         Logger.recordOutput("Conveyor/BottomCurrentDraw", getSupplyCurrent(ConveyorBottomMotor));
+        Logger.recordOutput("Conveyor/TargetRPS", getTargetRPS(ConveyorTopMotor));
         Logger.recordOutput("Conveyor/TopRPS", ConveyorTopMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Conveyor/BottomRPS", ConveyorBottomMotor.getVelocity().getValueAsDouble());
 

@@ -85,6 +85,7 @@ public class ControlAllShooting extends Command {
     public void execute() {
         Translation2d turretPos = drivebase.getTurretFieldPosition();
         inShootingZone = !drivebase.isInOpponentAllianceZone();
+        boolean passing = false;
 
         if (drivebase.isInAllianceZone()) { // shoot at hub
             Translation2d turretToHub = drivebase.getCachedDynamicHubLocation()
@@ -104,6 +105,7 @@ public class ControlAllShooting extends Command {
             Logger.recordOutput("Shooting/DistanceToHub", dist);
             Logger.recordOutput("Shooting/AimTolerance", aimTolerance(dist));
         } else if (drivebase.isInNeutralZone()) { // ferry
+            passing = true;
             Translation2d turretToFerry = drivebase.getCachedDynamicFerryLocation()
                     .getTranslation().minus(turretPos);
             double dist = turretToFerry.getNorm();
@@ -133,9 +135,9 @@ public class ControlAllShooting extends Command {
         if (isReadyToFire()) {
             if (!m_turret.isAtCableLimit()) {
                 isFiring = true;
-                m_kicker.ConveyorToShooter(recordedTargetRPM*.6);
-                m_conveyor.HopperToShooter();
-                m_rollers.RunRollers();
+                m_kicker.ConveyorToShooter(recordedTargetRPM);
+                m_conveyor.HopperToShooter(passing);
+                m_rollers.RunRollers(passing);
             } else {
                 isFiring = false;
                 m_kicker.ClearBall();
