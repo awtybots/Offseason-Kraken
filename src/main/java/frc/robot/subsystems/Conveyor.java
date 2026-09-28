@@ -42,6 +42,7 @@ public class Conveyor extends SubsystemBase {
 
         ConveyorTopMotor.getConfigurator().apply(ConveyorConfig);
         ConveyorBottomMotor.getConfigurator().apply(ConveyorConfig);
+        trimCanBus(ConveyorTopMotor, ConveyorBottomMotor);
 
         // Bottom follows top inverted
         ConveyorBottomMotor.setControl(new Follower(ConveyorTopMotor.getDeviceID(), MotorAlignmentValue.Opposed));

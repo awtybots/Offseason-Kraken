@@ -1,5 +1,6 @@
 package frc.robot.utils;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkFlex;
@@ -104,6 +105,16 @@ public class utils {
     public static double getTargetRPS(TalonFX motor)
     {
         return motor.getAppliedControl() instanceof VelocityVoltage request ? request.Velocity : 0.0;
+    }
+
+    public static void trimCanBus(TalonFX... motors)
+    {
+        for (TalonFX motor : motors)
+        {
+            BaseStatusSignal.setUpdateFrequencyForAll(100, motor.getDutyCycle(), motor.getMotorVoltage());
+            BaseStatusSignal.setUpdateFrequencyForAll(50, motor.getVelocity(), motor.getPosition());
+            motor.optimizeBusUtilization();
+        }
     }
 
     public static Alliance getAlliance() 

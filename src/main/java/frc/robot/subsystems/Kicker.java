@@ -58,6 +58,7 @@ public class Kicker extends SubsystemBase {
         KickerConfig.Slot0.kV = KickerConstants.v;
         KickerConfig.Slot0.kA = KickerConstants.a;
         KickerMotor.getConfigurator().apply(KickerConfig);
+        trimCanBus(KickerMotor);
 
         VerticalRollerMotor.configure(Configs.KickerSubsystem.VerticalMotorConfig, ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters);

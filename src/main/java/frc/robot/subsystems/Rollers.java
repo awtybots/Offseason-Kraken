@@ -49,6 +49,7 @@ public class Rollers extends SubsystemBase {
         RollersConfig.Slot0.kA = RollersConstants.a;
         RollersMotor.getConfigurator().apply(RollersConfig);
         RollersMotor.getStatorCurrent().setUpdateFrequency(50);
+        trimCanBus(RollersMotor);
     }
 
     public void ReverseRollers() {

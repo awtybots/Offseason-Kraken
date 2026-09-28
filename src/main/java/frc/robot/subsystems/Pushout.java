@@ -58,6 +58,7 @@ public class Pushout extends SubsystemBase {
         config.MotionMagic.MotionMagicAcceleration = PushoutConstants.PUSHOUT_ACCELERATION;
 
         PushoutMotor.getConfigurator().apply(config);
+        trimCanBus(PushoutMotor);
         PushoutMotor.setPosition(0);
     }
 
