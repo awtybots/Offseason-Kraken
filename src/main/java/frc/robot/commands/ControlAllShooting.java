@@ -100,7 +100,7 @@ public class ControlAllShooting extends Command {
             recordedTargetRPM = targetRPM;
 
             m_shooter.setTargetRPM(1200);
-            isAtSpeed = Math.abs(m_shooter.getRPS() - RPMToRPS(targetRPM)) <= ShooterConstants.ERROR_MARGIN;
+            isAtSpeed = Math.abs(m_shooter.getRPS() - RPMToRPS(1200)) <= ShooterConstants.ERROR_MARGIN;
 
             Logger.recordOutput("Shooting/Mode", "Hub");
             Logger.recordOutput("Shooting/DistanceToHub", dist);
