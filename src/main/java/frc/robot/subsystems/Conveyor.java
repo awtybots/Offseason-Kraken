@@ -29,8 +29,8 @@ public class Conveyor extends SubsystemBase {
         TalonFXConfiguration ConveyorConfig = new TalonFXConfiguration();
         ConveyorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         ConveyorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // adjust if needed
-        ConveyorConfig.CurrentLimits.SupplyCurrentLimit = 120.0;
-        ConveyorConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+        ConveyorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        ConveyorConfig.CurrentLimits.StatorCurrentLimit = 120.0;
         ConveyorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         ConveyorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         ConveyorConfig.Slot0.kP = ConveyorConstants.p;

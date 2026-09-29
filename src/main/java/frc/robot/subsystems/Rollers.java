@@ -103,8 +103,8 @@ public class Rollers extends SubsystemBase {
     public void periodic() {
         Logger.recordOutput("Rollers/TargetRPS", getTargetRPS(RollersMotor));
         Logger.recordOutput("Rollers/Voltage", getAppliedVoltage(RollersMotor));
-        Logger.recordOutput("Rollers/CurrentDraw", getSupplyCurrent(RollersMotor));
-        Logger.recordOutput("Rollers/StatorCurrent", getStatorCurrent(RollersMotor));
+        Logger.recordOutput("Rollers/SupplyCurrentDraw", getSupplyCurrent(RollersMotor));
+        Logger.recordOutput("Rollers/StatorCurrentDraw", getStatorCurrent(RollersMotor));
         Logger.recordOutput("Rollers/RPS", RollersMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Rollers/Unjamming", jamDetector.isReversing());
 
