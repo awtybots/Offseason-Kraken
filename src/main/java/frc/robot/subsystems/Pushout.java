@@ -265,6 +265,7 @@ public class Pushout extends SubsystemBase {
     @Override
     public void periodic() {
         Logger.recordOutput("Pushout/Position", PushoutMotor.getPosition().getValueAsDouble());
+        Logger.recordOutput("Pushout/TargetPosition", positionRequest.Position);
         Logger.recordOutput("Pushout/Velocity", PushoutMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Pushout/Voltage", getAppliedVoltage(PushoutMotor));
         Logger.recordOutput("Pushout/CurrentDraw", getSupplyCurrent(PushoutMotor));

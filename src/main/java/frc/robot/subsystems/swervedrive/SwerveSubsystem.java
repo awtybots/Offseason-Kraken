@@ -885,7 +885,9 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.addVisionMeasurement(
             mt1.pose,
             mt1.timestampSeconds);
+        Logger.recordOutput("Vision/" + cameraName + "/XYStdDev", xyStd);
       }
+      logVision(cameraName, megaTag, mt1, !doRejectUpdate);
     }
     else  // If using mega tag 2
     {
@@ -921,8 +923,19 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.addVisionMeasurement(
             mt2.pose,
             mt2.timestampSeconds);
+        Logger.recordOutput("Vision/" + cameraName + "/XYStdDev", xyStd);
       }
+      logVision(cameraName, megaTag, mt2, !doRejectUpdate);
     }
+  }
+
+  private void logVision(String cameraName, int megaTag, LimelightHelpers.PoseEstimate estimate, boolean accepted)
+  {
+    Logger.recordOutput("Vision/" + cameraName + "/MegaTag", megaTag);
+    Logger.recordOutput("Vision/" + cameraName + "/TagCount", estimate.tagCount);
+    Logger.recordOutput("Vision/" + cameraName + "/AvgTagDistM", estimate.avgTagDist);
+    Logger.recordOutput("Vision/" + cameraName + "/Accepted", accepted);
+    Logger.recordOutput("Vision/" + cameraName + "/Pose", estimate.pose);
   }
 
   /** Updates the field relative position of the robot. */

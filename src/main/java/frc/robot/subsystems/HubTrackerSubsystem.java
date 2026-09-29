@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj.util.Color;
 
+import org.littletonrobotics.junction.Logger;
+
 public class HubTrackerSubsystem extends SubsystemBase
 {
 
@@ -206,6 +208,7 @@ public class HubTrackerSubsystem extends SubsystemBase
     x = (x == 1) ? 0 : 1;
 
     SmartDashboard.putBoolean("HubActivity", active);
+    Logger.recordOutput("HubTracker/Active", active);
     if(!active || x == 0) circle.setPoses(createCircle(hubPose, radius, 20));
     else circle.setPoses(); // clears circle when not showing
 
