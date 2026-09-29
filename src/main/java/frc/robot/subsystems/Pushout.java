@@ -203,7 +203,8 @@ public class Pushout extends SubsystemBase {
     public Command PushCommand() {
         return this.run(() -> {
             PushIntake();
-        }).finallyDo(interrupted -> StopPushout());
+        });
+        // .finallyDo(interrupted -> StopPushout());
     }
 
     public Command RetractCommand() {
