@@ -17,7 +17,12 @@ import static frc.robot.utils.utils.*;
 
 import frc.robot.Constants;
 import frc.robot.Constants.ConveyorConstants;
+import frc.robot.Constants.RollersConstants;
+import frc.robot.utils.JamDetector;
 public class Conveyor extends SubsystemBase {
+       private final JamDetector jamDetector = new JamDetector(RollersConstants.JAMCURRENT,
+            RollersConstants.JAM_IGNORE_SECONDS, RollersConstants.JAM_DEBOUNCE_SECONDS,
+            RollersConstants.JAM_REVERSE_SECONDS);
 
     private TalonFX ConveyorTopMotor = new TalonFX(ConveyorConstants.CONVEYOR_TOP_ID);
     private TalonFX ConveyorBottomMotor = new TalonFX(ConveyorConstants.CONVEYOR_BOTTOM_ID);
@@ -67,6 +72,18 @@ public class Conveyor extends SubsystemBase {
         // ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0));
         ConveyorTopMotor.setControl(dutyCycleRequest.withOutput(0).withEnableFOC(Constants.USE_FOC));
         // bottom follows for all the voids
+    }
+
+        public void RunBelts()
+    {
+        if(jamDetector.shouldReverse(getStatorCurrent(RollersMotor)))
+        {
+            ReverseRollers();
+        }
+        else
+        {
+            RollersToConveyor();
+        }
     }
     
     public Command runDefaultCommand() {
