@@ -455,7 +455,7 @@ public final class Constants {
     public static final double a = 0.0; // inert in kPosition
 
     public static final double MAX_OUTPUT = 1; // limit speed for safety while tuning
-
+    public static final double HOOD_SCALE = 0.8;
     public static final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryHoodTable = new InterpolatingDoubleTreeMap();
 
@@ -464,15 +464,15 @@ public final class Constants {
       // Hood angle = 90 - ball_exit_angle. Exit angle chosen as the min-launch-speed
       // angle: theta_opt = 45 + 0.5 * atan(dz/d).
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), Degrees.of(28.4)),
-          Pair.of(Meters.of(2.5), Degrees.of(31.2)),
-          Pair.of(Meters.of(3.0), Degrees.of(33.2)),
-          Pair.of(Meters.of(3.5), Degrees.of(34.7)),
-          Pair.of(Meters.of(4.0), Degrees.of(35.9)),
-          Pair.of(Meters.of(4.5), Degrees.of(36.9)),
-          Pair.of(Meters.of(5.0), Degrees.of(37.7)),
-          Pair.of(Meters.of(5.5), Degrees.of(38.3)),
-          Pair.of(Meters.of(6.0), Degrees.of(38.8)))) {
+          Pair.of(Meters.of(2.0), Degrees.of(28.4*HOOD_SCALE)),
+          Pair.of(Meters.of(2.5), Degrees.of(31.2*HOOD_SCALE)),
+          Pair.of(Meters.of(3.0), Degrees.of(33.2*HOOD_SCALE)),
+          Pair.of(Meters.of(3.5), Degrees.of(34.7*HOOD_SCALE)),
+          Pair.of(Meters.of(4.0), Degrees.of(35.9*HOOD_SCALE)),
+          Pair.of(Meters.of(4.5), Degrees.of(36.9*HOOD_SCALE)),
+          Pair.of(Meters.of(5.0), Degrees.of(37.7*HOOD_SCALE)),
+          Pair.of(Meters.of(5.5), Degrees.of(38.3*HOOD_SCALE)),
+          Pair.of(Meters.of(6.0), Degrees.of(38.8*HOOD_SCALE)))) {
         hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
 
@@ -511,9 +511,9 @@ public final class Constants {
     public static final double JAM_DEBOUNCE_SECONDS = 0.1;
     public static final double JAM_REVERSE_SECONDS = 0.5;
 
-    public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
-    public static final double VERT_ROLLER_SPEED = -0.85;
-    public static final double VERT_ROLLER_RPM = -3600;
+    public static final double VERT_ROLLER_REVERSE_SPEED = 0.85;
+    public static final double VERT_ROLLER_SPEED = 0.85;
+    public static final double VERT_ROLLER_RPM = 3600;
 
     public static final double FEEDER_WHEEL_DIAMETER_M = Units.inchesToMeters(2.0);
     public static final double FEEDER_GEAR_RATIO = 3.0;
