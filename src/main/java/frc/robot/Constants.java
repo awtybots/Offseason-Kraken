@@ -205,7 +205,7 @@ public final class Constants {
     public static final double PUSHOUT_EXTEND_TIMEOUT = 2.0;
     public static final double PUSHOUT_CRUISE_VELOCITY = 80.0; // rot/s
     public static final double PUSHOUT_ACCELERATION = 80.0;    // rot/s^2
-    public static final double PUSHOUT_HOLD_VOLTS = 1.5;
+    public static final double PUSHOUT_HOLD_VOLTS = -1.5;
   }
 
   public static class ShooterConstants {
