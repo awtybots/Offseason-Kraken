@@ -318,7 +318,7 @@ public final class Constants {
 
     public static final int SOTM_MAX_ITERATIONS = 32;
     public static final double SOTM_TOLERANCE_M = 0.001;
-    public static final double rPM_Factor = 0.75;
+    public static final double rPM_Factor = 0.8;
     public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
     static {
