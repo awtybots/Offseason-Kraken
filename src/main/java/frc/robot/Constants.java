@@ -509,7 +509,7 @@ public final class Constants {
     public static final double JAMCURRENT = 30; // Current in Amps that determines if there is a jam
     public static final double JAM_IGNORE_SECONDS = 0.3;
     public static final double JAM_DEBOUNCE_SECONDS = 0.1;
-    public static final double JAM_REVERSE_SECONDS = 0.3;
+    public static final double JAM_REVERSE_SECONDS = 0.5;
 
     public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
     public static final double VERT_ROLLER_SPEED = 0.85;
