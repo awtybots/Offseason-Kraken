@@ -70,6 +70,13 @@ public class Kicker extends SubsystemBase {
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED));
         KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_REVERSE_SPEED).withEnableFOC(Constants.USE_FOC));
     }
+ public void ReverseVerticalRoller(double surfaceMps) {
+        double feederRPS = surfaceMps / (Math.PI * KickerConstants.FEEDER_WHEEL_DIAMETER_M) * KickerConstants.FEEDER_GEAR_RATIO;
+        vertRollerTargetRPM = KickerConstants.VERT_ROLLER_REVERSE_SPEED;
+        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_REVERSE_SPEED, ControlType.kDutyCycle);
+        KickerMotor.setControl(velocityRequest.withVelocity(feederRPS).withEnableFOC(Constants.USE_FOC));
+    }
+
 
     public void RunKicker() {
         feedAtSurfaceSpeed(KickerConstants.FEEDER_MIN_SURFACE_MPS);
@@ -91,7 +98,7 @@ public class Kicker extends SubsystemBase {
     public void ConveyorToShooter() {
         if(jamDetector.shouldReverse(getStatorCurrent(VerticalRollerMotor)))
         {
-            ReverseKicker();
+            ReverseVerticalRoller(KickerConstants.FEEDER_MIN_SURFACE_MPS);
         }
         else
         {
@@ -102,7 +109,7 @@ public class Kicker extends SubsystemBase {
     public void ConveyorToShooter(double shooterRPM) {
         if(jamDetector.shouldReverse(getStatorCurrent(VerticalRollerMotor)))
         {
-            ReverseKicker();
+            ReverseVerticalRoller(KickerConstants.FEEDER_MIN_SURFACE_MPS);
         }
         else
         {
