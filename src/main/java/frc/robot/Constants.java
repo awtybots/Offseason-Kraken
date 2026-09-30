@@ -318,7 +318,7 @@ public final class Constants {
 
     public static final int SOTM_MAX_ITERATIONS = 32;
     public static final double SOTM_TOLERANCE_M = 0.001;
-    
+    public static final double rPM_Factor = 0.75;
     public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
     static {
@@ -331,15 +331,15 @@ public final class Constants {
       // Magnus is worth under 1% here. Expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), RPM.of(3065)),
-          Pair.of(Meters.of(2.5), RPM.of(3262)),
-          Pair.of(Meters.of(3.0), RPM.of(3461)),
-          Pair.of(Meters.of(3.5), RPM.of(3659)),
-          Pair.of(Meters.of(4.0), RPM.of(3855)),
-          Pair.of(Meters.of(4.5), RPM.of(4048)),
-          Pair.of(Meters.of(5.0), RPM.of(4239)),
-          Pair.of(Meters.of(5.5), RPM.of(4426)),
-          Pair.of(Meters.of(6.0), RPM.of(4610)))) {
+          Pair.of(Meters.of(2.0), RPM.of(3065*rPM_Factor)),
+          Pair.of(Meters.of(2.5), RPM.of(3262*rPM_Factor)),
+          Pair.of(Meters.of(3.0), RPM.of(3461*rPM_Factor)),
+          Pair.of(Meters.of(3.5), RPM.of(3659*rPM_Factor)),
+          Pair.of(Meters.of(4.0), RPM.of(3855*rPM_Factor)),
+          Pair.of(Meters.of(4.5), RPM.of(4048*rPM_Factor)),
+          Pair.of(Meters.of(5.0), RPM.of(4239*rPM_Factor)),
+          Pair.of(Meters.of(5.5), RPM.of(4426*rPM_Factor)),
+          Pair.of(Meters.of(6.0), RPM.of(4610*rPM_Factor)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
@@ -576,7 +576,7 @@ public final class Constants {
     public static final double JAMCURRENT = 40;
     public static final double JAM_IGNORE_SECONDS = 0.25;
     public static final double JAM_DEBOUNCE_SECONDS = 0.25;
-    public static final double JAM_REVERSE_SECONDS = 0.3;
+    public static final double JAM_REVERSE_SECONDS = 0.15;
 
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;
