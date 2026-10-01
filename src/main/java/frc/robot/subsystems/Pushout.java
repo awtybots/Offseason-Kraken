@@ -1,14 +1,13 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import edu.wpi.first.math.MathUtil;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -29,22 +28,13 @@ public class Pushout extends SubsystemBase {
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
 
-    private final CoastOut coastRequest = new CoastOut();
-
-
-    public enum PushoutMode {
-        IDLE, EXTENDING, COMPLIANT, WAITING
-    }
-
-    private PushoutMode mode = PushoutMode.IDLE;
-    private final Timer stateTimer = new Timer();
-    private double releasePosition = PushoutConstants.PUSHOUT_EXTENDED_POS;
+    private final CurrentLimitsConfigs currentLimits;
 
     public Pushout() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        config.CurrentLimits.StatorCurrentLimit = 120.0;
+        config.CurrentLimits.StatorCurrentLimit = PushoutConstants.PUSHOUT_STATOR_LIMIT;
         config.CurrentLimits.SupplyCurrentLimit = 40.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -58,6 +48,7 @@ public class Pushout extends SubsystemBase {
         config.MotionMagic.MotionMagicAcceleration = PushoutConstants.PUSHOUT_ACCELERATION;
 
         PushoutMotor.getConfigurator().apply(config);
+        currentLimits = config.CurrentLimits;
         trimCanBus(PushoutMotor);
         PushoutMotor.setPosition(0);
     }
@@ -101,79 +92,19 @@ public class Pushout extends SubsystemBase {
         return PushoutMotor.getPosition().getValueAsDouble();
     }
 
-    public PushoutMode getMode() {
-        return mode;
-    }
-
-    /**
-     * Tru whent the pushout is out far enough we can stop the motor
-     */
     public boolean isAtExtended() {
         return Math.abs(
                 getPosition() - PushoutConstants.PUSHOUT_EXTENDED_POS) <= PushoutConstants.PUSHOUT_AT_TARGET_TOLERANCE;
     }
 
-    /** Tru when something has shoved the intake back in past the  threshold. */
-    public boolean wasKnockedBack() {
-        return releasePosition - getPosition() > PushoutConstants.PUSHOUT_KNOCKED_BACK;
+    private void setStatorLimit(double amps) {
+        PushoutMotor.getConfigurator().apply(currentLimits.withStatorCurrentLimit(amps));
     }
 
-    private void setMode(PushoutMode next) {
-        if (mode != next) {
-            mode = next;
-            stateTimer.restart();
-        }
-    }
-
-    private void release() {
-        releasePosition = getPosition();
-        setMode(PushoutMode.COMPLIANT);
-    }
-
-
-    public void compliantStep() {
-        switch (mode) {
-            case EXTENDING:
-                PushIntake();
-                if (isAtExtended()) {
-                    release();
-                } else if (stateTimer.hasElapsed(PushoutConstants.PUSHOUT_EXTEND_TIMEOUT)) {
-                    release();
-                }
-                break;
-
-            case COMPLIANT:
-                PushoutMotor.setControl(
-                        voltageRequest.withOutput(PushoutConstants.PUSHOUT_HOLD_VOLTS).withEnableFOC(Constants.USE_FOC));
-                if (wasKnockedBack()) {
-                    setMode(PushoutMode.WAITING);
-                }
-                break;
-
-            case WAITING:
-                PushoutMotor.setControl(coastRequest);
-                if (stateTimer.hasElapsed(PushoutConstants.PUSHOUT_REEXTEND_DELAY)) {
-                    setMode(PushoutMode.EXTENDING);
-                }
-                break;
-
-            case IDLE:
-            default:
-                break;
-        }
-    }
-
-   
     public Command CompliantPushCommand() {
-        return this.run(this::compliantStep)
-                .beforeStarting(() -> {
-                    mode = PushoutMode.IDLE;
-                    setMode(PushoutMode.EXTENDING);
-                })
-                .finallyDo(interrupted -> {
-                    mode = PushoutMode.IDLE;
-                    StopPushout();
-                });
+        return this.run(this::PushIntake)
+                .beforeStarting(() -> setStatorLimit(PushoutConstants.PUSHOUT_COMPLIANT_STATOR_LIMIT))
+                .finallyDo(interrupted -> setStatorLimit(PushoutConstants.PUSHOUT_STATOR_LIMIT));
     }
 
     public Command PushoutDutyCycleCommand() {
@@ -272,10 +203,7 @@ public class Pushout extends SubsystemBase {
         Logger.recordOutput("Pushout/CurrentDraw", getSupplyCurrent(PushoutMotor));
         Logger.recordOutput("Pushout/StatorCurrent", getStatorCurrent(PushoutMotor));
         logFOC("Pushout", PushoutMotor);
-        Logger.recordOutput("Pushout/Mode", mode.toString());
         Logger.recordOutput("Pushout/IsAtExtended", isAtExtended());
-        Logger.recordOutput("Pushout/WasKnockedBack", wasKnockedBack());
-        Logger.recordOutput("Pushout/ReleasePosition", releasePosition);
-        Logger.recordOutput("Pushout/DriftFromRelease", releasePosition - getPosition());
+        Logger.recordOutput("Pushout/StatorLimit", currentLimits.StatorCurrentLimit);
     }
 }

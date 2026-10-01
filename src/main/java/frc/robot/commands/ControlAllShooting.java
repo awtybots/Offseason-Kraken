@@ -27,6 +27,7 @@ public class ControlAllShooting extends Command {
     public double recordedTargetRPM = 0.0;
     private boolean isFiring = false;
     private boolean isAtSpeed = false;
+    private boolean isAboveFiringFloor = false;
     private boolean inShootingZone = true; // false in the opponent alliance zone
     private double turretAimErrorDegrees = 180.0;
 
@@ -68,7 +69,7 @@ public class ControlAllShooting extends Command {
 
     private boolean isReadyToFire() {
         return inShootingZone
-                && isAtSpeed
+                && (isFiring ? isAboveFiringFloor : isAtSpeed)
                 && m_hood.isAtAngle()
                 && turretAimErrorDegrees <= TurretConstants.ANGLE_TOLERANCE_DEGREES
                 && m_turret.isTargetReachable();
@@ -78,7 +79,7 @@ public class ControlAllShooting extends Command {
     public void initialize() {
         isFiring = false;
         isAtSpeed = false;
-        
+        isAboveFiringFloor = false;
         turretAimErrorDegrees = 180.0;
     }
 
@@ -101,6 +102,7 @@ public class ControlAllShooting extends Command {
 
             m_shooter.setTargetRPM(targetRPM);
             isAtSpeed = Math.abs(m_shooter.getRPS() - RPMToRPS(targetRPM)) <= ShooterConstants.ERROR_MARGIN;
+            isAboveFiringFloor = m_shooter.getRPS() >= RPMToRPS(targetRPM) * ShooterConstants.FIRING_FLOOR_FRACTION;
 
             Logger.recordOutput("Shooting/Mode", "Hub");
             Logger.recordOutput("Shooting/DistanceToHub", dist);
@@ -119,6 +121,7 @@ public class ControlAllShooting extends Command {
 
             m_shooter.setTargetRPM(targetRPM);
             isAtSpeed = Math.abs(m_shooter.getRPS() - RPMToRPS(targetRPM)) <= ShooterConstants.ERROR_MARGIN;
+            isAboveFiringFloor = m_shooter.getRPS() >= RPMToRPS(targetRPM) * ShooterConstants.FIRING_FLOOR_FRACTION;
 
             Logger.recordOutput("Shooting/Mode", "Ferry");
             Logger.recordOutput("Shooting/DistanceToFerry", dist);
@@ -127,6 +130,7 @@ public class ControlAllShooting extends Command {
             recordedTargetRPM = ShooterConstants.ALLIANCE_IDLE_RPM;
             m_shooter.setTargetRPM(ShooterConstants.ALLIANCE_IDLE_RPM);
             isAtSpeed = false;
+            isAboveFiringFloor = false;
             turretAimErrorDegrees = 180.0;
             Logger.recordOutput("Shooting/Mode", "HoldOpponentZone");
         }
@@ -137,8 +141,12 @@ public class ControlAllShooting extends Command {
             if (!m_turret.isAtCableLimit()) {
                 isFiring = true;
                 m_kicker.ConveyorToShooter(recordedTargetRPM);
-                m_conveyor.HopperToShooter(passing);
                 m_rollers.RunRollers(passing);
+                if (m_rollers.isUnjamming()) {
+                    m_conveyor.ReverseConveyor();
+                } else {
+                    m_conveyor.HopperToShooter(passing);
+                }
             } else {
                 isFiring = false;
                 m_kicker.ClearBall();
@@ -155,6 +163,7 @@ public class ControlAllShooting extends Command {
         Logger.recordOutput("Shooting/TargetRPM", recordedTargetRPM);
         Logger.recordOutput("Shooting/CurrentRPM", RPSToRPM(m_shooter.getRPS()));
         Logger.recordOutput("Shooting/IsAtSpeed", isAtSpeed);
+        Logger.recordOutput("Shooting/IsAboveFiringFloor", isAboveFiringFloor);
         Logger.recordOutput("Shooting/IsFiring", isFiring);
         Logger.recordOutput("Shooting/IsReadyToFire", isReadyToFire());
         Logger.recordOutput("Shooting/TurretAtAngle", m_turret.isAtAngle());

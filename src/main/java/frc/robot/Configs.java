@@ -102,6 +102,8 @@ public final class Configs
                         .p(TurretConstants.p)
                         .i(TurretConstants.i)
                         .d(TurretConstants.d)
+                        .allowedClosedLoopError(TurretConstants.CLOSED_LOOP_DEADBAND_DEGREES / 360.0
+                                * TurretConstants.GEAR_RATIO, ClosedLoopSlot.kSlot0)
                         .outputRange(-TurretConstants.MAX_OUTPUT, TurretConstants.MAX_OUTPUT) //do 0.66 after testing
                         .feedForward
                         .kS(TurretConstants.s)

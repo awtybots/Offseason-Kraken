@@ -200,12 +200,11 @@ public final class Constants {
     public static final double PUSHOUT_BETWEEN = 0.5; // seconds between in and out
 
     public static final double PUSHOUT_AT_TARGET_TOLERANCE = 0.5; // rot
-    public static final double PUSHOUT_KNOCKED_BACK = 1.5;        // rot pushed in before we call it a hit
-    public static final double PUSHOUT_REEXTEND_DELAY = 1.0;      // s to wait before driving back out
     public static final double PUSHOUT_EXTEND_TIMEOUT = 2.0;
     public static final double PUSHOUT_CRUISE_VELOCITY = 80.0; // rot/s
     public static final double PUSHOUT_ACCELERATION = 80.0;    // rot/s^2
-    public static final double PUSHOUT_HOLD_VOLTS = -1.5;
+    public static final double PUSHOUT_STATOR_LIMIT = 120.0;
+    public static final double PUSHOUT_COMPLIANT_STATOR_LIMIT = 20.0;
   }
 
   public static class ShooterConstants {
@@ -214,7 +213,8 @@ public final class Constants {
 
     public static final double SHOOTER_SPEED = 1000;
     public static final double SHOOTER_PASSING_SPEED = 1200;
-    public static final double ERROR_MARGIN = 50.0 / 60.0; // 100 RPM, expressed in RPS
+    public static final double ERROR_MARGIN = 100.0 / 60.0; // 100 RPM, expressed in RPS
+    public static final double FIRING_FLOOR_FRACTION = 0.65;
     public static final double STOP = 0;
     public static final double IDLE = 0.1;
 
@@ -413,7 +413,8 @@ public final class Constants {
     public static final double v = 0.004; // inert in kPosition
     public static final double a = 0.0003; // inert in kPosition
 
-    public static final double ANGLE_TOLERANCE_DEGREES = 10.0;
+    public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
+    public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.3;
 
     public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
   }
@@ -443,7 +444,7 @@ public final class Constants {
     public static final double TRENCH_Y_LEFT_MIN = 6.777; // opening on the y=8.043 guardrail
 
     // Same units as the turret: error in motor rotations, output in duty cycle.
-    public static final double p = 0.35;
+    public static final double p = 0.2;
     public static final double i = 0.0;
     public static final double d = 0.0; // if it overshoots try 0.0005; ~0.001 is the ceiling
 
@@ -574,6 +575,7 @@ public final class Constants {
     public static final int ROLLERS_ID = 10;
 
     public static final double JAMCURRENT = 40;
+    public static final double JAM_STALL_SPEED_FRACTION = 0.5;
     public static final double JAM_IGNORE_SECONDS = 0.25;
     public static final double JAM_DEBOUNCE_SECONDS = 0.25;
     public static final double JAM_REVERSE_SECONDS = 0.15;

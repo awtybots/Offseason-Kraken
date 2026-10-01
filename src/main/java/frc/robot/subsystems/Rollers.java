@@ -29,8 +29,8 @@ public class Rollers extends SubsystemBase {
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
     private final JamDetector jamDetector = new JamDetector(RollersConstants.JAMCURRENT,
-            RollersConstants.JAM_IGNORE_SECONDS, RollersConstants.JAM_DEBOUNCE_SECONDS,
-            RollersConstants.JAM_REVERSE_SECONDS);
+            RollersConstants.JAM_STALL_SPEED_FRACTION, RollersConstants.JAM_IGNORE_SECONDS,
+            RollersConstants.JAM_DEBOUNCE_SECONDS, RollersConstants.JAM_REVERSE_SECONDS);
 
 
     public Rollers() {
@@ -38,7 +38,7 @@ public class Rollers extends SubsystemBase {
         RollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         RollersConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // adjust we have to
         RollersConfig.CurrentLimits.StatorCurrentLimit = 120.0;
-        RollersConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        RollersConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
         RollersConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         RollersConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         RollersConfig.Slot0.kP = RollersConstants.p;
@@ -69,7 +69,9 @@ public class Rollers extends SubsystemBase {
 
     public void RunRollers(boolean passing)
     {
-        if(jamDetector.shouldReverse(getStatorCurrent(RollersMotor)))
+        double targetRPS = passing ? RollersConstants.ROLLERS_PASSING_RPS : RollersConstants.ROLLERS_SCORING_RPS;
+        double speedFraction = Math.abs(RollersMotor.getVelocity().getValueAsDouble()) / targetRPS;
+        if(jamDetector.shouldReverse(getStatorCurrent(RollersMotor), speedFraction))
         {
             ReverseRollers();
         }
@@ -77,6 +79,10 @@ public class Rollers extends SubsystemBase {
         {
             RollersToConveyor(passing);
         }
+    }
+
+    public boolean isUnjamming() {
+        return jamDetector.isReversing();
     }
 
     public void stopRollers() {
