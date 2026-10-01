@@ -8,6 +8,7 @@ import edu.wpi.first.math.MathUtil;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -27,6 +28,7 @@ public class Pushout extends SubsystemBase {
 
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
+    private final CoastOut coastRequest = new CoastOut();
 
     private final CurrentLimitsConfigs currentLimits;
 
@@ -80,6 +82,10 @@ public class Pushout extends SubsystemBase {
         PushoutMotor.setControl(voltageRequest.withOutput(0).withEnableFOC(Constants.USE_FOC));
     }
 
+    public void CoastPushout() {
+        PushoutMotor.setControl(coastRequest);
+    }
+
     public void PushoutDutyCycle(double output) {
         PushoutMotor.setControl(voltageRequest.withOutput(output).withEnableFOC(Constants.USE_FOC));
     }
@@ -104,7 +110,10 @@ public class Pushout extends SubsystemBase {
     public Command CompliantPushCommand() {
         return this.run(this::PushIntake)
                 .beforeStarting(() -> setStatorLimit(PushoutConstants.PUSHOUT_COMPLIANT_STATOR_LIMIT))
-                .finallyDo(interrupted -> setStatorLimit(PushoutConstants.PUSHOUT_STATOR_LIMIT));
+                .finallyDo(interrupted -> {
+                    setStatorLimit(PushoutConstants.PUSHOUT_STATOR_LIMIT);
+                    CoastPushout();
+                });
     }
 
     public Command PushoutDutyCycleCommand() {
