@@ -226,7 +226,7 @@ public final class Constants {
     // volts per rps. The old values were volts per RPM - 60x too small - so the
     // loop asked for 0.16 V at a 4600 RPM setpoint and the flywheel never spun up.
     // Tell-tale: 0.00169 * 60 = 0.101, right next to the theoretical Kraken kV.
-    public static final double p = 0.2;
+    public static final double p = 0.5;
     public static final double i = 0.000;
     public static final double d = 0.0; // was 0.0065; carrying it across the 60x would
                                         // give 0.39 V per rps/s, and derivative on a
@@ -240,7 +240,7 @@ public final class Constants {
     // ---- SHOOTER MECHANISM ----
     // Two Krakens both drive a common belt/pulley train. The rollers are locked to
     // each other at 3:2 - the bottom turns 3 for every 2 of the top - which is what
-    // produces the backspin. The motors stay speed-matched (hence the Follower), and
+    // produces the backspin. The motors stay speed-matched, and
     // one motor revolution is one BOTTOM roller revolution.
     //
     //   v_ball  = EFF * w_motor * (R_BOTTOM + PULLEY_TOP_PER_BOTTOM * R_TOP) / 2

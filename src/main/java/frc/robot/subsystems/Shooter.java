@@ -6,13 +6,12 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import org.littletonrobotics.junction.Logger;
@@ -68,11 +67,12 @@ public class Shooter extends SubsystemBase {
         shooterConfig.Slot0.kV = ShooterConstants.v;
         shooterConfig.Slot0.kA = ShooterConstants.a;
         ShooterRightMotor.getConfigurator().apply(shooterConfig);
+        shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         ShooterLeftMotor.getConfigurator().apply(shooterConfig);
+        BaseStatusSignal.setUpdateFrequencyForAll(50,
+                ShooterRightMotor.getStatorCurrent(), ShooterRightMotor.getSupplyCurrent(),
+                ShooterLeftMotor.getStatorCurrent(), ShooterLeftMotor.getSupplyCurrent());
         trimCanBus(ShooterRightMotor, ShooterLeftMotor);
-
-        // Follow the right motor
-        ShooterLeftMotor.setControl(new Follower(ShooterRightMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     // Against the live setpoint, not SHOOTER_SPEED. That constant is a 2400 RPM bench
@@ -105,6 +105,7 @@ public class Shooter extends SubsystemBase {
     public void stopShooting() {
         targetRPS = 0.0;
         ShooterRightMotor.setControl(dutyCycleRequest.withOutput(0.0));
+        ShooterLeftMotor.setControl(dutyCycleRequest.withOutput(0.0));
     }
 
     public void SpeedUpShooter() {
@@ -115,6 +116,7 @@ public class Shooter extends SubsystemBase {
     public void setTargetRPM(double rpm) {
         targetRPS = RPMToRPS(rpm);
         ShooterRightMotor.setControl(velocityRequest.withVelocity(RPMToRPS(rpm)).withSlot(0));
+        ShooterLeftMotor.setControl(velocityRequest);
     }
 
     public void ShooterPassing() {
