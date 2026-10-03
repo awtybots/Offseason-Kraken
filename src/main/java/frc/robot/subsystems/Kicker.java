@@ -73,7 +73,7 @@ public class Kicker extends SubsystemBase {
  public void ReverseVerticalRoller(double surfaceMps) {
         double feederRPS = surfaceMps / (Math.PI * KickerConstants.FEEDER_WHEEL_DIAMETER_M) * KickerConstants.FEEDER_GEAR_RATIO;
         vertRollerTargetRPM = KickerConstants.VERT_ROLLER_REVERSE_SPEED;
-        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_REVERSE_SPEED, ControlType.kDutyCycle);
+        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_SPEED, ControlType.kDutyCycle);
         KickerMotor.setControl(velocityRequest.withVelocity(feederRPS).withEnableFOC(Constants.USE_FOC));
     }
 
