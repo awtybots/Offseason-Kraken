@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import static edu.wpi.first.units.Units.Inches;
@@ -47,8 +48,8 @@ import swervelib.SwerveInputStream;
 public class RobotContainer {
 
   // controllers
-  final CommandXboxController driverXbox = new CommandXboxController(0);
-  final CommandXboxController operatorXbox = new CommandXboxController(1);
+  final CommandPS5Controller driverXbox = new CommandPS5Controller(0);
+  final CommandPS5Controller operatorXbox = new CommandPS5Controller(1);
 
   // subsystems
   private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
@@ -276,7 +277,7 @@ public class RobotContainer {
     // ==================== DRIVER BINDINGS ====================
 
     // RT shoots
-    driverXbox.rightTrigger().whileTrue(
+    driverXbox.R2().whileTrue(
         Commands.defer(() -> {
           ControlAllShooting shootCmd = new ControlAllShooting(
               m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase);
@@ -292,31 +293,31 @@ public class RobotContainer {
                       driveAngularVelocity::get)));
         }, Set.of(m_shooter, m_conveyor, m_kicker, m_rollers, m_hood, drivebase)));
 
-    driverXbox.rightTrigger().and(driverXbox.leftTrigger().negate())
+    driverXbox.R2().and(driverXbox.L2().negate())
         .whileTrue(m_pushout.AgitateCommand());
 
     // intake runs whenever the driver is asking when shooting or just intaking
     // or both
-    driverXbox.rightTrigger().or(driverXbox.leftTrigger())
+    driverXbox.R2().or(driverXbox.L2())
         .whileTrue(m_intake.runIntakeCommand());
 
     // LT extends pushout to intaking position
-    driverXbox.leftTrigger().whileTrue(m_pushout.CompliantPushCommand());
+    driverXbox.L2().whileTrue(m_pushout.CompliantPushCommand());
 
     // LB retracts
-    driverXbox.leftBumper().whileTrue(m_pushout.RetractCommand());
+    driverXbox.L1().whileTrue(m_pushout.RetractCommand());
 
-    driverXbox.b().whileTrue(new AimTurret(m_turret, drivebase));
+    driverXbox.circle().whileTrue(new AimTurret(m_turret, drivebase));
 
     // RB unjams
-    driverXbox.rightBumper().whileTrue(
+    driverXbox.R1().whileTrue(
         Commands.parallel(
             m_kicker.ReverseKickerCommand(),
             m_conveyor.ReverseConveyorCommand(),
             m_rollers.runReverseRollersCommand()));
 
     // A — outtake
-    driverXbox.a().whileTrue(
+    driverXbox.cross().whileTrue(
         Commands.parallel(
             m_intake.runOuttakeCommand(),
             m_rollers.runReverseRollersCommand()));
@@ -325,21 +326,21 @@ public class RobotContainer {
     driverXbox.povLeft().whileTrue(drivebase.driveToPoseDeffered());
 
     // start zero gyro
-    driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
+    driverXbox.touchpad().onTrue(Commands.runOnce(drivebase::zeroGyro));
 
     // ==================== OPERATOR BINDINGS ====================
 
   
-    operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPMCommand(RPSToRPM(30)));
+    operatorXbox.L2().whileTrue(m_shooter.setTargetRPMCommand(RPSToRPM(30)));
     // LB - hood to 33.2 deg. Check it against a protractor, and measure the ball exit
     //      height here and at HOOD_MIN: SHOOTER_HEIGHT_M assumes it does not move.
-    operatorXbox.leftBumper().whileTrue(m_hood.setAngleCommand(35));
+    operatorXbox.L1().whileTrue(m_hood.setAngleCommand(35));
     // RB - turret to 45 deg. A real arc, so Turret/FrameDisagreementDeg should stay near
     //      zero the whole way if GEAR_RATIO = 50 is right.
-    operatorXbox.rightBumper().whileTrue(m_turret.goToAngleCommand(45.0));
+    operatorXbox.R1().whileTrue(m_turret.goToAngleCommand(45.0));
             operatorXbox.povDown().whileTrue(m_hood.justmoveHooReverseCommandd());
     // Testing
-    operatorXbox.rightTrigger().whileTrue(
+    operatorXbox.R2().whileTrue(
         Commands.parallel(
             m_conveyor.HopperToShooterCommand(),
             m_kicker.KickerCommand(),
@@ -347,20 +348,20 @@ public class RobotContainer {
             m_shooter.shootingTestCommad()));
 
 
-    operatorXbox.back().onTrue(m_turret.resyncEncoderCommand());
+    operatorXbox.create().onTrue(m_turret.resyncEncoderCommand());
     // reset encoder
-    operatorXbox.start().onTrue(m_pushout.ResetEncoderCommand());
+    operatorXbox.options().onTrue(m_pushout.ResetEncoderCommand());
 
     // intake
-    operatorXbox.x().whileTrue(m_intake.runIntakeCommand());
-    operatorXbox.a().whileTrue(
+    operatorXbox.square().whileTrue(m_intake.runIntakeCommand());
+    operatorXbox.cross().whileTrue(
         Commands.parallel(
             m_intake.runOuttakeCommand(),
             m_rollers.runReverseRollersCommand()));
 
     // pushout
-    operatorXbox.y().whileTrue(m_pushout.PushoutDutyCycleCommand());
-    operatorXbox.b().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
+    operatorXbox.triangle().whileTrue(m_pushout.PushoutDutyCycleCommand());
+    operatorXbox.circle().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
 
     // vision
     // operatorXbox.povUp().onTrue(drivebase.FrontToggle());
@@ -376,7 +377,7 @@ public class RobotContainer {
           new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
           new ProfiledPIDController(5, 0, 0,
               new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
-      driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
+      driverXbox.touchpad().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
       driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
       driverXbox.button(2).whileTrue(Commands.runEnd(
           () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
@@ -444,17 +445,17 @@ public class RobotContainer {
     Logger.recordOutput("Input/Driver/LeftY", driverXbox.getLeftY());
     Logger.recordOutput("Input/Driver/RightX", driverXbox.getRightX());
     Logger.recordOutput("Input/Driver/RightY", driverXbox.getRightY());
-    Logger.recordOutput("Input/Driver/LeftTrigger", driverXbox.getLeftTriggerAxis());
-    Logger.recordOutput("Input/Driver/RightTrigger", driverXbox.getRightTriggerAxis());
+    Logger.recordOutput("Input/Driver/LeftTrigger", driverXbox.getL2Axis());
+    Logger.recordOutput("Input/Driver/RightTrigger", driverXbox.getR2Axis());
 
     Logger.recordOutput("Input/Operator/LeftX", operatorXbox.getLeftX());
     Logger.recordOutput("Input/Operator/LeftY", operatorXbox.getLeftY());
     Logger.recordOutput("Input/Operator/RightX", operatorXbox.getRightX());
     Logger.recordOutput("Input/Operator/RightY", operatorXbox.getRightY());
-    Logger.recordOutput("Input/Operator/LeftTrigger", operatorXbox.getLeftTriggerAxis());
-    Logger.recordOutput("Input/Operator/RightTrigger", operatorXbox.getRightTriggerAxis());
+    Logger.recordOutput("Input/Operator/LeftTrigger", operatorXbox.getL2Axis());
+    Logger.recordOutput("Input/Operator/RightTrigger", operatorXbox.getR2Axis());
 
-    Logger.recordOutput("Shooting/RTHeld", driverXbox.rightTrigger().getAsBoolean());
+    Logger.recordOutput("Shooting/RTHeld", driverXbox.R2().getAsBoolean());
     Logger.recordOutput("Shooting/InAllianceZone", isInAllianceZone());
   }
 

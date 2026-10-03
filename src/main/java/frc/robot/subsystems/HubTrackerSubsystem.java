@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 
@@ -31,7 +32,7 @@ public class HubTrackerSubsystem extends SubsystemBase
     @SuppressWarnings("unused")
     private FieldObject2d traj;
 
-    final CommandXboxController driverController;
+    final CommandPS5Controller driverController;
 
     boolean active = true;
 
@@ -45,7 +46,7 @@ public class HubTrackerSubsystem extends SubsystemBase
     
     int x = 0;
     
-    public HubTrackerSubsystem(SwerveSubsystem drivebase, CommandXboxController driverController)
+    public HubTrackerSubsystem(SwerveSubsystem drivebase, CommandPS5Controller driverController)
     {
         SmartDashboard.putString("Hub Color For Xavier", RED.toHexString());
         this.drivebase = drivebase;
