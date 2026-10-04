@@ -6,6 +6,7 @@ package frc.robot;
 
 // import frc.robot.Constants.ShooterConstants;
 import java.util.Set;
+import frc.robot.utils.ShotTrim;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -101,6 +102,19 @@ public class RobotContainer {
     AimTurret turretWarm = new AimTurret(m_turret, drivebase);
     @SuppressWarnings("unused")
     AimHood hoodWarm = new AimHood(m_hood, drivebase);
+    @SuppressWarnings("unused")
+    Command rtWarm = Commands.sequence(
+        Commands.parallel(
+            new ControlAllShooting(
+                m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase, operatorXbox.povUp()),
+            new AimHood(m_hood, drivebase),
+            drivebase.lockCommand(
+                driverXbox::getLeftX,
+                driverXbox::getLeftY,
+                driverXbox::getRightX,
+                driveAngularVelocity::get)));
+    ShotTrim.hub();
+    ShotTrim.ferry();
   }
 
   public RobotContainer() {

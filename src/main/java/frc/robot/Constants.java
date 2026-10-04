@@ -121,6 +121,10 @@ public final class Constants {
     // exactly when pose matters most. Single tag stays tighter; it has no geometry to check.
     public static final double MAX_SINGLE_TAG_DIST_M = 4.0;
     public static final double MAX_MULTI_TAG_DIST_M = 6.0;
+    public static final double MAX_JUMP_SINGLE_TAG_M = 1.0;
+    public static final double MAX_JUMP_MULTI_TAG_M = 1.0;
+    public static final int RELOCALIZE_FRAMES = 5;
+    public static final double RELOCALIZE_AGREE_M = 0.3;
 
     // xyStd = base + coeff * dist^2, in metres. Starting points for Limelight 4, NOT measured.
     // To measure: park disabled at taped distances, log botpose_orb_wpiblue, and the scatter at

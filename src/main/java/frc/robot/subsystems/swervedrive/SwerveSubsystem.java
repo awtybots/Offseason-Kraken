@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.DrivebaseConstants;
 import frc.robot.Constants.LimelightConstants;
+import frc.robot.utils.VisionJumpGate;
 import frc.robot.LimelightHelpers;
 
 import java.io.File;
@@ -94,6 +95,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public boolean useFrontLimelight = true;
   public boolean useBackLimelight = true;
+  private final VisionJumpGate visionGate = new VisionJumpGate();
   public boolean useLeftLimelight = true;
 
   boolean locked = false;
@@ -131,7 +133,7 @@ public class SwerveSubsystem extends SubsystemBase {
         : new Pose2d(Meter.of(16), Meter.of(4), Rotation2d.fromDegrees(180));
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
     // objects being created.
-    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.POSE;
     try {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED, startingPose);
       // Alternative method if you don't want to supply the conversion factor via JSON
@@ -840,6 +842,10 @@ public class SwerveSubsystem extends SubsystemBase {
     if(megaTag == 1) // If using mega tag 1
     {
       LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
+      if(!visionGate.isNewFrame(cameraName, mt1.timestampSeconds))
+      {
+        return;
+      }
 
       if(mt1.tagCount == 0)
       {
@@ -870,6 +876,13 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         doRejectUpdate = true;
       }
+      boolean jumpRejected = !doRejectUpdate
+          && !visionGate.accept(cameraName, mt1.pose, mt1.tagCount, getPose());
+      if(jumpRejected)
+      {
+        doRejectUpdate = true;
+      }
+      Logger.recordOutput("Vision/" + cameraName + "/JumpRejected", jumpRejected);
 
       if(!doRejectUpdate)
       {
@@ -895,6 +908,10 @@ public class SwerveSubsystem extends SubsystemBase {
       swerveDrive.getOdometryHeading().getDegrees(),
       0.0, 0.0, 0.0, 0.0, 0.0);
       LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+      if(!visionGate.isNewFrame(cameraName, mt2.timestampSeconds))
+      {
+        return;
+      }
 
       if(Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(DegreesPerSecond)) > 720)
       {
@@ -909,6 +926,13 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         doRejectUpdate = true;
       }
+      boolean jumpRejected = !doRejectUpdate
+          && !visionGate.accept(cameraName, mt2.pose, mt2.tagCount, getPose());
+      if(jumpRejected)
+      {
+        doRejectUpdate = true;
+      }
+      Logger.recordOutput("Vision/" + cameraName + "/JumpRejected", jumpRejected);
       if(!doRejectUpdate)
       {
         // Scale std devs by distance and tag count
