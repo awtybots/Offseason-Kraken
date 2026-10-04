@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.spark.SparkMax;
@@ -15,6 +16,7 @@ import org.littletonrobotics.junction.Logger;
 
 import frc.robot.Configs;
 import frc.robot.Constants.HoodConstants;
+import frc.robot.utils.StallHomer;
 
 import static frc.robot.utils.utils.*;
 
@@ -25,6 +27,8 @@ public class Hood extends SubsystemBase {
     private RelativeEncoder HoodEncoder = HoodMotor.getEncoder();
 
     private double currentTargetDegrees = HoodConstants.HOOD_MIN_DEGREES; // tracks last commanded angle, used for isAtAngle check
+    private final StallHomer homer = new StallHomer(HoodConstants.HOMING_STALL_RPM,
+            HoodConstants.HOMING_MIN_SECONDS, HoodConstants.HOMING_SETTLE_SECONDS, HoodConstants.HOMING_TIMEOUT_SECONDS);
 
     public Hood() {
         HoodMotor.configure(Configs.HoodSubsystem.HoodMotorConfig, ResetMode.kResetSafeParameters,
@@ -47,24 +51,40 @@ public class Hood extends SubsystemBase {
 
 
     public boolean isAtAngle() { // true = hood is within tolerance of its last commanded angle
-        return Math.abs(getAngleDegrees() - currentTargetDegrees) <= HoodConstants.ANGLE_TOLERANCE_DEGREES;
+        return homer.isHomed()
+                && Math.abs(getAngleDegrees() - currentTargetDegrees) <= HoodConstants.ANGLE_TOLERANCE_DEGREES;
     }
 
     public void setAngle(double degrees) { // ensures is within limits and sends to controller
         double clamped = Math.max(HoodConstants.HOOD_MIN_DEGREES, Math.min(HoodConstants.HOOD_MAX_DEGREES, degrees));
         currentTargetDegrees = clamped; // track target so isAtAngle can check it
-        HoodController.setSetpoint(degreesToRotations(clamped), ControlType.kPosition);
+        if (!homer.isHoming()) {
+            sendSetpoint();
+        }
+    }
+
+    private void sendSetpoint() {
+        HoodController.setSetpoint(degreesToRotations(currentTargetDegrees), ControlType.kPosition);
     }
 
     public void stopHood() {
+        if (homer.isHoming()) {
+            return;
+        }
         HoodMotor.set(0);
     }
 
     public void moveHood() {
+        if (homer.isHoming()) {
+            return;
+        }
         HoodMotor.set(1);
     }
 
     public void moveHoodReverse() {
+        if (homer.isHoming()) {
+            return;
+        }
         HoodMotor.set(-1);
     }
 
@@ -113,8 +133,22 @@ public class Hood extends SubsystemBase {
         });
     }
 
+    public Command HomeCommand() {
+        return this.runOnce(homer::rehome);
+    }
+
     @Override
     public void periodic() {
+        switch (homer.update(DriverStation.isEnabled(), HoodEncoder.getVelocity())) {
+            case DRIVE -> HoodMotor.set(-HoodConstants.HOMING_DUTY);
+            case ZERO -> {
+                HoodEncoder.setPosition(degreesToRotations(HoodConstants.HOOD_MIN_DEGREES));
+                sendSetpoint();
+            }
+            case GAVE_UP -> sendSetpoint();
+            case IDLE -> {
+            }
+        }
         Logger.recordOutput("Hood/AngleDegrees", getAngleDegrees());
         Logger.recordOutput("Hood/TargetDegrees", currentTargetDegrees);
         Logger.recordOutput("Hood/IsAtAngle", isAtAngle());
@@ -122,5 +156,8 @@ public class Hood extends SubsystemBase {
         Logger.recordOutput("Hood/Voltage", getAppliedVoltage(HoodMotor));
         Logger.recordOutput("Hood/StatorCurrent", getStatorCurrent(HoodMotor));
         Logger.recordOutput("Hood/CurrentDraw", getSupplyCurrent(HoodMotor));
+        Logger.recordOutput("Hood/Homed", homer.isHomed());
+        Logger.recordOutput("Hood/Homing", homer.isHoming());
+        Logger.recordOutput("Hood/HomingTimedOut", homer.timedOut());
     }
 }

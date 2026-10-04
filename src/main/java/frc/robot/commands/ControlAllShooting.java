@@ -7,6 +7,8 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.utils.ShotTrim;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 import static frc.robot.utils.utils.*;
 
@@ -22,6 +24,7 @@ public class ControlAllShooting extends Command {
     private final Rollers m_rollers;
     private final Turret m_turret;
     private final SwerveSubsystem drivebase;
+    private final BooleanSupplier ignoreTolerances;
 
     public double distance = 0.0;
     public double recordedTargetRPM = 0.0;
@@ -33,6 +36,12 @@ public class ControlAllShooting extends Command {
 
     public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Hood hood,
             Rollers rollers, Turret turret, SwerveSubsystem swerve) {
+        this(shooter, conveyor, kicker, hood, rollers, turret, swerve, () -> false);
+    }
+
+    public ControlAllShooting(Shooter shooter, Conveyor conveyor, Kicker kicker, Hood hood,
+            Rollers rollers, Turret turret, SwerveSubsystem swerve, BooleanSupplier ignoreTolerances) {
+        this.ignoreTolerances = ignoreTolerances;
         this.m_shooter = shooter;
         this.m_conveyor = conveyor;
         this.m_kicker = kicker;
@@ -68,6 +77,9 @@ public class ControlAllShooting extends Command {
     }
 
     private boolean isReadyToFire() {
+        if (inShootingZone && ignoreTolerances.getAsBoolean()) {
+            return true;
+        }
         return inShootingZone
                 && (isFiring ? isAboveFiringFloor : isAtSpeed)
                 && m_hood.isAtAngle()
@@ -97,7 +109,7 @@ public class ControlAllShooting extends Command {
             turretAimErrorDegrees = aimErrorTo(
                     drivebase.getCachedDynamicHubLocation().getTranslation(), turretPos);
 
-            double targetRPM = ShooterConstants.hubShooterTable.get(dist);
+            double targetRPM = ShooterConstants.hubShooterTable.get(dist) * ShotTrim.hub();
             recordedTargetRPM = targetRPM;
 
             m_shooter.setTargetRPM(1200);
@@ -116,7 +128,7 @@ public class ControlAllShooting extends Command {
             turretAimErrorDegrees = aimErrorTo(
                     drivebase.getCachedDynamicFerryLocation().getTranslation(), turretPos);
 
-            double targetRPM = ShooterConstants.ferryShooterTable.get(dist);
+            double targetRPM = ShooterConstants.ferryShooterTable.get(dist) * ShotTrim.ferry();
             recordedTargetRPM = targetRPM;
 
             m_shooter.setTargetRPM(targetRPM);
@@ -172,6 +184,7 @@ public class ControlAllShooting extends Command {
         Logger.recordOutput("Shooting/TurretAtCableLimit", m_turret.isAtCableLimit());
         Logger.recordOutput("Shooting/Distance", distance);
         Logger.recordOutput("Shooting/InShootingZone", inShootingZone);
+        Logger.recordOutput("Shooting/IgnoreTolerances", ignoreTolerances.getAsBoolean());
     }
 
     @Override

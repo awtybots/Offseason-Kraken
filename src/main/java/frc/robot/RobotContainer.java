@@ -279,7 +279,7 @@ public class RobotContainer {
     driverXbox.rightTrigger().whileTrue(
         Commands.defer(() -> {
           ControlAllShooting shootCmd = new ControlAllShooting(
-              m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase);
+              m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase, operatorXbox.povUp());
           AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
           return Commands.sequence(
               Commands.parallel(
