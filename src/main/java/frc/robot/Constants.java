@@ -251,13 +251,11 @@ public final class Constants {
     public static final double ROLLER_RADIUS_BOTTOM_M = 1.5 * 0.0254;
     public static final double ROLLER_RADIUS_TOP_M = 0.5 * 0.0254;
     public static final double PULLEY_TOP_PER_BOTTOM = 2.0 / 3.0;
-    public static final double SHOOTER_EFFICIENCY = 0.90; // grip/slip loss into the ball
+    public static final double SHOOTER_EFFICIENCY = 1.092;
 
     // ---- AERO (parameters the tables below were generated with) ----
-    // Linear drag time constant. Kept at 0.45 rather than 6328's 0.375: their value
-    // is for a ball with far less spin, and a sphere at S=0.64 carries noticeably
-    // more drag than the spin-free C_d=0.63 that 5987 measured by dropping it.
-    public static final double LINEAR_DRAG_K = 0.45;
+    // Linear drag time constant.
+    public static final double LINEAR_DRAG_K = 0.35;
     // Magnus lift as a fraction of drag. Both scale with v^2 about the same way, so
     // k_magnus = LINEAR_DRAG_K * MAGNUS_LIFT_RATIO and this is just C_L / C_D.
     // C_L ~ 0.30 at S = 0.64 (spheres saturate near 0.3-0.4). TOF is sensitive to
@@ -275,19 +273,18 @@ public final class Constants {
     // 1% but adds ~11% to flight time, because the lift vector is velocity rotated
     // 90 deg and points up-and-backward while the ball is still climbing.
     //
-    // MODEL OUTPUT, NOT MEASURED. Still sits ~20% under every team that measured
-    // this game piece; the residual is most likely arc choice, not aero.
+    // MODEL OUTPUT, NOT MEASURED.
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), Seconds.of(0.811)),
-          Pair.of(Meters.of(2.5), Seconds.of(0.882)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.954)),
-          Pair.of(Meters.of(3.5), Seconds.of(1.025)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.095)),
-          Pair.of(Meters.of(4.5), Seconds.of(1.162)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.228)),
-          Pair.of(Meters.of(5.5), Seconds.of(1.293)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.356)))) {
+          Pair.of(Meters.of(2.0), Seconds.of(0.961)),
+          Pair.of(Meters.of(2.5), Seconds.of(1.041)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.123)),
+          Pair.of(Meters.of(3.5), Seconds.of(1.204)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.281)),
+          Pair.of(Meters.of(4.5), Seconds.of(1.354)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.426)),
+          Pair.of(Meters.of(5.5), Seconds.of(1.500)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.572)))) {
         TOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
@@ -299,22 +296,22 @@ public final class Constants {
     public final static InterpolatingDoubleTreeMap ferryTOF = new InterpolatingDoubleTreeMap();
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Seconds.of(0.678)),
-          Pair.of(Meters.of(2.0), Seconds.of(0.766)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.924)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.067)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.198)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.322)),
-          Pair.of(Meters.of(7.0), Seconds.of(1.439)),
-          Pair.of(Meters.of(8.0), Seconds.of(1.553)),
-          Pair.of(Meters.of(9.0), Seconds.of(1.662)),
-          Pair.of(Meters.of(10.0), Seconds.of(1.771)),
-          Pair.of(Meters.of(11.0), Seconds.of(1.88)))) {
+          Pair.of(Meters.of(1.5), Seconds.of(0.760)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.864)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.049)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.213)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.364)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.505)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.638)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.765)),
+          Pair.of(Meters.of(9.0), Seconds.of(1.888)),
+          Pair.of(Meters.of(10.0), Seconds.of(2.009)),
+          Pair.of(Meters.of(11.0), Seconds.of(2.132)))) {
         ferryTOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
 
-    public static final double TOF_SCALE = 1.0;   // tune up toward ~1.25 with real shots
+    public static final double TOF_SCALE = 1.0;
 
     public static final int SOTM_MAX_ITERATIONS = 32;
     public static final double SOTM_TOLERANCE_M = 0.001;
@@ -347,21 +344,18 @@ public final class Constants {
       // ferryHoodTable angle, same drag + Magnus model as the hub table. Domain 1.5-11 m
       // matches ferryTOF and covers the neutral zone.
       //
-      // HEADROOM: 5387 RPM at 10 m is 90% of Kraken free speed and 5734 at 11 m is 96%.
-      // The far end will droop under load. Longest pass the neutral zone allows is
-      // ~10.6 m, so treat anything past ~9 m as best-effort.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), RPM.of(1619)),
-          Pair.of(Meters.of(2.0), RPM.of(1957)),
-          Pair.of(Meters.of(3.0), RPM.of(2533)),
-          Pair.of(Meters.of(4.0), RPM.of(3031)),
-          Pair.of(Meters.of(5.0), RPM.of(3482)),
-          Pair.of(Meters.of(6.0), RPM.of(3900)),
-          Pair.of(Meters.of(7.0), RPM.of(4294)),
-          Pair.of(Meters.of(8.0), RPM.of(4670)),
-          Pair.of(Meters.of(9.0), RPM.of(5032)),
-          Pair.of(Meters.of(10.0), RPM.of(5387)),
-          Pair.of(Meters.of(11.0), RPM.of(5734)))) {
+          Pair.of(Meters.of(1.5), RPM.of(1411)),
+          Pair.of(Meters.of(2.0), RPM.of(1692)),
+          Pair.of(Meters.of(3.0), RPM.of(2174)),
+          Pair.of(Meters.of(4.0), RPM.of(2591)),
+          Pair.of(Meters.of(5.0), RPM.of(2968)),
+          Pair.of(Meters.of(6.0), RPM.of(3318)),
+          Pair.of(Meters.of(7.0), RPM.of(3649)),
+          Pair.of(Meters.of(8.0), RPM.of(3964)),
+          Pair.of(Meters.of(9.0), RPM.of(4267)),
+          Pair.of(Meters.of(10.0), RPM.of(4565)),
+          Pair.of(Meters.of(11.0), RPM.of(4861)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
     }
@@ -483,17 +477,17 @@ public final class Constants {
       // reach. If ferry
       // shots come out too lofted, that is the hood running out of travel, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Degrees.of(46.6)),
-          Pair.of(Meters.of(2.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(3.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(4.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(5.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(6.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(7.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(8.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(9.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(10.0), Degrees.of(46.5)),
-          Pair.of(Meters.of(11.0), Degrees.of(46.3)))) {
+          Pair.of(Meters.of(1.5), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(2.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(3.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(4.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(5.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(6.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(7.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(8.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(9.0), Degrees.of(46.6*HOOD_SCALE)),
+          Pair.of(Meters.of(10.0), Degrees.of(46.5*HOOD_SCALE)),
+          Pair.of(Meters.of(11.0), Degrees.of(46.3*HOOD_SCALE)))) {
         ferryHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
     }
