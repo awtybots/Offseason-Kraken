@@ -109,7 +109,7 @@ public class ControlAllShooting extends Command {
             turretAimErrorDegrees = aimErrorTo(
                     drivebase.getCachedDynamicHubLocation().getTranslation(), turretPos);
 
-            double targetRPM = ShooterConstants.hubShooterTable.get(dist) * ShotTrim.hub();
+            double targetRPM = ShotTrim.hubRPM(ShooterConstants.hubShooterTable.get(dist));
             recordedTargetRPM = targetRPM;
 
             m_shooter.setTargetRPM(1200);
@@ -128,7 +128,7 @@ public class ControlAllShooting extends Command {
             turretAimErrorDegrees = aimErrorTo(
                     drivebase.getCachedDynamicFerryLocation().getTranslation(), turretPos);
 
-            double targetRPM = ShooterConstants.ferryShooterTable.get(dist) * ShotTrim.ferry();
+            double targetRPM = ShotTrim.ferryRPM(ShooterConstants.ferryShooterTable.get(dist));
             recordedTargetRPM = targetRPM;
 
             m_shooter.setTargetRPM(targetRPM);

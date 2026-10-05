@@ -330,6 +330,9 @@ public final class Constants {
     public static final double rPM_Factor = 0.85;
     public static final double RPM_TRIM_MIN = 0.7;
     public static final double RPM_TRIM_MAX = 1.3;
+    public static final double HUB_RPM_OFFSET = 0.0;
+    public static final double FERRY_RPM_OFFSET = 0.0;
+    public static final double RPM_OFFSET_TRIM_LIMIT = 500.0;
     public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
     static {
@@ -433,6 +436,7 @@ public final class Constants {
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.3;
 
     public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
+    public static final double FF_VOLTS_PER_DEG_PER_SEC = 0.0095;
   }
 
   public static final class HoodConstants {
