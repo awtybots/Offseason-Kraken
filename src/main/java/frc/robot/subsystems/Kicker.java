@@ -91,7 +91,7 @@ public class Kicker extends SubsystemBase {
     private void feedAtSurfaceSpeed(double surfaceMps) {
         double feederRPS = surfaceMps / (Math.PI * KickerConstants.FEEDER_WHEEL_DIAMETER_M) * KickerConstants.FEEDER_GEAR_RATIO;
         vertRollerTargetRPM = KickerConstants.VERT_ROLLER_RPM;
-        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_RPM, ControlType.kVelocity);
+        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_SPEED, ControlType.kVelocity);
         KickerMotor.setControl(velocityRequest.withVelocity(feederRPS).withEnableFOC(Constants.USE_FOC));
     }
 
