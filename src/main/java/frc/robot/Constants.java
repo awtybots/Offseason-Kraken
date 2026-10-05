@@ -512,7 +512,7 @@ public final class Constants {
     public static final double JAM_DEBOUNCE_SECONDS = 0.05;
     public static final double JAM_REVERSE_SECONDS = 0.4;
 
-    public static final double VERT_ROLLER_REVERSE_SPEED = 0.85;
+    public static final double VERT_ROLLER_REVERSE_SPEED = -0.85;
     public static final double VERT_ROLLER_SPEED = 0.85;
     public static final double VERT_ROLLER_RPM = 3600;
 
