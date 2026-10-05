@@ -117,8 +117,6 @@ public final class Constants {
     public static final String LIMELIGHT_BACK = "limelight-back"; //10.99.95.16
     public static final String LIMELIGHT_LEFT = "limelight-left"; //10.99.95.17
 
-    // Was 3 m for both, but the hub shot table spans 2-6 m, so every estimate was discarded
-    // exactly when pose matters most. Single tag stays tighter; it has no geometry to check.
     public static final double MAX_SINGLE_TAG_DIST_M = 4.0;
     public static final double MAX_MULTI_TAG_DIST_M = 6.0;
     public static final double MAX_JUMP_SINGLE_TAG_M = 1.0;
@@ -275,9 +273,7 @@ public final class Constants {
     public final static InterpolatingDoubleTreeMap TOF = new InterpolatingDoubleTreeMap();
 
     // Flight time of the hubHoodTable shot, solved with linear drag AND Magnus lift
-    // (see MECHANISM/AERO block above). Domain 2-6 m; InterpolatingDoubleTreeMap
-    // clamps outside it, which is why ferry must NOT use this map - see the ferry
-    // tables below.
+    // (see MECHANISM/AERO block above).
     //
     // Magnus is what moves these numbers: it changes required launch speed by under
     // 1% but adds ~11% to flight time, because the lift vector is velocity rotated
@@ -286,6 +282,8 @@ public final class Constants {
     // MODEL OUTPUT, NOT MEASURED.
     static {
       for (var entry : List.of(
+          Pair.of(Meters.of(1.0), Seconds.of(0.594)),
+          Pair.of(Meters.of(1.5), Seconds.of(0.843)),
           Pair.of(Meters.of(2.0), Seconds.of(0.961)),
           Pair.of(Meters.of(2.5), Seconds.of(1.041)),
           Pair.of(Meters.of(3.0), Seconds.of(1.123)),
@@ -294,18 +292,20 @@ public final class Constants {
           Pair.of(Meters.of(4.5), Seconds.of(1.354)),
           Pair.of(Meters.of(5.0), Seconds.of(1.426)),
           Pair.of(Meters.of(5.5), Seconds.of(1.500)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.572)))) {
+          Pair.of(Meters.of(6.0), Seconds.of(1.572)),
+          Pair.of(Meters.of(6.5), Seconds.of(1.639)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.706)),
+          Pair.of(Meters.of(7.5), Seconds.of(1.774)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.839)))) {
         TOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
 
-    // Ferry flight time. Ferry MUST NOT use the hub TOF map above: that map's domain is
-    // 2-6 m and InterpolatingDoubleTreeMap clamps, so every pass past 6 m used to lead
-    // with the 6 m hub flight time. Domain here is 1.5-11 m, which covers the 1.8-10.6 m
-    // a robot can actually be from its ferry target while inside the NEUTRAL ZONE.
+    // Ferry flight time. Ferry MUST NOT use the hub TOF map above
     public final static InterpolatingDoubleTreeMap ferryTOF = new InterpolatingDoubleTreeMap();
     static {
       for (var entry : List.of(
+          Pair.of(Meters.of(1.0), Seconds.of(0.644)),
           Pair.of(Meters.of(1.5), Seconds.of(0.760)),
           Pair.of(Meters.of(2.0), Seconds.of(0.864)),
           Pair.of(Meters.of(3.0), Seconds.of(1.049)),
@@ -316,7 +316,9 @@ public final class Constants {
           Pair.of(Meters.of(8.0), Seconds.of(1.765)),
           Pair.of(Meters.of(9.0), Seconds.of(1.888)),
           Pair.of(Meters.of(10.0), Seconds.of(2.009)),
-          Pair.of(Meters.of(11.0), Seconds.of(2.132)))) {
+          Pair.of(Meters.of(11.0), Seconds.of(2.132)),
+          Pair.of(Meters.of(12.0), Seconds.of(2.248)),
+          Pair.of(Meters.of(13.0), Seconds.of(2.363)))) {
         ferryTOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
@@ -340,6 +342,8 @@ public final class Constants {
       // Magnus is worth under 1% here. Expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
+          Pair.of(Meters.of(1.0), RPM.of(2536*rPM_Factor)),
+          Pair.of(Meters.of(1.5), RPM.of(2834*rPM_Factor)),
           Pair.of(Meters.of(2.0), RPM.of(3065*rPM_Factor)),
           Pair.of(Meters.of(2.5), RPM.of(3262*rPM_Factor)),
           Pair.of(Meters.of(3.0), RPM.of(3461*rPM_Factor)),
@@ -348,15 +352,19 @@ public final class Constants {
           Pair.of(Meters.of(4.5), RPM.of(4048*rPM_Factor)),
           Pair.of(Meters.of(5.0), RPM.of(4239*rPM_Factor)),
           Pair.of(Meters.of(5.5), RPM.of(4426*rPM_Factor)),
-          Pair.of(Meters.of(6.0), RPM.of(4610*rPM_Factor)))) {
+          Pair.of(Meters.of(6.0), RPM.of(4610*rPM_Factor)),
+          Pair.of(Meters.of(6.5), RPM.of(4789*rPM_Factor)),
+          Pair.of(Meters.of(7.0), RPM.of(4967*rPM_Factor)),
+          Pair.of(Meters.of(7.5), RPM.of(5146*rPM_Factor)),
+          Pair.of(Meters.of(8.0), RPM.of(5320*rPM_Factor)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
       // Derived, no longer placeholders: floor target (dz = -0.5177 m) on the
-      // ferryHoodTable angle, same drag + Magnus model as the hub table. Domain 1.5-11 m
-      // matches ferryTOF and covers the neutral zone.
+      // ferryHoodTable angle, same drag + Magnus model as the hub table.
       //
       for (var entry : List.of(
+          Pair.of(Meters.of(1.0), RPM.of(1081)),
           Pair.of(Meters.of(1.5), RPM.of(1411)),
           Pair.of(Meters.of(2.0), RPM.of(1692)),
           Pair.of(Meters.of(3.0), RPM.of(2174)),
@@ -367,7 +375,9 @@ public final class Constants {
           Pair.of(Meters.of(8.0), RPM.of(3964)),
           Pair.of(Meters.of(9.0), RPM.of(4267)),
           Pair.of(Meters.of(10.0), RPM.of(4565)),
-          Pair.of(Meters.of(11.0), RPM.of(4861)))) {
+          Pair.of(Meters.of(11.0), RPM.of(4861)),
+          Pair.of(Meters.of(12.0), RPM.of(5146)),
+          Pair.of(Meters.of(13.0), RPM.of(5427)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
     }
@@ -476,6 +486,8 @@ public final class Constants {
       // Hood angle = 90 - ball_exit_angle. Exit angle chosen as the min-launch-speed
       // angle: theta_opt = 45 + 0.5 * atan(dz/d).
       for (var entry : List.of(
+          Pair.of(Meters.of(1.0), Degrees.of(HOOD_MIN_DEGREES)),
+          Pair.of(Meters.of(1.5), Degrees.of(HOOD_MIN_DEGREES)),
           Pair.of(Meters.of(2.0), Degrees.of(28.4*HOOD_SCALE)),
           Pair.of(Meters.of(2.5), Degrees.of(31.2*HOOD_SCALE)),
           Pair.of(Meters.of(3.0), Degrees.of(33.2*HOOD_SCALE)),
@@ -484,7 +496,11 @@ public final class Constants {
           Pair.of(Meters.of(4.5), Degrees.of(36.9*HOOD_SCALE)),
           Pair.of(Meters.of(5.0), Degrees.of(37.7*HOOD_SCALE)),
           Pair.of(Meters.of(5.5), Degrees.of(38.3*HOOD_SCALE)),
-          Pair.of(Meters.of(6.0), Degrees.of(38.8*HOOD_SCALE)))) {
+          Pair.of(Meters.of(6.0), Degrees.of(38.8*HOOD_SCALE)),
+          Pair.of(Meters.of(6.5), Degrees.of(39.3*HOOD_SCALE)),
+          Pair.of(Meters.of(7.0), Degrees.of(39.7*HOOD_SCALE)),
+          Pair.of(Meters.of(7.5), Degrees.of(40.0*HOOD_SCALE)),
+          Pair.of(Meters.of(8.0), Degrees.of(40.3*HOOD_SCALE)))) {
         hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
 
@@ -494,6 +510,7 @@ public final class Constants {
       // reach. If ferry
       // shots come out too lofted, that is the hood running out of travel, not the table.
       for (var entry : List.of(
+          Pair.of(Meters.of(1.0), Degrees.of(46.6*HOOD_SCALE)),
           Pair.of(Meters.of(1.5), Degrees.of(46.6*HOOD_SCALE)),
           Pair.of(Meters.of(2.0), Degrees.of(46.6*HOOD_SCALE)),
           Pair.of(Meters.of(3.0), Degrees.of(46.6*HOOD_SCALE)),
@@ -504,7 +521,9 @@ public final class Constants {
           Pair.of(Meters.of(8.0), Degrees.of(46.6*HOOD_SCALE)),
           Pair.of(Meters.of(9.0), Degrees.of(46.6*HOOD_SCALE)),
           Pair.of(Meters.of(10.0), Degrees.of(46.5*HOOD_SCALE)),
-          Pair.of(Meters.of(11.0), Degrees.of(46.3*HOOD_SCALE)))) {
+          Pair.of(Meters.of(11.0), Degrees.of(46.3*HOOD_SCALE)),
+          Pair.of(Meters.of(12.0), Degrees.of(46.2*HOOD_SCALE)),
+          Pair.of(Meters.of(13.0), Degrees.of(46.1*HOOD_SCALE)))) {
         ferryHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
     }
