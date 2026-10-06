@@ -98,6 +98,11 @@ public class Rollers extends SubsystemBase {
         }).finallyDo(interrupted -> stopRollers());
     }
 
+    public Command RunRollersCommand() {
+        return this.run(() -> {
+            RunRollers(false);
+        }).finallyDo(interrupted -> stopRollers());
+    }
 
     public Command runReverseRollersCommand() {
         return this.run(() -> {
