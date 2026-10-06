@@ -583,7 +583,7 @@ public final class Constants {
     public static final double ROLLERS_RPS = -100;
     public static final double REVERSE_ROLLERS_RPS = 100;
 
-    public static final double ROLLERS_SCORING_RPS = 75;
+    public static final double ROLLERS_SCORING_RPS = 50;
     public static final double ROLLERS_PASSING_RPS = 85;
 
     public static final double ROLLERS_SPEED = 0.75;
