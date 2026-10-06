@@ -512,8 +512,8 @@ public final class Constants {
     public static final double JAM_DEBOUNCE_SECONDS = 0.05;
     public static final double JAM_REVERSE_SECONDS = 0.4;
 
-    public static final double VERT_ROLLER_REVERSE_SPEED = -0;
-    public static final double VERT_ROLLER_SPEED = 0;
+    public static final double VERT_ROLLER_REVERSE_SPEED = -1; // negative = outwards, positive = inwards
+    public static final double VERT_ROLLER_SPEED = 1;
     public static final double VERT_ROLLER_RPM = 3600;
 
     public static final double FEEDER_WHEEL_DIAMETER_M = Units.inchesToMeters(2.0);
