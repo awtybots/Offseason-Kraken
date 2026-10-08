@@ -290,8 +290,7 @@ public class RobotContainer {
       drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
     } else {
 
-      drivebase.setDefaultCommand(drivebase.driveFieldOrientedOrLock(
-          driveAngularVelocity, driverXbox::getLeftX, driverXbox::getLeftY, driverXbox::getRightX));
+      drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
     }
 
@@ -347,14 +346,10 @@ public class RobotContainer {
     // start zero gyro
     driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
 
-    driverXbox.y().onTrue(Commands.runOnce(() -> {
-      drivebase.toggleDefenseMode();
-      if (drivebase.isDefenseMode()) {
-        driverRumble.pulse(OperatorConstants.RUMBLE_DEFENSE_ON, OperatorConstants.RUMBLE_DEFENSE_ON_SECONDS);
-      } else {
-        driverRumble.pulse(OperatorConstants.RUMBLE_DEFENSE_OFF, OperatorConstants.RUMBLE_DEFENSE_OFF_SECONDS);
-      }
-    }));
+    drivebase.setDefenseCondition(() -> DriverStation.isTeleopEnabled()
+        && driverXbox.rightTrigger().getAsBoolean()
+        && SwerveSubsystem.sticksIdle(driverXbox.getLeftX(), driverXbox.getLeftY(),
+            driverXbox.getRightX(), driverXbox.getRightY()));
 
     // ==================== OPERATOR BINDINGS ====================
 

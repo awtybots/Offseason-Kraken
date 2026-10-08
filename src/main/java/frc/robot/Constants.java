@@ -158,10 +158,6 @@ public final class Constants {
     public static final double RUMBLE_JAM_SECONDS = 0.3;
     public static final double RUMBLE_FIRE = 0.4;
     public static final double RUMBLE_FIRE_SECONDS = 0.15;
-    public static final double RUMBLE_DEFENSE_ON = 1.0;
-    public static final double RUMBLE_DEFENSE_ON_SECONDS = 0.4;
-    public static final double RUMBLE_DEFENSE_OFF = 0.4;
-    public static final double RUMBLE_DEFENSE_OFF_SECONDS = 0.2;
     public static final double RUMBLE_LOW_BATTERY = 0.3;
     public static final double RUMBLE_LOW_BATTERY_SECONDS = 0.2;
     public static final double LOW_BATTERY_VOLTS = 9.0;

@@ -56,6 +56,7 @@ import java.util.Arrays;
 // import java.util.Optional;
 // import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.json.simple.parser.ParseException;
@@ -101,7 +102,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public boolean useLeftLimelight = true;
 
   boolean locked = false;
-  private boolean defenseMode = false;
+  private BooleanSupplier defenseCondition = () -> false;
 
   // Initialize to non-kZero so YAGSL's SwerveInputStream.aim(supplier) actually registers the target.
   // At registration time it calls supplier.get().equals(Pose2d.kZero) and skips the target if true.
@@ -351,7 +352,7 @@ public class SwerveSubsystem extends SubsystemBase {
     Logger.recordOutput("Drive/CommandedFieldVelocity", lastCommandedFieldVelocity);
     // Commanded rotational rate (rad/sec); should be ~0 when no turn input.
     Logger.recordOutput("Drive/CommandedOmega", lastCommandedRobotVelocity.omegaRadiansPerSecond);
-    Logger.recordOutput("Drive/DefenseMode", defenseMode);
+    Logger.recordOutput("Drive/DefenseMode", isDefenseMode());
     // Measured rotational rate (rad/sec); should match commanded omega.
     Logger.recordOutput("Drive/ActualOmega", robotVel.omegaRadiansPerSecond);
 
@@ -894,7 +895,7 @@ public class SwerveSubsystem extends SubsystemBase {
         double xyStd = visionStdDev(LimelightConstants.MT1_STD_BASE, LimelightConstants.MT1_STD_DIST_COEFF,
             mt1.avgTagDist, mt1.tagCount, DriverStation.isDisabled(),
             Math.hypot(moving.vxMetersPerSecond, moving.vyMetersPerSecond), moving.omegaRadiansPerSecond,
-            defenseMode);
+            isDefenseMode());
 
         swerveDrive.setVisionMeasurementStdDevs(
             VecBuilder.fill(xyStd, xyStd, LimelightConstants.THETA_STD_IGNORE));
@@ -943,7 +944,7 @@ public class SwerveSubsystem extends SubsystemBase {
         double xyStd = visionStdDev(LimelightConstants.MT2_STD_BASE, LimelightConstants.MT2_STD_DIST_COEFF,
             mt2.avgTagDist, mt2.tagCount, DriverStation.isDisabled(),
             Math.hypot(moving.vxMetersPerSecond, moving.vyMetersPerSecond), moving.omegaRadiansPerSecond,
-            defenseMode);
+            isDefenseMode());
 
         swerveDrive.setVisionMeasurementStdDevs(
             VecBuilder.fill(xyStd, xyStd, LimelightConstants.THETA_STD_IGNORE));
@@ -1176,24 +1177,16 @@ public class SwerveSubsystem extends SubsystemBase {
     swerveDrive.lockPose();
   }
 
-  public void toggleDefenseMode() {
-    defenseMode = !defenseMode;
+  public void setDefenseCondition(BooleanSupplier condition) {
+    defenseCondition = condition;
   }
 
   public boolean isDefenseMode() {
-    return defenseMode;
+    return defenseCondition.getAsBoolean();
   }
 
-  public Command driveFieldOrientedOrLock(Supplier<ChassisSpeeds> velocity, DoubleSupplier leftX,
-      DoubleSupplier leftY, DoubleSupplier rightX) {
-    return run(() -> {
-      double sticks = Math.hypot(leftX.getAsDouble(), leftY.getAsDouble()) + Math.abs(rightX.getAsDouble());
-      if (defenseMode && sticks <= Constants.OperatorConstants.DEADBAND) {
-        lock();
-      } else {
-        driveFieldOriented(velocity.get());
-      }
-    });
+  public static boolean sticksIdle(double leftX, double leftY, double rightX, double rightY) {
+    return Math.hypot(leftX, leftY) + Math.hypot(rightX, rightY) <= Constants.OperatorConstants.DEADBAND;
   }
 
   public Command lockCommand () {
@@ -1391,7 +1384,7 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     public Translation2d getLeadVelocity() {
-      return defenseMode ? new Translation2d() : getTurretFieldAimVelocity();
+      return isDefenseMode() ? new Translation2d() : getTurretFieldAimVelocity();
     }
 
     public Translation2d getTurretFieldPosition() {
