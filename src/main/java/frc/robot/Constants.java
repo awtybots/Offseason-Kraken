@@ -401,6 +401,10 @@ public final class Constants {
     // pushing into it forever.
     public static final double CABLE_LIMIT_MARGIN_DEGREES = 7.0;
     public static final double BOOT_RESYNC_DELAY_SECONDS = 1.0;
+    public static final double SEED_MAX_DEGREES_PER_SECOND = 5.0;
+    public static final double TRACK_JUMP_WINDOW_SECONDS = 0.06;
+    public static final double TRACK_JUMP_MARGIN_DEGREES = 3.0;
+    public static final int TRACK_JUMP_ACCEPT_LOOPS = 5;
 
     // Position loop on the SPARK: error is in MOTOR ROTATIONS (no positionConversionFactor
     // on the primary encoder) and the output is duty cycle, so

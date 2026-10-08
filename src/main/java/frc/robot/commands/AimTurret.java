@@ -44,6 +44,11 @@ public class AimTurret extends Command {
 
     @Override
     public void execute() {
+        Logger.recordOutput("AimTurret/Seeded", turret.isSeeded());
+        if (!turret.isSeeded()) {
+            turret.stopTurret();
+            return;
+        }
         Pose2d target = getTargetPose();
         Pose2d robotPose = swerveSubsystem.getPose();
 
