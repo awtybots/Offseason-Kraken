@@ -385,16 +385,17 @@ public final class Constants {
     public static final double GEAR_RATIO = 50.0;
 
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
-    public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions per one full turret revolution
-    public static final double ABSOLUTE_ENCODER_OFFSET = 0.919996;
+    public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions pe
+    // \r one full turret revolution
+    public static final double ABSOLUTE_ENCODER_OFFSET = 0.074053;
     public static final boolean ABSOLUTE_ENCODER_INVERTED = true; // flip if the encoder counts down when the turret
                                                                    // goes counterclockwise
 
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
     
-    public static final double MIN_CONTINUOUS_DEGREES = -330.0;
-    public static final double MAX_CONTINUOUS_DEGREES = 150.0;
+    public static final double MIN_CONTINUOUS_DEGREES = -360.0;
+    public static final double MAX_CONTINUOUS_DEGREES = 60.0;
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
@@ -538,8 +539,8 @@ public final class Constants {
     public static final double JAM_DEBOUNCE_SECONDS = 0.05;
     public static final double JAM_REVERSE_SECONDS = 0.4;
 
-    public static final double VERT_ROLLER_REVERSE_SPEED = 1; // negative = outwards, positive = inwards
-    public static final double VERT_ROLLER_SPEED = -1;
+    public static final double VERT_ROLLER_REVERSE_SPEED = -1; // negative = outwards, positive = inwards
+    public static final double VERT_ROLLER_SPEED = 1;
     public static final double VERT_ROLLER_RPM = 3600;
 
     public static final double FEEDER_WHEEL_DIAMETER_M = Units.inchesToMeters(2.0);
