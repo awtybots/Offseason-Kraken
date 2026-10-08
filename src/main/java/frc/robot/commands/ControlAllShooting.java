@@ -174,28 +174,21 @@ public class ControlAllShooting extends Command {
         // m_intake.runIntake();
 
         if (isReadyToFire()) {
-            if (!m_turret.isAtCableLimit()) {
-                isFiring = true;
-                m_kicker.ConveyorToShooter(recordedTargetRPM);
-                m_rollers.RunRollers(passing);
-                boolean rollersUnjamming = m_rollers.isUnjamming();
-                boolean kickerUnjamming = m_kicker.isUnjamming();
-                if (rollersUnjamming && !kickerUnjamming) {
-                    m_kicker.ReverseForUnjam();
-                }
-                if (kickerUnjamming && !rollersUnjamming) {
-                    m_rollers.ReverseForUnjam();
-                }
-                if (rollersUnjamming || kickerUnjamming) {
-                    m_conveyor.ReverseConveyor();
-                } else {
-                    m_conveyor.HopperToShooter(passing);
-                }
+            isFiring = true;
+            m_kicker.ConveyorToShooter(recordedTargetRPM);
+            m_rollers.RunRollers(passing);
+            boolean rollersUnjamming = m_rollers.isUnjamming();
+            boolean kickerUnjamming = m_kicker.isUnjamming();
+            if (rollersUnjamming && !kickerUnjamming) {
+                m_kicker.ReverseForUnjam();
+            }
+            if (kickerUnjamming && !rollersUnjamming) {
+                m_rollers.ReverseForUnjam();
+            }
+            if (rollersUnjamming || kickerUnjamming) {
+                m_conveyor.ReverseConveyor();
             } else {
-                isFiring = false;
-                m_kicker.ClearBall();
-                m_conveyor.stopConveyor();
-                m_rollers.stopRollers();
+                m_conveyor.HopperToShooter(passing);
             }
         } else {
             isFiring = false;
