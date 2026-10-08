@@ -117,10 +117,12 @@ public final class Constants {
     public static final String LIMELIGHT_BACK = "limelight-back"; //10.99.95.16
     public static final String LIMELIGHT_LEFT = "limelight-left"; //10.99.95.17
 
-    // Was 3 m for both, but the hub shot table spans 2-6 m, so every estimate was discarded
-    // exactly when pose matters most. Single tag stays tighter; it has no geometry to check.
     public static final double MAX_SINGLE_TAG_DIST_M = 4.0;
     public static final double MAX_MULTI_TAG_DIST_M = 6.0;
+    public static final double MAX_JUMP_SINGLE_TAG_M = 1.0;
+    public static final double MAX_JUMP_MULTI_TAG_M = 1.0;
+    public static final int RELOCALIZE_FRAMES = 5;
+    public static final double RELOCALIZE_AGREE_M = 0.3;
 
     // xyStd = base + coeff * dist^2, in metres. Starting points for Limelight 4, NOT measured.
     // To measure: park disabled at taped distances, log botpose_orb_wpiblue, and the scatter at
@@ -205,6 +207,12 @@ public final class Constants {
     public static final double PUSHOUT_ACCELERATION = 80.0;    // rot/s^2
     public static final double PUSHOUT_STATOR_LIMIT = 120.0;
     public static final double PUSHOUT_COMPLIANT_STATOR_LIMIT = 20.0;
+    public static final double PUSHOUT_HOMING_VOLTS = 2.0;
+    public static final double PUSHOUT_HOMING_STATOR_LIMIT = 20.0;
+    public static final double PUSHOUT_HOMING_STALL_RPS = 0.5;
+    public static final double PUSHOUT_HOMING_MIN_SECONDS = 0.25;
+    public static final double PUSHOUT_HOMING_SETTLE_SECONDS = 0.1;
+    public static final double PUSHOUT_HOMING_TIMEOUT_SECONDS = 4.0;
   }
 
   public static class ShooterConstants {
@@ -238,87 +246,84 @@ public final class Constants {
     public static final double a = 0.0;
 
     // ---- SHOOTER MECHANISM ----
-    // Two Krakens both drive a common belt/pulley train. The rollers are locked to
-    // each other at 3:2 - the bottom turns 3 for every 2 of the top - which is what
-    // produces the backspin. The motors stay speed-matched, and
+    // Two Krakens both drive a common belt/pulley train.
+    // The motors stay speed-matched, and
     // one motor revolution is one BOTTOM roller revolution.
     //
     //   v_ball  = EFF * w_motor * (R_BOTTOM + PULLEY_TOP_PER_BOTTOM * R_TOP) / 2
     //   spin S  = (R_BOTTOM - PULLEY * R_TOP) / (R_BOTTOM + PULLEY * R_TOP)
-    //
-    // Going 1:1 -> 3:2 dropped ball speed per motor rev by 8.33% (so the RPM tables
-    // rose 9.09%) and raised backspin per unit speed from S=0.500 to S=0.636, +27%.
     public static final double ROLLER_RADIUS_BOTTOM_M = 1.5 * 0.0254;
-    public static final double ROLLER_RADIUS_TOP_M = 0.5 * 0.0254;
-    public static final double PULLEY_TOP_PER_BOTTOM = 2.0 / 3.0;
-    public static final double SHOOTER_EFFICIENCY = 0.90; // grip/slip loss into the ball
+    public static final double ROLLER_RADIUS_TOP_M = 1.0 * 0.0254;
+    public static final double PULLEY_TOP_PER_BOTTOM = 25.0 / 31.0;
+    public static final double SHOOTER_EFFICIENCY = 0.86;
 
     // ---- AERO (parameters the tables below were generated with) ----
-    // Linear drag time constant. Kept at 0.45 rather than 6328's 0.375: their value
-    // is for a ball with far less spin, and a sphere at S=0.64 carries noticeably
-    // more drag than the spin-free C_d=0.63 that 5987 measured by dropping it.
-    public static final double LINEAR_DRAG_K = 0.45;
+    // Linear drag time constant.
+    public static final double LINEAR_DRAG_K = 0.35;
     // Magnus lift as a fraction of drag. Both scale with v^2 about the same way, so
     // k_magnus = LINEAR_DRAG_K * MAGNUS_LIFT_RATIO and this is just C_L / C_D.
-    // C_L ~ 0.30 at S = 0.64 (spheres saturate near 0.3-0.4). TOF is sensitive to
-    // this (+-7% over 0.30-0.60); required RPM is not (under 1%).
-    public static final double MAGNUS_LIFT_RATIO = 0.45;
+    // C_L ~ 0.30 at S = 0.64 (spheres saturate near 0.3-0.4).
+    public static final double MAGNUS_LIFT_RATIO = 0.26;
 
     public final static InterpolatingDoubleTreeMap TOF = new InterpolatingDoubleTreeMap();
 
     // Flight time of the hubHoodTable shot, solved with linear drag AND Magnus lift
-    // (see MECHANISM/AERO block above). Domain 2-6 m; InterpolatingDoubleTreeMap
-    // clamps outside it, which is why ferry must NOT use this map - see the ferry
-    // tables below.
+    // (see MECHANISM/AERO block above).
     //
-    // Magnus is what moves these numbers: it changes required launch speed by under
-    // 1% but adds ~11% to flight time, because the lift vector is velocity rotated
-    // 90 deg and points up-and-backward while the ball is still climbing.
-    //
-    // MODEL OUTPUT, NOT MEASURED. Still sits ~20% under every team that measured
-    // this game piece; the residual is most likely arc choice, not aero.
+    // MODEL OUTPUT, NOT MEASURED.
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), Seconds.of(0.811)),
-          Pair.of(Meters.of(2.5), Seconds.of(0.882)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.954)),
-          Pair.of(Meters.of(3.5), Seconds.of(1.025)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.095)),
-          Pair.of(Meters.of(4.5), Seconds.of(1.162)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.228)),
-          Pair.of(Meters.of(5.5), Seconds.of(1.293)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.356)))) {
+          Pair.of(Meters.of(1.0), Seconds.of(0.570)),
+          Pair.of(Meters.of(1.5), Seconds.of(0.812)),
+          Pair.of(Meters.of(2.0), Seconds.of(1.000)),
+          Pair.of(Meters.of(2.5), Seconds.of(1.078)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.153)),
+          Pair.of(Meters.of(3.5), Seconds.of(1.232)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.310)),
+          Pair.of(Meters.of(4.5), Seconds.of(1.382)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.455)),
+          Pair.of(Meters.of(5.5), Seconds.of(1.526)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.592)),
+          Pair.of(Meters.of(6.5), Seconds.of(1.662)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.724)),
+          Pair.of(Meters.of(7.5), Seconds.of(1.792)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.852)))) {
         TOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
 
-    // Ferry flight time. Ferry MUST NOT use the hub TOF map above: that map's domain is
-    // 2-6 m and InterpolatingDoubleTreeMap clamps, so every pass past 6 m used to lead
-    // with the 6 m hub flight time. Domain here is 1.5-11 m, which covers the 1.8-10.6 m
-    // a robot can actually be from its ferry target while inside the NEUTRAL ZONE.
+    // Ferry flight time. Ferry MUST NOT use the hub TOF map above
     public final static InterpolatingDoubleTreeMap ferryTOF = new InterpolatingDoubleTreeMap();
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Seconds.of(0.678)),
-          Pair.of(Meters.of(2.0), Seconds.of(0.766)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.924)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.067)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.198)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.322)),
-          Pair.of(Meters.of(7.0), Seconds.of(1.439)),
-          Pair.of(Meters.of(8.0), Seconds.of(1.553)),
-          Pair.of(Meters.of(9.0), Seconds.of(1.662)),
-          Pair.of(Meters.of(10.0), Seconds.of(1.771)),
-          Pair.of(Meters.of(11.0), Seconds.of(1.88)))) {
+          Pair.of(Meters.of(1.0), Seconds.of(0.639)),
+          Pair.of(Meters.of(1.5), Seconds.of(0.753)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.854)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.031)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.189)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.332)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.466)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.592)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.711)),
+          Pair.of(Meters.of(9.0), Seconds.of(1.825)),
+          Pair.of(Meters.of(10.0), Seconds.of(1.940)),
+          Pair.of(Meters.of(11.0), Seconds.of(2.055)),
+          Pair.of(Meters.of(12.0), Seconds.of(2.160)),
+          Pair.of(Meters.of(13.0), Seconds.of(2.266)))) {
         ferryTOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
 
-    public static final double TOF_SCALE = 1.0;   // tune up toward ~1.25 with real shots
+    public static final double TOF_SCALE = 1.0;
 
     public static final int SOTM_MAX_ITERATIONS = 32;
     public static final double SOTM_TOLERANCE_M = 0.001;
-    public static final double rPM_Factor = 0.85;
+    public static final double rPM_Factor = 1.0;
+    public static final double RPM_TRIM_MIN = 0.7;
+    public static final double RPM_TRIM_MAX = 1.3;
+    public static final double HUB_RPM_OFFSET = 0.0;
+    public static final double FERRY_RPM_OFFSET = 0.0;
+    public static final double RPM_OFFSET_TRIM_LIMIT = 500.0;
     public static final InterpolatingDoubleTreeMap hubShooterTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
     static {
@@ -327,41 +332,45 @@ public final class Constants {
       // dz = 1.3111 m at each distance on the hubHoodTable angle, integrating linear
       // drag plus Magnus lift. Ball speed from the MECHANISM block above.
       //
-      // Nearly all of the rise over the old 1:1 table is the pulley change, not aero:
-      // Magnus is worth under 1% here. Expect the far end to droop under load - if long shots land low
+      // Expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), RPM.of(3065*rPM_Factor)),
-          Pair.of(Meters.of(2.5), RPM.of(3262*rPM_Factor)),
-          Pair.of(Meters.of(3.0), RPM.of(3461*rPM_Factor)),
-          Pair.of(Meters.of(3.5), RPM.of(3659*rPM_Factor)),
-          Pair.of(Meters.of(4.0), RPM.of(3855*rPM_Factor)),
-          Pair.of(Meters.of(4.5), RPM.of(4048*rPM_Factor)),
-          Pair.of(Meters.of(5.0), RPM.of(4239*rPM_Factor)),
-          Pair.of(Meters.of(5.5), RPM.of(4426*rPM_Factor)),
-          Pair.of(Meters.of(6.0), RPM.of(4610*rPM_Factor)))) {
+          Pair.of(Meters.of(1.0), RPM.of(2178*rPM_Factor)),
+          Pair.of(Meters.of(1.5), RPM.of(2409*rPM_Factor)),
+          Pair.of(Meters.of(2.0), RPM.of(2691*rPM_Factor)),
+          Pair.of(Meters.of(2.5), RPM.of(2860*rPM_Factor)),
+          Pair.of(Meters.of(3.0), RPM.of(3028*rPM_Factor)),
+          Pair.of(Meters.of(3.5), RPM.of(3201*rPM_Factor)),
+          Pair.of(Meters.of(4.0), RPM.of(3374*rPM_Factor)),
+          Pair.of(Meters.of(4.5), RPM.of(3540*rPM_Factor)),
+          Pair.of(Meters.of(5.0), RPM.of(3706*rPM_Factor)),
+          Pair.of(Meters.of(5.5), RPM.of(3870*rPM_Factor)),
+          Pair.of(Meters.of(6.0), RPM.of(4026*rPM_Factor)),
+          Pair.of(Meters.of(6.5), RPM.of(4188*rPM_Factor)),
+          Pair.of(Meters.of(7.0), RPM.of(4339*rPM_Factor)),
+          Pair.of(Meters.of(7.5), RPM.of(4497*rPM_Factor)),
+          Pair.of(Meters.of(8.0), RPM.of(4645*rPM_Factor)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
       // Derived, no longer placeholders: floor target (dz = -0.5177 m) on the
-      // ferryHoodTable angle, same drag + Magnus model as the hub table. Domain 1.5-11 m
-      // matches ferryTOF and covers the neutral zone.
+      // ferryHoodTable angle, same drag + Magnus model as the hub table.
       //
-      // HEADROOM: 5387 RPM at 10 m is 90% of Kraken free speed and 5734 at 11 m is 96%.
-      // The far end will droop under load. Longest pass the neutral zone allows is
-      // ~10.6 m, so treat anything past ~9 m as best-effort.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), RPM.of(1619)),
-          Pair.of(Meters.of(2.0), RPM.of(1957)),
-          Pair.of(Meters.of(3.0), RPM.of(2533)),
-          Pair.of(Meters.of(4.0), RPM.of(3031)),
-          Pair.of(Meters.of(5.0), RPM.of(3482)),
-          Pair.of(Meters.of(6.0), RPM.of(3900)),
-          Pair.of(Meters.of(7.0), RPM.of(4294)),
-          Pair.of(Meters.of(8.0), RPM.of(4670)),
-          Pair.of(Meters.of(9.0), RPM.of(5032)),
-          Pair.of(Meters.of(10.0), RPM.of(5387)),
-          Pair.of(Meters.of(11.0), RPM.of(5734)))) {
+          Pair.of(Meters.of(1.0), RPM.of(1095)),
+          Pair.of(Meters.of(1.5), RPM.of(1428)),
+          Pair.of(Meters.of(2.0), RPM.of(1712)),
+          Pair.of(Meters.of(3.0), RPM.of(2199)),
+          Pair.of(Meters.of(4.0), RPM.of(2619)),
+          Pair.of(Meters.of(5.0), RPM.of(2999)),
+          Pair.of(Meters.of(6.0), RPM.of(3351)),
+          Pair.of(Meters.of(7.0), RPM.of(3682)),
+          Pair.of(Meters.of(8.0), RPM.of(3998)),
+          Pair.of(Meters.of(9.0), RPM.of(4301)),
+          Pair.of(Meters.of(10.0), RPM.of(4598)),
+          Pair.of(Meters.of(11.0), RPM.of(4893)),
+          Pair.of(Meters.of(12.0), RPM.of(5171)),
+          Pair.of(Meters.of(13.0), RPM.of(5450)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
     }
@@ -417,6 +426,7 @@ public final class Constants {
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.3;
 
     public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
+    public static final double FF_VOLTS_PER_DEG_PER_SEC = 0.0095;
   }
 
   public static final class HoodConstants {
@@ -428,6 +438,11 @@ public final class Constants {
     public static final double GEAR_RATIO = 240.0;
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.2;
+    public static final double HOMING_DUTY = 0.1;
+    public static final double HOMING_STALL_RPM = 60.0;
+    public static final double HOMING_MIN_SECONDS = 0.25;
+    public static final double HOMING_SETTLE_SECONDS = 0.1;
+    public static final double HOMING_TIMEOUT_SECONDS = 3.0;
 
     // The TRENCH sits at the HUB's x, so these double as the trench x band.
     public static final double TRENCH_X_BLUE = 4.611; // blue side trench x coordinate
@@ -456,44 +471,51 @@ public final class Constants {
     public static final double a = 0.0; // inert in kPosition
 
     public static final double MAX_OUTPUT = 1; // limit speed for safety while tuning
-    public static final double HOOD_SCALE = 0.8;
+    public static final double HOOD_SCALE = 1.0;
     public static final InterpolatingDoubleTreeMap hubHoodTable = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap ferryHoodTable = new InterpolatingDoubleTreeMap();
 
     static {
       // aim at hub LUT
-      // Hood angle = 90 - ball_exit_angle. Exit angle chosen as the min-launch-speed
-      // angle: theta_opt = 45 + 0.5 * atan(dz/d).
+      // Hood angle = 90 - ball_exit_angle.
       for (var entry : List.of(
-          Pair.of(Meters.of(2.0), Degrees.of(28.4*HOOD_SCALE)),
-          Pair.of(Meters.of(2.5), Degrees.of(31.2*HOOD_SCALE)),
-          Pair.of(Meters.of(3.0), Degrees.of(33.2*HOOD_SCALE)),
-          Pair.of(Meters.of(3.5), Degrees.of(34.7*HOOD_SCALE)),
-          Pair.of(Meters.of(4.0), Degrees.of(35.9*HOOD_SCALE)),
-          Pair.of(Meters.of(4.5), Degrees.of(36.9*HOOD_SCALE)),
-          Pair.of(Meters.of(5.0), Degrees.of(37.7*HOOD_SCALE)),
-          Pair.of(Meters.of(5.5), Degrees.of(38.3*HOOD_SCALE)),
-          Pair.of(Meters.of(6.0), Degrees.of(38.8*HOOD_SCALE)))) {
+          Pair.of(Meters.of(1.0), Degrees.of(HOOD_MIN_DEGREES)),
+          Pair.of(Meters.of(1.5), Degrees.of(HOOD_MIN_DEGREES)),
+          Pair.of(Meters.of(2.0), Degrees.of(20.7*HOOD_SCALE)),
+          Pair.of(Meters.of(2.5), Degrees.of(22.9*HOOD_SCALE)),
+          Pair.of(Meters.of(3.0), Degrees.of(24.6*HOOD_SCALE)),
+          Pair.of(Meters.of(3.5), Degrees.of(25.8*HOOD_SCALE)),
+          Pair.of(Meters.of(4.0), Degrees.of(26.7*HOOD_SCALE)),
+          Pair.of(Meters.of(4.5), Degrees.of(27.5*HOOD_SCALE)),
+          Pair.of(Meters.of(5.0), Degrees.of(28.1*HOOD_SCALE)),
+          Pair.of(Meters.of(5.5), Degrees.of(28.6*HOOD_SCALE)),
+          Pair.of(Meters.of(6.0), Degrees.of(29.1*HOOD_SCALE)),
+          Pair.of(Meters.of(6.5), Degrees.of(29.4*HOOD_SCALE)),
+          Pair.of(Meters.of(7.0), Degrees.of(29.8*HOOD_SCALE)),
+          Pair.of(Meters.of(7.5), Degrees.of(30.0*HOOD_SCALE)),
+          Pair.of(Meters.of(8.0), Degrees.of(30.3*HOOD_SCALE)))) {
         hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
 
-      // aim at ferry LUT. Min-launch-speed angle for a floor target, clamped to the
-      // hood's travel: exit = 90 - hood, so the hood can only produce 43-69 deg of exit
+      // aim at ferry LUT.
+      // exit = 90 - hood, so the hood can only produce 43-69 deg of exit
       // angle. Min-energy ferry wants 35-44 deg, which is FLATTER than the mechanism can
-      // reach. If ferry
-      // shots come out too lofted, that is the hood running out of travel, not the table.
+      // reach.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.5), Degrees.of(46.6)),
-          Pair.of(Meters.of(2.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(3.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(4.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(5.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(6.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(7.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(8.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(9.0), Degrees.of(46.6)),
-          Pair.of(Meters.of(10.0), Degrees.of(46.5)),
-          Pair.of(Meters.of(11.0), Degrees.of(46.3)))) {
+          Pair.of(Meters.of(1.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(1.5), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(2.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(3.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(4.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(5.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(6.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(7.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(8.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(9.0), Degrees.of(37.3*HOOD_SCALE)),
+          Pair.of(Meters.of(10.0), Degrees.of(37.2*HOOD_SCALE)),
+          Pair.of(Meters.of(11.0), Degrees.of(37.0*HOOD_SCALE)),
+          Pair.of(Meters.of(12.0), Degrees.of(37.0*HOOD_SCALE)),
+          Pair.of(Meters.of(13.0), Degrees.of(36.9*HOOD_SCALE)))) {
         ferryHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
     }

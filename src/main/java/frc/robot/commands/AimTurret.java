@@ -31,6 +31,17 @@ public class AimTurret extends Command {
         }
     }
 
+    public static double aimRateDegPerSec(Translation2d turretToTarget, Translation2d turretVelocity,
+            double robotOmegaRadPerSec) {
+        double distance = turretToTarget.getNorm();
+        if (distance < 1e-3) {
+            return 0.0;
+        }
+        double bearingRate = (turretToTarget.getY() * turretVelocity.getX()
+                - turretToTarget.getX() * turretVelocity.getY()) / (distance * distance);
+        return Math.toDegrees(bearingRate - robotOmegaRadPerSec);
+    }
+
     @Override
     public void execute() {
         Pose2d target = getTargetPose();
@@ -48,7 +59,11 @@ public class AimTurret extends Command {
         // get the robot relative angle that the turret needs to go to
         double turretTargetDegrees = fieldAngleToTarget.minus(robotPose.getRotation()).getDegrees();
 
-        boolean reachable = turret.setAngleClamped(turretTargetDegrees);
+        double aimRateDegPerSec = aimRateDegPerSec(turretToTarget,
+                swerveSubsystem.getTurretFieldVelocity(),
+                swerveSubsystem.getFieldVelocity().omegaRadiansPerSecond);
+
+        boolean reachable = turret.setAngleClamped(turretTargetDegrees, aimRateDegPerSec);
 
         Logger.recordOutput("AimTurret/Mode",
                 swerveSubsystem.isInAllianceZone() ? "Hub" : "Ferry");
@@ -60,6 +75,7 @@ public class AimTurret extends Command {
         Logger.recordOutput("AimTurret/ActualTurretDeg", turret.getContinuousDegrees());
         Logger.recordOutput("AimTurret/ErrorDeg",
                 turret.getTargetDegrees() - turret.getContinuousDegrees());
+        Logger.recordOutput("AimTurret/AimRateDegPerSec", aimRateDegPerSec);
         Logger.recordOutput("AimTurret/Reachable", reachable);
         Logger.recordOutput("AimTurret/AtCableLimit", turret.isAtCableLimit());
         Logger.recordOutput("AimTurret/RobotHeadingDeg", robotPose.getRotation().getDegrees());

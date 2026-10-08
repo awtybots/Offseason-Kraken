@@ -19,9 +19,11 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 
 import static frc.robot.utils.utils.*;
 
@@ -49,6 +51,7 @@ public class Turret extends SubsystemBase {
     private double lastAbsolutePosition = 0.0; // last abs encoder reading in encoder degrees, used for tracking wraps
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
     private boolean setpointWasClamped = false; // last setAngle call hit a travel limit
+    private double arbFFVolts = 0.0;
     private final Timer bootTimer = new Timer();
     private boolean bootResyncDone = false;
 
@@ -211,6 +214,10 @@ public class Turret extends SubsystemBase {
      * Returns false if the requested angle was outside that range.
      */
     public boolean setAngleClamped(double targetDegrees) {
+        return setAngleClamped(targetDegrees, 0.0);
+    }
+
+    public boolean setAngleClamped(double targetDegrees, double feedforwardDegPerSec) {
         double setpoint = angleToSetpoint(targetDegrees);
         if (Double.isNaN(setpoint)) {
             double base = MathUtil.inputModulus(targetDegrees, -180.0, 180.0);
@@ -219,16 +226,24 @@ public class Turret extends SubsystemBase {
         } else {
             targetReachable = true;
         }
-        setAngle(setpoint);
+        setAngle(setpoint, targetReachable ? feedforwardDegPerSec : 0.0);
         return targetReachable;
     }
 
-    public void setAngle(double degrees) { // send turret to angle in degrees using position control
+    public void setAngle(double degrees) {
+        setAngle(degrees, 0.0);
+    }
+
+    public void setAngle(double degrees, double feedforwardDegPerSec) { // send turret to angle in degrees using position control
         // Hard guard for the closed loop. A position setpoint inside the soft range
         // cannot command the turret into a stop no matter who calls this.
         double clamped = MathUtil.clamp(degrees, softMinDegrees(), softMaxDegrees());
         setpointWasClamped = clamped != degrees;
         currentTargetDegrees = clamped; // track target so isAtAngle can check it
+        double maxVolts = TurretConstants.MAX_OUTPUT * 12.0;
+        arbFFVolts = setpointWasClamped ? 0.0
+                : MathUtil.clamp(feedforwardDegPerSec * TurretConstants.FF_VOLTS_PER_DEG_PER_SEC,
+                        -maxVolts, maxVolts);
         // kPosition, not kMAXMotionPositionControl. Two reasons:
         // 1. TurretMotorConfig never sets a maxMotion block, and we configure with
         //    kResetSafeParameters, which wipes whatever was stored on the SPARK. So
@@ -237,7 +252,8 @@ public class Turret extends SubsystemBase {
         // 2. MAXMotion is the wrong mode for a continuously moving setpoint anyway;
         //    it re-plans a deceleration ramp every loop. The hood already uses
         //    kPosition. If a trapezoid is wanted later, configure maxMotion first.
-        turretController.setSetpoint(degreesToRotations(clamped), ControlType.kPosition);
+        turretController.setSetpoint(degreesToRotations(clamped), ControlType.kPosition,
+                ClosedLoopSlot.kSlot0, arbFFVolts, ArbFFUnits.kVoltage);
     }
 
     public void stopTurret() {
@@ -307,6 +323,7 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/SoftMinDegrees", softMinDegrees());
         Logger.recordOutput("Turret/SoftMaxDegrees", softMaxDegrees());
         Logger.recordOutput("Turret/SetpointWasClamped", setpointWasClamped);
+        Logger.recordOutput("Turret/ArbFFVolts", arbFFVolts);
         Logger.recordOutput("Turret/IsTargetReachable", isTargetReachable());
     }
 }

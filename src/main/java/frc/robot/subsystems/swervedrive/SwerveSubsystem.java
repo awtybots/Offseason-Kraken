@@ -45,6 +45,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.DrivebaseConstants;
 import frc.robot.Constants.LimelightConstants;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import frc.robot.utils.VisionJumpGate;
 import frc.robot.LimelightHelpers;
 
 import java.io.File;
@@ -94,6 +96,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public boolean useFrontLimelight = true;
   public boolean useBackLimelight = true;
+  private final VisionJumpGate visionGate = new VisionJumpGate();
   public boolean useLeftLimelight = true;
 
   boolean locked = false;
@@ -131,7 +134,7 @@ public class SwerveSubsystem extends SubsystemBase {
         : new Pose2d(Meter.of(16), Meter.of(4), Rotation2d.fromDegrees(180));
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
     // objects being created.
-    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.POSE;
     try {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED, startingPose);
       // Alternative method if you don't want to supply the conversion factor via JSON
@@ -840,6 +843,10 @@ public class SwerveSubsystem extends SubsystemBase {
     if(megaTag == 1) // If using mega tag 1
     {
       LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
+      if(!visionGate.isNewFrame(cameraName, mt1.timestampSeconds))
+      {
+        return;
+      }
 
       if(mt1.tagCount == 0)
       {
@@ -870,6 +877,13 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         doRejectUpdate = true;
       }
+      boolean jumpRejected = !doRejectUpdate
+          && !visionGate.accept(cameraName, mt1.pose, mt1.tagCount, getPose());
+      if(jumpRejected)
+      {
+        doRejectUpdate = true;
+      }
+      Logger.recordOutput("Vision/" + cameraName + "/JumpRejected", jumpRejected);
 
       if(!doRejectUpdate)
       {
@@ -895,6 +909,10 @@ public class SwerveSubsystem extends SubsystemBase {
       swerveDrive.getOdometryHeading().getDegrees(),
       0.0, 0.0, 0.0, 0.0, 0.0);
       LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+      if(!visionGate.isNewFrame(cameraName, mt2.timestampSeconds))
+      {
+        return;
+      }
 
       if(Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(DegreesPerSecond)) > 720)
       {
@@ -909,6 +927,13 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         doRejectUpdate = true;
       }
+      boolean jumpRejected = !doRejectUpdate
+          && !visionGate.accept(cameraName, mt2.pose, mt2.tagCount, getPose());
+      if(jumpRejected)
+      {
+        doRejectUpdate = true;
+      }
+      Logger.recordOutput("Vision/" + cameraName + "/JumpRejected", jumpRejected);
       if(!doRejectUpdate)
       {
         // Scale std devs by distance and tag count
@@ -1195,6 +1220,31 @@ public class SwerveSubsystem extends SubsystemBase {
  *
  * @return A Pose2d representing the compensated aim point.
  */
+    public static double dragLeadSeconds(double flightSeconds) {
+        double k = Constants.ShooterConstants.LINEAR_DRAG_K;
+        return (1.0 - Math.exp(-k * flightSeconds)) / k;
+    }
+
+    public static Translation2d leadTarget(Translation2d target, Translation2d turretPos,
+        Translation2d vel, InterpolatingDoubleTreeMap tofMap) {
+        double speed = vel.getNorm();
+        double lo = 0.0;
+        double hi = tofMap.get(Double.MAX_VALUE) * Constants.ShooterConstants.TOF_SCALE;
+        for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS
+            && speed * (hi - lo) > Constants.ShooterConstants.SOTM_TOLERANCE_M; i++) {
+            double mid = 0.5 * (lo + hi);
+            Translation2d aim = target.minus(vel.times(dragLeadSeconds(mid)));
+            double flight = tofMap.get(aim.minus(turretPos).getNorm())
+                * Constants.ShooterConstants.TOF_SCALE;
+            if (flight > mid) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        return target.minus(vel.times(dragLeadSeconds(0.5 * (lo + hi))));
+    }
+
     public Pose2d getDynamicHubLocation() {
 
         Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
@@ -1202,19 +1252,8 @@ public class SwerveSubsystem extends SubsystemBase {
         Translation2d robotVel = getTurretFieldVelocity(); // includes omega x r
 
         // velocity compensation — iterative TOF convergence
-        Translation2d CompensatedHub = hubVec;
-        for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS; i++) {
-            double distance = CompensatedHub.minus(robotVec).getNorm();
-            double tof = Constants.ShooterConstants.TOF.get(distance)
-                * Constants.ShooterConstants.TOF_SCALE;
-            Translation2d next = hubVec.minus(robotVel.times(tof));
-            boolean settled = next.getDistance(CompensatedHub)
-                < Constants.ShooterConstants.SOTM_TOLERANCE_M;
-            CompensatedHub = next;
-            if (settled) {
-                break;
-            }
-        }
+        Translation2d CompensatedHub = leadTarget(hubVec, robotVec, robotVel,
+            Constants.ShooterConstants.TOF);
 
         // // tilt compensation
         // double pitchRad = swerveDrive.getPitch().getRadians(); // tilt forward/back
@@ -1311,21 +1350,8 @@ public class SwerveSubsystem extends SubsystemBase {
     Translation2d robotVec = getTurretFieldPosition();
     Translation2d robotVel = getTurretFieldVelocity(); // includes omega x r
 
-    Translation2d CompensatedFerry = ferryVec;
-    for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS; i++) {
-      double distance = CompensatedFerry.minus(robotVec).getNorm();
-      // ferryTOF, not the hub TOF map: the hub map only spans 2-6 m and clamps, so
-      // every pass past 6 m used to lead with the 6 m hub flight time.
-      double tof = Constants.ShooterConstants.ferryTOF.get(distance)
-          * Constants.ShooterConstants.TOF_SCALE;
-      Translation2d next = ferryVec.minus(robotVel.times(tof));
-      boolean settled = next.getDistance(CompensatedFerry)
-          < Constants.ShooterConstants.SOTM_TOLERANCE_M;
-      CompensatedFerry = next;
-      if (settled) {
-        break;
-      }
-    }
+    Translation2d CompensatedFerry = leadTarget(ferryVec, robotVec, robotVel,
+        Constants.ShooterConstants.ferryTOF);
 
     return new Pose2d(CompensatedFerry, new Rotation2d());
   }
@@ -1356,7 +1382,7 @@ public class SwerveSubsystem extends SubsystemBase {
   /**
    * True when the robot is between the two alliance zones. We ferry only from here -
    * never from the opponent's alliance zone - so this bounds ferry distance to about
-   * 1.8-10.6 m, which is the domain ferryTOF and the ferry tables are built over.
+   * 1.8-10.6 m.
    */
   public boolean isInNeutralZone() {
     double x = getPose().getX();
