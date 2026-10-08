@@ -29,7 +29,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 
 import static edu.wpi.first.units.Units.Inches;
 import static frc.robot.utils.utils.*;
@@ -52,10 +52,10 @@ import swervelib.SwerveInputStream;
 public class RobotContainer {
 
   // controllers
-  final CommandXboxController driverXbox = new CommandXboxController(0);
-  final CommandXboxController operatorXbox = new CommandXboxController(1);
-  private final ControllerRumble driverRumble = new ControllerRumble(driverXbox.getHID());
-  private final ControllerRumble operatorRumble = new ControllerRumble(operatorXbox.getHID());
+  final CommandPS5Controller driverPS5 = new CommandPS5Controller(OperatorConstants.kDriverControllerPort);
+  final CommandPS5Controller operatorPS5 = new CommandPS5Controller(OperatorConstants.kOperatorControllerPort);
+  private final ControllerRumble driverRumble = new ControllerRumble(driverPS5.getHID());
+  private final ControllerRumble operatorRumble = new ControllerRumble(operatorPS5.getHID());
 
   // subsystems
   private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
@@ -123,12 +123,12 @@ public class RobotContainer {
     Command rtWarm = Commands.sequence(
         Commands.parallel(
             new ControlAllShooting(
-                m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase, operatorXbox.povUp()),
+                m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase, operatorPS5.povUp()),
             new AimHood(m_hood, drivebase),
             drivebase.lockCommand(
-                driverXbox::getLeftX,
-                driverXbox::getLeftY,
-                driverXbox::getRightX,
+                driverPS5::getLeftX,
+                driverPS5::getLeftY,
+                driverPS5::getRightX,
                 driveAngularVelocity::get)));
     ShotTrim.hub();
     ShotTrim.ferry();
@@ -229,15 +229,15 @@ public class RobotContainer {
   private void configureBindings() {
 
     driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-        () -> driverXbox.getLeftY() * -1,
-        () -> driverXbox.getLeftX() * -1)
-        .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
+        () -> driverPS5.getLeftY() * -1,
+        () -> driverPS5.getLeftX() * -1)
+        .withControllerRotationAxis(() -> driverPS5.getRightX() * -1)
         .deadband(OperatorConstants.DEADBAND)
         .scaleTranslation(1.0)
         .allianceRelativeControl(true);
 
     driveDirectAngle = driveAngularVelocity.copy()
-        .withControllerHeadingAxis(driverXbox::getRightX, driverXbox::getRightY)
+        .withControllerHeadingAxis(driverPS5::getRightX, driverPS5::getRightY)
         .headingWhile(true);
 
     driveRobotOriented = driveAngularVelocity.copy()
@@ -245,17 +245,17 @@ public class RobotContainer {
         .allianceRelativeControl(false);
 
     driveAngularVelocityKeyboard = SwerveInputStream.of(drivebase.getSwerveDrive(),
-        () -> -driverXbox.getLeftY(),
-        () -> -driverXbox.getLeftX())
-        .withControllerRotationAxis(() -> driverXbox.getRawAxis(2))
+        () -> -driverPS5.getLeftY(),
+        () -> -driverPS5.getLeftX())
+        .withControllerRotationAxis(() -> driverPS5.getRightX())
         .deadband(OperatorConstants.DEADBAND)
         .scaleTranslation(0.8)
         .allianceRelativeControl(true);
 
     driveDirectAngleKeyboard = driveAngularVelocityKeyboard.copy()
         .withControllerHeadingAxis(
-            () -> Math.sin(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2),
-            () -> Math.cos(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2))
+            () -> Math.sin(driverPS5.getRightX() * Math.PI) * (Math.PI * 2),
+            () -> Math.cos(driverPS5.getRightX() * Math.PI) * (Math.PI * 2))
         .headingWhile(true)
         .translationHeadingOffset(true)
         .translationHeadingOffset(Rotation2d.fromDegrees(0));
@@ -296,11 +296,11 @@ public class RobotContainer {
 
     // ==================== DRIVER BINDINGS ====================
 
-    // RT shoots
-    driverXbox.rightTrigger().whileTrue(
+    // R2 shoots
+    driverPS5.R2().whileTrue(
         Commands.defer(() -> {
           ControlAllShooting shootCmd = new ControlAllShooting(
-              m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase, operatorXbox.povUp());
+              m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase, operatorPS5.povUp());
           activeShot = shootCmd;
           AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
           return Commands.sequence(
@@ -308,61 +308,61 @@ public class RobotContainer {
                   shootCmd,
                   aimHoodCmd,
                   drivebase.lockCommand( // lock wheels while shooting
-                      driverXbox::getLeftX,
-                      driverXbox::getLeftY,
-                      driverXbox::getRightX,
+                      driverPS5::getLeftX,
+                      driverPS5::getLeftY,
+                      driverPS5::getRightX,
                       driveAngularVelocity::get)));
         }, Set.of(m_shooter, m_conveyor, m_kicker, m_rollers, m_hood, drivebase)));
 
-    driverXbox.rightTrigger().and(driverXbox.leftTrigger().negate())
+    driverPS5.R2().and(driverPS5.L2().negate())
         .whileTrue(m_pushout.AgitateCommand());
 
     // intake runs whenever the driver is asking when shooting or just intaking
     // or both
-    driverXbox.rightTrigger().or(driverXbox.leftTrigger())
+    driverPS5.R2().or(driverPS5.L2())
         .whileTrue(m_intake.runIntakeCommand());
 
-    // LT extends pushout to intaking position
-    driverXbox.leftTrigger().whileTrue(Commands.parallel(m_pushout.CompliantPushCommand()));
+    // L2 extends pushout to intaking position
+    driverPS5.L2().whileTrue(Commands.parallel(m_pushout.CompliantPushCommand()));
 
-    // LB retracts
-    driverXbox.leftBumper().whileTrue(m_pushout.RetractCommand());
+    // L1 retracts
+    driverPS5.L1().whileTrue(m_pushout.RetractCommand());
 
-    driverXbox.b().whileTrue(new AimTurret(m_turret, drivebase));
+    driverPS5.circle().whileTrue(new AimTurret(m_turret, drivebase));
 
-    // RB unjams
-    driverXbox.rightBumper().whileTrue(
+    // R1 unjams
+    driverPS5.R1().whileTrue(
         Commands.parallel(
             m_kicker.ReverseKickerCommand(),
             m_conveyor.ReverseConveyorCommand(),
             m_rollers.runReverseRollersCommand()));
 
-    // A — outtake
-    driverXbox.a().whileTrue(
+    // Cross - outtake
+    driverPS5.cross().whileTrue(
         Commands.parallel(
             m_intake.runOuttakeCommand(),
             m_rollers.runReverseRollersCommand()));
 
-    // start zero gyro
-    driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
+    // Options zero gyro
+    driverPS5.options().onTrue(Commands.runOnce(drivebase::zeroGyro));
 
     drivebase.setDefenseCondition(() -> DriverStation.isTeleopEnabled()
-        && driverXbox.rightTrigger().getAsBoolean()
-        && SwerveSubsystem.sticksIdle(driverXbox.getLeftX(), driverXbox.getLeftY(),
-            driverXbox.getRightX(), driverXbox.getRightY()));
+        && driverPS5.R2().getAsBoolean()
+        && SwerveSubsystem.sticksIdle(driverPS5.getLeftX(), driverPS5.getLeftY(),
+            driverPS5.getRightX(), driverPS5.getRightY()));
 
     // ==================== OPERATOR BINDINGS ====================
 
   
-    operatorXbox.leftTrigger().whileTrue(m_shooter.setTargetRPMCommand(RPSToRPM(30)));
-    // LB - hood to 33.2 deg. Check it against a protractor, and measure the ball exit
+    operatorPS5.L2().whileTrue(m_shooter.setTargetRPMCommand(RPSToRPM(30)));
+    // L1 - hood to 33.2 deg. Check it against a protractor, and measure the ball exit
     //      height here and at HOOD_MIN: SHOOTER_HEIGHT_M assumes it does not move.
-    operatorXbox.leftBumper().whileTrue(m_hood.setAngleCommand(35));
-    // RB - turret to 45 deg. A real arc, so Turret/FrameDisagreementDeg should stay near
+    operatorPS5.L1().whileTrue(m_hood.setAngleCommand(35));
+    // R1 - turret to 45 deg. A real arc, so Turret/FrameDisagreementDeg should stay near
     //      zero the whole way if GEAR_RATIO = 50 is right.
-    operatorXbox.rightBumper().whileTrue(m_turret.goToAngleCommand(45.0));
+    operatorPS5.R1().whileTrue(m_turret.goToAngleCommand(45.0));
     // Testing
-    operatorXbox.rightTrigger().whileTrue(
+    operatorPS5.R2().whileTrue(
         Commands.parallel(
             m_conveyor.HopperToShooterCommand(),
             m_kicker.KickerCommand(),
@@ -370,26 +370,26 @@ public class RobotContainer {
             m_shooter.shootingTestCommad()));
 
 
-    operatorXbox.back().onTrue(m_turret.resyncEncoderCommand());
+    operatorPS5.create().onTrue(m_turret.resyncEncoderCommand());
     // reset encoder
-    operatorXbox.start().onTrue(m_pushout.ResetEncoderCommand());
+    operatorPS5.options().onTrue(m_pushout.ResetEncoderCommand());
 
     // intake
-    operatorXbox.x().whileTrue(m_intake.runIntakeCommand());
-    operatorXbox.a().whileTrue(
+    operatorPS5.square().whileTrue(m_intake.runIntakeCommand());
+    operatorPS5.cross().whileTrue(
         Commands.parallel(
             m_intake.runOuttakeCommand(),
             m_rollers.runReverseRollersCommand()));
 
     // pushout
-    operatorXbox.y().whileTrue(m_pushout.PushoutDutyCycleCommand());
-    operatorXbox.b().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
+    operatorPS5.triangle().whileTrue(m_pushout.PushoutDutyCycleCommand());
+    operatorPS5.circle().whileTrue(m_pushout.PushoutDutyCycleRetractCommand());
 
     // vision
-    // operatorXbox.povUp().onTrue(drivebase.FrontToggle());
-    // operatorXbox.povLeft().onTrue(drivebase.LeftToggle());
-    // operatorXbox.povRight().onTrue(drivebase.VisionToggle());
-    // operatorXbox.povDown().onTrue(drivebase.BackToggle());
+    // operatorPS5.povUp().onTrue(drivebase.FrontToggle());
+    // operatorPS5.povLeft().onTrue(drivebase.LeftToggle());
+    // operatorPS5.povRight().onTrue(drivebase.VisionToggle());
+    // operatorPS5.povDown().onTrue(drivebase.BackToggle());
 
     // ==================== SIMULATION ====================
 
@@ -399,9 +399,9 @@ public class RobotContainer {
           new ProfiledPIDController(5, 0, 0, new Constraints(5, 2)),
           new ProfiledPIDController(5, 0, 0,
               new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
-      driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
-      driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
-      driverXbox.button(2).whileTrue(Commands.runEnd(
+      driverPS5.options().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
+      driverPS5.cross().whileTrue(drivebase.sysIdDriveMotorCommand());
+      driverPS5.circle().whileTrue(Commands.runEnd(
           () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
           () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
     }
@@ -496,21 +496,21 @@ public class RobotContainer {
   }
 
   public void logControllerInputs() {
-    Logger.recordOutput("Input/Driver/LeftX", driverXbox.getLeftX());
-    Logger.recordOutput("Input/Driver/LeftY", driverXbox.getLeftY());
-    Logger.recordOutput("Input/Driver/RightX", driverXbox.getRightX());
-    Logger.recordOutput("Input/Driver/RightY", driverXbox.getRightY());
-    Logger.recordOutput("Input/Driver/LeftTrigger", driverXbox.getLeftTriggerAxis());
-    Logger.recordOutput("Input/Driver/RightTrigger", driverXbox.getRightTriggerAxis());
+    Logger.recordOutput("Input/Driver/LeftX", driverPS5.getLeftX());
+    Logger.recordOutput("Input/Driver/LeftY", driverPS5.getLeftY());
+    Logger.recordOutput("Input/Driver/RightX", driverPS5.getRightX());
+    Logger.recordOutput("Input/Driver/RightY", driverPS5.getRightY());
+    Logger.recordOutput("Input/Driver/LeftTrigger", driverPS5.getL2Axis());
+    Logger.recordOutput("Input/Driver/RightTrigger", driverPS5.getR2Axis());
 
-    Logger.recordOutput("Input/Operator/LeftX", operatorXbox.getLeftX());
-    Logger.recordOutput("Input/Operator/LeftY", operatorXbox.getLeftY());
-    Logger.recordOutput("Input/Operator/RightX", operatorXbox.getRightX());
-    Logger.recordOutput("Input/Operator/RightY", operatorXbox.getRightY());
-    Logger.recordOutput("Input/Operator/LeftTrigger", operatorXbox.getLeftTriggerAxis());
-    Logger.recordOutput("Input/Operator/RightTrigger", operatorXbox.getRightTriggerAxis());
+    Logger.recordOutput("Input/Operator/LeftX", operatorPS5.getLeftX());
+    Logger.recordOutput("Input/Operator/LeftY", operatorPS5.getLeftY());
+    Logger.recordOutput("Input/Operator/RightX", operatorPS5.getRightX());
+    Logger.recordOutput("Input/Operator/RightY", operatorPS5.getRightY());
+    Logger.recordOutput("Input/Operator/LeftTrigger", operatorPS5.getL2Axis());
+    Logger.recordOutput("Input/Operator/RightTrigger", operatorPS5.getR2Axis());
 
-    Logger.recordOutput("Shooting/RTHeld", driverXbox.rightTrigger().getAsBoolean());
+    Logger.recordOutput("Shooting/R2Held", driverPS5.R2().getAsBoolean());
     Logger.recordOutput("Shooting/InAllianceZone", isInAllianceZone());
   }
 
