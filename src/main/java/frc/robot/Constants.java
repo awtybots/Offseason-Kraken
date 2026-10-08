@@ -393,8 +393,8 @@ public final class Constants {
     public static final double REFERENCE_TURRET_DEGREES = 0.0; // zeroed facing straight forward towards the intake
 
     
-    public static final double MIN_CONTINUOUS_DEGREES = -330.0;
-    public static final double MAX_CONTINUOUS_DEGREES = 150.0;
+    public static final double MIN_CONTINUOUS_DEGREES = -360.0;
+    public static final double MAX_CONTINUOUS_DEGREES = 60.0;
 
     // Keep this much air between the commanded setpoint and the hard stop. Clamping
     // straight to MIN/MAX parks the turret on the stop and leaves the position loop
