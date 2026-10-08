@@ -385,7 +385,8 @@ public final class Constants {
     public static final double GEAR_RATIO = 50.0;
 
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
-    public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions per one full turret revolution
+    public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions pe
+    // \r one full turret revolution
     public static final double ABSOLUTE_ENCODER_OFFSET = 0.074053;
     public static final boolean ABSOLUTE_ENCODER_INVERTED = true; // flip if the encoder counts down when the turret
                                                                    // goes counterclockwise
