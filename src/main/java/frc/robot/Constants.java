@@ -134,6 +134,9 @@ public final class Constants {
     public static final double SINGLE_TAG_STD_SCALE = 2.0; // multi-tag is the baseline above
     public static final double DISABLED_STD_SCALE = 0.5; // not moving, so lock the pose in harder
     public static final double THETA_STD_IGNORE = 9999999; // Pigeon beats any vision heading solve
+    public static final double STD_PER_MPS = 0.5;
+    public static final double STD_PER_RAD_PER_SEC = 0.3;
+    public static final double DEFENSE_STD_SCALE = 0.3;
   }
 
   public static class OperatorConstants {
@@ -150,6 +153,20 @@ public final class Constants {
 
     public static final double SHOOTING_TRANSLATION_SCALE = 0.35;
     public static final double SHOOTING_ROTATION_SCALE = 0.5;
+
+    public static final double RUMBLE_JAM = 0.6;
+    public static final double RUMBLE_JAM_SECONDS = 0.3;
+    public static final double RUMBLE_FIRE = 0.4;
+    public static final double RUMBLE_FIRE_SECONDS = 0.15;
+    public static final double RUMBLE_DEFENSE_ON = 1.0;
+    public static final double RUMBLE_DEFENSE_ON_SECONDS = 0.4;
+    public static final double RUMBLE_DEFENSE_OFF = 0.4;
+    public static final double RUMBLE_DEFENSE_OFF_SECONDS = 0.2;
+    public static final double RUMBLE_LOW_BATTERY = 0.3;
+    public static final double RUMBLE_LOW_BATTERY_SECONDS = 0.2;
+    public static final double LOW_BATTERY_VOLTS = 9.0;
+    public static final double LOW_BATTERY_AVERAGE_SECONDS = 2.0;
+    public static final double LOW_BATTERY_PULSE_PERIOD_SECONDS = 3.0;
 
   }
 
@@ -318,6 +335,10 @@ public final class Constants {
 
     public static final int SOTM_MAX_ITERATIONS = 32;
     public static final double SOTM_TOLERANCE_M = 0.001;
+    public static final double SOTM_VELOCITY_MISMATCH_MPS = 1.0;
+    public static final double SHOT_DIP_RPM = 120.0;
+    public static final double SHOT_DIP_WINDOW_SECONDS = 0.08;
+    public static final double SHOT_COOLDOWN_SECONDS = 0.08;
     public static final double rPM_Factor = 1.0;
     public static final double RPM_TRIM_MIN = 0.7;
     public static final double RPM_TRIM_MAX = 1.3;
@@ -535,13 +556,15 @@ public final class Constants {
 
     public static final double MIN_SPEED = 0.75;
     public static final double JAMCURRENT = 30; // Current in Amps that determines if there is a jam
-    public static final double JAM_IGNORE_SECONDS = 0.05;
+    public static final double JAM_STALL_SPEED_FRACTION = 0.5;
+    public static final double JAM_IGNORE_SECONDS = 0.5;
     public static final double JAM_DEBOUNCE_SECONDS = 0.05;
     public static final double JAM_REVERSE_SECONDS = 0.4;
 
     public static final double VERT_ROLLER_REVERSE_SPEED = -1; // negative = outwards, positive = inwards
     public static final double VERT_ROLLER_SPEED = 1;
     public static final double VERT_ROLLER_RPM = 3600;
+    public static final double VERT_ROLLER_FREE_RPM = 5676.0;
 
     public static final double FEEDER_WHEEL_DIAMETER_M = Units.inchesToMeters(2.0);
     public static final double FEEDER_GEAR_RATIO = 3.0;
