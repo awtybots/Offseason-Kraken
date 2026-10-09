@@ -198,7 +198,7 @@ public final class Constants {
 
     public static final double dutyRetractSpeed = -8.0;
     public static final double dutyExtendSpeed = 8.0;
-    public static final double cheesySpeed = -5.0;
+    public static final double cheesySpeed = -8.0;
 
     // PID/FF
     public static final double p = 6.0;
@@ -352,21 +352,21 @@ public final class Constants {
       // Expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.0), RPM.of(2504*rPM_Factor)),
-          Pair.of(Meters.of(1.5), RPM.of(2770*rPM_Factor)),
-          Pair.of(Meters.of(2.0), RPM.of(3094*rPM_Factor)),
-          Pair.of(Meters.of(2.5), RPM.of(3288*rPM_Factor)),
-          Pair.of(Meters.of(3.0), RPM.of(3481*rPM_Factor)),
-          Pair.of(Meters.of(3.5), RPM.of(3680*rPM_Factor)),
-          Pair.of(Meters.of(4.0), RPM.of(3879*rPM_Factor)),
-          Pair.of(Meters.of(4.5), RPM.of(4070*rPM_Factor)),
-          Pair.of(Meters.of(5.0), RPM.of(4261*rPM_Factor)),
-          Pair.of(Meters.of(5.5), RPM.of(4449*rPM_Factor)),
-          Pair.of(Meters.of(6.0), RPM.of(4629*rPM_Factor)),
-          Pair.of(Meters.of(6.5), RPM.of(4815*rPM_Factor)),
-          Pair.of(Meters.of(7.0), RPM.of(4989*rPM_Factor)),
-          Pair.of(Meters.of(7.5), RPM.of(5171*rPM_Factor)),
-          Pair.of(Meters.of(8.0), RPM.of(5340*rPM_Factor)))) {
+          Pair.of(Meters.of(1.0), RPM.of(2754.4*rPM_Factor)),
+          Pair.of(Meters.of(1.5), RPM.of(3047.0*rPM_Factor)),
+          Pair.of(Meters.of(2.0), RPM.of(3403.4*rPM_Factor)),
+          Pair.of(Meters.of(2.5), RPM.of(3616.8*rPM_Factor)),
+          Pair.of(Meters.of(3.0), RPM.of(3829.1*rPM_Factor)),
+          Pair.of(Meters.of(3.5), RPM.of(4048.0*rPM_Factor)),
+          Pair.of(Meters.of(4.0), RPM.of(4266.9*rPM_Factor)),
+          Pair.of(Meters.of(4.5), RPM.of(4477.0*rPM_Factor)),
+          Pair.of(Meters.of(5.0), RPM.of(4687.1*rPM_Factor)),
+          Pair.of(Meters.of(5.5), RPM.of(4893.9*rPM_Factor)),
+          Pair.of(Meters.of(6.0), RPM.of(5091.9*rPM_Factor)),
+          Pair.of(Meters.of(6.5), RPM.of(5296.5*rPM_Factor)),
+          Pair.of(Meters.of(7.0), RPM.of(5487.9*rPM_Factor)),
+          Pair.of(Meters.of(7.5), RPM.of(5688.1*rPM_Factor)),
+          Pair.of(Meters.of(8.0), RPM.of(5874.0*rPM_Factor)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
