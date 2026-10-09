@@ -311,15 +311,16 @@ public final class Constants {
       for (var entry : List.of(
           Pair.of(Meters.of(1.0), Seconds.of(0.569)),
           Pair.of(Meters.of(1.5), Seconds.of(0.660)),
-          Pair.of(Meters.of(2.0), Seconds.of(0.742)),
-          Pair.of(Meters.of(3.0), Seconds.of(0.887)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.016)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.98)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.23)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.11)),
           Pair.of(Meters.of(5.0), Seconds.of(1.133)),
           Pair.of(Meters.of(6.0), Seconds.of(1.243)),
           Pair.of(Meters.of(7.0), Seconds.of(1.345)),
           Pair.of(Meters.of(8.0), Seconds.of(1.443)),
           Pair.of(Meters.of(9.0), Seconds.of(1.536)),
           Pair.of(Meters.of(10.0), Seconds.of(1.629)),
+
           Pair.of(Meters.of(11.0), Seconds.of(1.723)),
           Pair.of(Meters.of(12.0), Seconds.of(1.811)),
           Pair.of(Meters.of(13.0), Seconds.of(1.897)))) {
@@ -404,7 +405,7 @@ public final class Constants {
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
     public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions pe
     // \r one full turret revolution
-    public static final double ABSOLUTE_ENCODER_OFFSET = 0.074053;
+    public static final double ABSOLUTE_ENCODER_OFFSET = 0.433174;
     public static final boolean ABSOLUTE_ENCODER_INVERTED = true; // flip if the encoder counts down when the turret
                                                                    // goes counterclockwise
 
@@ -444,7 +445,7 @@ public final class Constants {
     public static final double v = 0.004; // inert in kPosition
     public static final double a = 0.0003; // inert in kPosition
 
-    public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
+    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.3;
 
     public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
