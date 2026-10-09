@@ -315,7 +315,7 @@ public class RobotContainer {
         }, Set.of(m_shooter, m_conveyor, m_kicker, m_rollers, m_hood, drivebase)));
 
     driverXbox.rightTrigger().and(driverXbox.leftTrigger().negate())
-        .whileTrue(m_pushout.AgitateCommand());
+        .whileTrue(m_pushout.CheesyAgitation());
 
     // intake runs whenever the driver is asking when shooting or just intaking
     // or both
