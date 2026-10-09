@@ -268,11 +268,11 @@ public final class Constants {
     public static final double ROLLER_RADIUS_BOTTOM_M = 1.5 * 0.0254;
     public static final double ROLLER_RADIUS_TOP_M = 1.0 * 0.0254;
     public static final double PULLEY_TOP_PER_BOTTOM = 25.0 / 31.0;
-    public static final double SHOOTER_EFFICIENCY = 0.748;
+    public static final double SHOOTER_EFFICIENCY = 0.685;
 
     // ---- AERO (parameters the tables below were generated with) ----
     // Linear drag time constant.
-    public static final double LINEAR_DRAG_K = 0.35;
+    public static final double LINEAR_DRAG_K = 0.45;
     // Magnus lift as a fraction of drag. Both scale with v^2 about the same way, so
     // k_magnus = LINEAR_DRAG_K * MAGNUS_LIFT_RATIO and this is just C_L / C_D.
     // C_L ~ 0.30 at S = 0.64 (spheres saturate near 0.3-0.4).
@@ -286,21 +286,21 @@ public final class Constants {
     // MODEL OUTPUT, NOT MEASURED.
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(1.0), Seconds.of(0.570)),
-          Pair.of(Meters.of(1.5), Seconds.of(0.812)),
-          Pair.of(Meters.of(2.0), Seconds.of(1.000)),
-          Pair.of(Meters.of(2.5), Seconds.of(1.078)),
-          Pair.of(Meters.of(3.0), Seconds.of(1.153)),
-          Pair.of(Meters.of(3.5), Seconds.of(1.232)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.310)),
-          Pair.of(Meters.of(4.5), Seconds.of(1.382)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.455)),
-          Pair.of(Meters.of(5.5), Seconds.of(1.526)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.592)),
-          Pair.of(Meters.of(6.5), Seconds.of(1.662)),
-          Pair.of(Meters.of(7.0), Seconds.of(1.724)),
-          Pair.of(Meters.of(7.5), Seconds.of(1.792)),
-          Pair.of(Meters.of(8.0), Seconds.of(1.852)))) {
+          Pair.of(Meters.of(1.0), Seconds.of(0.585)),
+          Pair.of(Meters.of(1.5), Seconds.of(0.835)),
+          Pair.of(Meters.of(2.0), Seconds.of(1.032)),
+          Pair.of(Meters.of(2.5), Seconds.of(1.113)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.192)),
+          Pair.of(Meters.of(3.5), Seconds.of(1.275)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.358)),
+          Pair.of(Meters.of(4.5), Seconds.of(1.435)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.513)),
+          Pair.of(Meters.of(5.5), Seconds.of(1.512)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.448)),
+          Pair.of(Meters.of(6.5), Seconds.of(1.341)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.209)),
+          Pair.of(Meters.of(7.5), Seconds.of(1.262)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.325)))) {
         TOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
@@ -309,21 +309,20 @@ public final class Constants {
     public final static InterpolatingDoubleTreeMap ferryTOF = new InterpolatingDoubleTreeMap();
     static {
       for (var entry : List.of(
-          Pair.of(Meters.of(1.0), Seconds.of(0.569)),
-          Pair.of(Meters.of(1.5), Seconds.of(0.660)),
-          Pair.of(Meters.of(2.0), Seconds.of(0.98)),
-          Pair.of(Meters.of(3.0), Seconds.of(1.23)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.11)),
-          Pair.of(Meters.of(5.0), Seconds.of(1.133)),
-          Pair.of(Meters.of(6.0), Seconds.of(1.243)),
-          Pair.of(Meters.of(7.0), Seconds.of(1.345)),
-          Pair.of(Meters.of(8.0), Seconds.of(1.443)),
-          Pair.of(Meters.of(9.0), Seconds.of(1.536)),
-          Pair.of(Meters.of(10.0), Seconds.of(1.629)),
-
-          Pair.of(Meters.of(11.0), Seconds.of(1.723)),
-          Pair.of(Meters.of(12.0), Seconds.of(1.811)),
-          Pair.of(Meters.of(13.0), Seconds.of(1.897)))) {
+          Pair.of(Meters.of(1.0), Seconds.of(0.576)),
+          Pair.of(Meters.of(1.5), Seconds.of(0.670)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.755)),
+          Pair.of(Meters.of(3.0), Seconds.of(0.906)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.041)),
+          Pair.of(Meters.of(5.0), Seconds.of(1.165)),
+          Pair.of(Meters.of(6.0), Seconds.of(1.280)),
+          Pair.of(Meters.of(7.0), Seconds.of(1.390)),
+          Pair.of(Meters.of(8.0), Seconds.of(1.495)),
+          Pair.of(Meters.of(9.0), Seconds.of(1.595)),
+          Pair.of(Meters.of(10.0), Seconds.of(1.651)),
+          Pair.of(Meters.of(11.0), Seconds.of(1.655)),
+          Pair.of(Meters.of(12.0), Seconds.of(1.657)),
+          Pair.of(Meters.of(13.0), Seconds.of(1.660)))) {
         ferryTOF.put(entry.getFirst().in(Meters), entry.getSecond().in(Seconds));
       }
     }
@@ -332,6 +331,7 @@ public final class Constants {
 
     public static final int SOTM_MAX_ITERATIONS = 32;
     public static final double SOTM_TOLERANCE_M = 0.001;
+    public static final double SOTM_MAX_FLIGHT_SECONDS = 3.0;
     public static final double SOTM_VELOCITY_MISMATCH_MPS = 1.0;
     public static final double SHOT_DIP_RPM = 120.0;
     public static final double SHOT_DIP_WINDOW_SECONDS = 0.08;
@@ -353,21 +353,21 @@ public final class Constants {
       // Expect the far end to droop under load - if long shots land low
       // while short ones are fine, that is the flywheel running out, not the table.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.0), RPM.of(2504*rPM_Factor)),
-          Pair.of(Meters.of(1.5), RPM.of(2770*rPM_Factor)),
-          Pair.of(Meters.of(2.0), RPM.of(3094*rPM_Factor)),
-          Pair.of(Meters.of(2.5), RPM.of(3288*rPM_Factor)),
-          Pair.of(Meters.of(3.0), RPM.of(3481*rPM_Factor)),
-          Pair.of(Meters.of(3.5), RPM.of(3680*rPM_Factor)),
-          Pair.of(Meters.of(4.0), RPM.of(3879*rPM_Factor)),
-          Pair.of(Meters.of(4.5), RPM.of(4070*rPM_Factor)),
-          Pair.of(Meters.of(5.0), RPM.of(4261*rPM_Factor)),
-          Pair.of(Meters.of(5.5), RPM.of(4449*rPM_Factor)),
-          Pair.of(Meters.of(6.0), RPM.of(4629*rPM_Factor)),
-          Pair.of(Meters.of(6.5), RPM.of(4815*rPM_Factor)),
-          Pair.of(Meters.of(7.0), RPM.of(4989*rPM_Factor)),
-          Pair.of(Meters.of(7.5), RPM.of(5171*rPM_Factor)),
-          Pair.of(Meters.of(8.0), RPM.of(5340*rPM_Factor)))) {
+          Pair.of(Meters.of(1.0), RPM.of(2786*rPM_Factor)),
+          Pair.of(Meters.of(1.5), RPM.of(3119*rPM_Factor)),
+          Pair.of(Meters.of(2.0), RPM.of(3513*rPM_Factor)),
+          Pair.of(Meters.of(2.5), RPM.of(3741*rPM_Factor)),
+          Pair.of(Meters.of(3.0), RPM.of(3969*rPM_Factor)),
+          Pair.of(Meters.of(3.5), RPM.of(4206*rPM_Factor)),
+          Pair.of(Meters.of(4.0), RPM.of(4445*rPM_Factor)),
+          Pair.of(Meters.of(4.5), RPM.of(4674*rPM_Factor)),
+          Pair.of(Meters.of(5.0), RPM.of(4906*rPM_Factor)),
+          Pair.of(Meters.of(5.5), RPM.of(4996*rPM_Factor)),
+          Pair.of(Meters.of(6.0), RPM.of(4998*rPM_Factor)),
+          Pair.of(Meters.of(6.5), RPM.of(4998*rPM_Factor)),
+          Pair.of(Meters.of(7.0), RPM.of(5087*rPM_Factor)),
+          Pair.of(Meters.of(7.5), RPM.of(5262*rPM_Factor)),
+          Pair.of(Meters.of(8.0), RPM.of(5438*rPM_Factor)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
@@ -375,20 +375,20 @@ public final class Constants {
       // ferryHoodTable angle, same drag + Magnus model as the hub table.
       //
       for (var entry : List.of(
-          Pair.of(Meters.of(1.0), RPM.of(1162)),
-          Pair.of(Meters.of(1.5), RPM.of(1530)),
-          Pair.of(Meters.of(2.0), RPM.of(1844)),
-          Pair.of(Meters.of(3.0), RPM.of(2378)),
-          Pair.of(Meters.of(4.0), RPM.of(2835)),
-          Pair.of(Meters.of(5.0), RPM.of(3245)),
-          Pair.of(Meters.of(6.0), RPM.of(3621)),
-          Pair.of(Meters.of(7.0), RPM.of(3973)),
-          Pair.of(Meters.of(8.0), RPM.of(4307)),
-          Pair.of(Meters.of(9.0), RPM.of(4625)),
-          Pair.of(Meters.of(10.0), RPM.of(4932)),
-          Pair.of(Meters.of(11.0), RPM.of(5232)),
-          Pair.of(Meters.of(12.0), RPM.of(5522)),
-          Pair.of(Meters.of(13.0), RPM.of(5804)))) {
+          Pair.of(Meters.of(1.0), RPM.of(1290)),
+          Pair.of(Meters.of(1.5), RPM.of(1704)),
+          Pair.of(Meters.of(2.0), RPM.of(2059)),
+          Pair.of(Meters.of(3.0), RPM.of(2667)),
+          Pair.of(Meters.of(4.0), RPM.of(3194)),
+          Pair.of(Meters.of(5.0), RPM.of(3669)),
+          Pair.of(Meters.of(6.0), RPM.of(4110)),
+          Pair.of(Meters.of(7.0), RPM.of(4525)),
+          Pair.of(Meters.of(8.0), RPM.of(4920)),
+          Pair.of(Meters.of(9.0), RPM.of(5300)),
+          Pair.of(Meters.of(10.0), RPM.of(5500)),
+          Pair.of(Meters.of(11.0), RPM.of(5500)),
+          Pair.of(Meters.of(12.0), RPM.of(5500)),
+          Pair.of(Meters.of(13.0), RPM.of(5500)))) {
         ferryShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
     }
@@ -445,7 +445,7 @@ public final class Constants {
     public static final double v = 0.004; // inert in kPosition
     public static final double a = 0.0003; // inert in kPosition
 
-    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
+    public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.3;
 
     public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
@@ -511,12 +511,12 @@ public final class Constants {
           Pair.of(Meters.of(4.0), Degrees.of(26.7*HOOD_SCALE)),
           Pair.of(Meters.of(4.5), Degrees.of(27.5*HOOD_SCALE)),
           Pair.of(Meters.of(5.0), Degrees.of(28.1*HOOD_SCALE)),
-          Pair.of(Meters.of(5.5), Degrees.of(28.6*HOOD_SCALE)),
-          Pair.of(Meters.of(6.0), Degrees.of(29.1*HOOD_SCALE)),
-          Pair.of(Meters.of(6.5), Degrees.of(29.4*HOOD_SCALE)),
-          Pair.of(Meters.of(7.0), Degrees.of(29.8*HOOD_SCALE)),
-          Pair.of(Meters.of(7.5), Degrees.of(30.0*HOOD_SCALE)),
-          Pair.of(Meters.of(8.0), Degrees.of(30.3*HOOD_SCALE)))) {
+          Pair.of(Meters.of(5.5), Degrees.of(30.4*HOOD_SCALE)),
+          Pair.of(Meters.of(6.0), Degrees.of(34.3*HOOD_SCALE)),
+          Pair.of(Meters.of(6.5), Degrees.of(39.7*HOOD_SCALE)),
+          Pair.of(Meters.of(7.0), Degrees.of(46.3*HOOD_SCALE)),
+          Pair.of(Meters.of(7.5), Degrees.of(46.5*HOOD_SCALE)),
+          Pair.of(Meters.of(8.0), Degrees.of(46.3*HOOD_SCALE)))) {
         hubHoodTable.put(entry.getFirst().in(Meters), entry.getSecond().in(Degrees));
       }
 

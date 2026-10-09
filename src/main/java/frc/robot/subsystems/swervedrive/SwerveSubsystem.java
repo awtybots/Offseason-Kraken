@@ -1264,7 +1264,7 @@ public class SwerveSubsystem extends SubsystemBase {
         Translation2d vel, InterpolatingDoubleTreeMap tofMap) {
         double speed = vel.getNorm();
         double lo = 0.0;
-        double hi = tofMap.get(Double.MAX_VALUE) * Constants.ShooterConstants.TOF_SCALE;
+        double hi = Constants.ShooterConstants.SOTM_MAX_FLIGHT_SECONDS * Constants.ShooterConstants.TOF_SCALE;
         for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS
             && speed * (hi - lo) > Constants.ShooterConstants.SOTM_TOLERANCE_M; i++) {
             double mid = 0.5 * (lo + hi);
