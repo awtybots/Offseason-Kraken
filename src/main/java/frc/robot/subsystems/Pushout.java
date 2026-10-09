@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -19,7 +18,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants;
 import frc.robot.Constants.PushoutConstants;
-import frc.robot.utils.StallHomer;
 
 import static frc.robot.utils.utils.*;
 
@@ -32,12 +30,8 @@ public class Pushout extends SubsystemBase {
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
     private final CoastOut coastRequest = new CoastOut();
-    private final VoltageOut homingRequest = new VoltageOut(0);
 
     private final CurrentLimitsConfigs currentLimits;
-    private final StallHomer homer = new StallHomer(PushoutConstants.PUSHOUT_HOMING_STALL_RPS,
-            PushoutConstants.PUSHOUT_HOMING_MIN_SECONDS, PushoutConstants.PUSHOUT_HOMING_SETTLE_SECONDS,
-            PushoutConstants.PUSHOUT_HOMING_TIMEOUT_SECONDS);
     private ControlRequest lastRequest = null;
     private double statorLimit = PushoutConstants.PUSHOUT_STATOR_LIMIT;
 
@@ -114,9 +108,7 @@ public class Pushout extends SubsystemBase {
 
     private void setStatorLimit(double amps) {
         statorLimit = amps;
-        if (!homer.isHoming()) {
-            applyStatorLimit(amps);
-        }
+        applyStatorLimit(amps);
     }
 
     private void applyStatorLimit(double amps) {
@@ -125,14 +117,7 @@ public class Pushout extends SubsystemBase {
 
     private void control(ControlRequest request) {
         lastRequest = request;
-        if (!homer.isHoming()) {
-            PushoutMotor.setControl(request);
-        }
-    }
-
-    private void resumeAfterHoming() {
-        applyStatorLimit(statorLimit);
-        PushoutMotor.setControl(lastRequest != null ? lastRequest : coastRequest);
+        PushoutMotor.setControl(request);
     }
 
     public Command CompliantPushCommand() {
@@ -193,10 +178,6 @@ public class Pushout extends SubsystemBase {
         });
     }
 
-    public Command HomeCommand() {
-        return this.runOnce(homer::rehome);
-    }
-
     public Command CheesyAgitation() {
         return PushoutDutyCycleRetractCommand(PushoutConstants.cheesySpeed);
     }
@@ -237,21 +218,6 @@ public class Pushout extends SubsystemBase {
 
     @Override
     public void periodic() {
-        switch (homer.update(DriverStation.isEnabled(), PushoutMotor.getVelocity().getValueAsDouble())) {
-            case DRIVE -> {
-                if (currentLimits.StatorCurrentLimit != PushoutConstants.PUSHOUT_HOMING_STATOR_LIMIT) {
-                    applyStatorLimit(PushoutConstants.PUSHOUT_HOMING_STATOR_LIMIT);
-                }
-                PushoutMotor.setControl(homingRequest.withOutput(-PushoutConstants.PUSHOUT_HOMING_VOLTS));
-            }
-            case ZERO -> {
-                PushoutMotor.setPosition(PushoutConstants.FULLY_RETRACTED_POS);
-                resumeAfterHoming();
-            }
-            case GAVE_UP -> resumeAfterHoming();
-            case IDLE -> {
-            }
-        }
         Logger.recordOutput("Pushout/Position", PushoutMotor.getPosition().getValueAsDouble());
         Logger.recordOutput("Pushout/TargetPosition", positionRequest.Position);
         Logger.recordOutput("Pushout/Velocity", PushoutMotor.getVelocity().getValueAsDouble());
@@ -261,8 +227,5 @@ public class Pushout extends SubsystemBase {
         logFOC("Pushout", PushoutMotor);
         Logger.recordOutput("Pushout/IsAtExtended", isAtExtended());
         Logger.recordOutput("Pushout/StatorLimit", currentLimits.StatorCurrentLimit);
-        Logger.recordOutput("Pushout/Homed", homer.isHomed());
-        Logger.recordOutput("Pushout/Homing", homer.isHoming());
-        Logger.recordOutput("Pushout/HomingTimedOut", homer.timedOut());
     }
 }

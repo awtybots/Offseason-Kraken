@@ -220,12 +220,6 @@ public final class Constants {
     public static final double PUSHOUT_ACCELERATION = 80.0;    // rot/s^2
     public static final double PUSHOUT_STATOR_LIMIT = 120.0;
     public static final double PUSHOUT_COMPLIANT_STATOR_LIMIT = 20.0;
-    public static final double PUSHOUT_HOMING_VOLTS = 2.0;
-    public static final double PUSHOUT_HOMING_STATOR_LIMIT = 20.0;
-    public static final double PUSHOUT_HOMING_STALL_RPS = 0.5;
-    public static final double PUSHOUT_HOMING_MIN_SECONDS = 0.25;
-    public static final double PUSHOUT_HOMING_SETTLE_SECONDS = 0.1;
-    public static final double PUSHOUT_HOMING_TIMEOUT_SECONDS = 4.0;
   }
 
   public static class ShooterConstants {
@@ -461,11 +455,6 @@ public final class Constants {
     public static final double GEAR_RATIO = 240.0;
     public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.2;
-    public static final double HOMING_DUTY = 0.1;
-    public static final double HOMING_STALL_RPM = 60.0;
-    public static final double HOMING_MIN_SECONDS = 0.25;
-    public static final double HOMING_SETTLE_SECONDS = 0.1;
-    public static final double HOMING_TIMEOUT_SECONDS = 3.0;
 
     // The TRENCH sits at the HUB's x, so these double as the trench x band.
     public static final double TRENCH_X_BLUE = 4.611; // blue side trench x coordinate
