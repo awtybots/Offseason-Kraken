@@ -154,6 +154,7 @@ public class Robot extends LoggedRobot {
         // in the Command-based framework to work.
         CommandScheduler.getInstance().run();
         m_robotContainer.logControllerInputs();
+        m_robotContainer.updateFeedback();
     }
 
     /**

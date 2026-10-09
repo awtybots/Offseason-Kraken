@@ -45,6 +45,10 @@ public class Hood extends SubsystemBase {
         return (rotations / HoodConstants.GEAR_RATIO) * 360.0;
     }
 
+    public double getTargetDegrees() {
+        return currentTargetDegrees;
+    }
+
     public double getAngleDegrees() {
         return rotationsToDegrees(HoodEncoder.getPosition());
     }
@@ -74,38 +78,12 @@ public class Hood extends SubsystemBase {
         HoodMotor.set(0);
     }
 
-    public void moveHood() {
-        if (homer.isHoming()) {
-            return;
-        }
-        HoodMotor.set(1);
-    }
-
-    public void moveHoodReverse() {
-        if (homer.isHoming()) {
-            return;
-        }
-        HoodMotor.set(-1);
-    }
-
     public void goToMin() { // send hood to lowest position (20 deg)
         setAngle(HoodConstants.HOOD_MIN_DEGREES);
     }
 
     public void goToMax() { // send hood to highest position (40-45 deg, tune in constants)
         setAngle(HoodConstants.HOOD_MAX_DEGREES);
-    }
-
-    public Command justmoveHooCommandd() {
-        return this.run(() -> {
-            moveHood();
-        }).finallyDo(interrupted -> stopHood());
-    }
-
-    public Command justmoveHooReverseCommandd() {
-        return this.run(() -> {
-            moveHoodReverse();
-        }).finallyDo(interrupted -> stopHood());
     }
 
 

@@ -12,6 +12,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -22,6 +23,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,6 +42,7 @@ import frc.robot.commands.AimHood;
 import frc.robot.commands.ControlAllShooting;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.utils.ControllerRumble;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -50,6 +54,8 @@ public class RobotContainer {
   // controllers
   final CommandXboxController driverXbox = new CommandXboxController(0);
   final CommandXboxController operatorXbox = new CommandXboxController(1);
+  private final ControllerRumble driverRumble = new ControllerRumble(driverXbox.getHID());
+  private final ControllerRumble operatorRumble = new ControllerRumble(operatorXbox.getHID());
 
   // subsystems
   private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
@@ -62,11 +68,22 @@ public class RobotContainer {
   private final Pushout m_pushout = new Pushout();
   private final Kicker m_kicker = new Kicker();
   @SuppressWarnings("unused")
-  private final HubTrackerSubsystem m_hubtracker = new HubTrackerSubsystem(drivebase, driverXbox);
+  private final HubTrackerSubsystem m_hubtracker = new HubTrackerSubsystem(drivebase, driverRumble);
 
   // auto choosers
-  private SendableChooser<Command> autoChooser;
-  private LoggedDashboardChooser<Command> loggedAutoChooser;
+  private static final String NO_AUTO = "Do Nothing";
+  private SendableChooser<String> autoChooser;
+  private LoggedDashboardChooser<String> loggedAutoChooser;
+  private String builtAutoName = NO_AUTO;
+  private boolean builtAutoFlip = false;
+  private Command builtAuto = Commands.none();
+
+  private ControlAllShooting activeShot;
+  private boolean wasUnjamming = false;
+  private boolean wasFiring = false;
+  private final LinearFilter batteryAverage = LinearFilter.movingAverage(
+      (int) Math.round(OperatorConstants.LOW_BATTERY_AVERAGE_SECONDS / 0.02));
+  private final Timer lowBatteryTimer = new Timer();
   private SendableChooser<Boolean> flipChooser = new SendableChooser<>();
 
   /**
@@ -181,25 +198,15 @@ public class RobotContainer {
     flipChooser.addOption("Flipped", true);
     SmartDashboard.putData("Flip Auto", flipChooser);
 
-    flipChooser.onChange((Boolean flip) -> {
-      autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
-          autoStream -> autoStream.map(auto -> {
-            auto = new PathPlannerAuto(auto.getName(), flip);
-            return auto;
-          }));
-      autoChooser.setDefaultOption("Do Nothing", Commands.none());
-      SmartDashboard.putData("Auto Chooser", autoChooser);
-      loggedAutoChooser = new LoggedDashboardChooser<>("Auto Routine", autoChooser);
-    });
-
-    autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
-        autoStream -> autoStream.map(auto -> {
-          auto = new PathPlannerAuto(auto.getName(), flipChooser.getSelected());
-          return auto;
-        }));
-    autoChooser.setDefaultOption("Do Nothing", Commands.none());
+    autoChooser = new SendableChooser<>();
+    autoChooser.setDefaultOption(NO_AUTO, NO_AUTO);
+    for (String name : AutoBuilder.getAllAutoNames()) {
+      autoChooser.addOption(name, name);
+    }
     SmartDashboard.putData("Auto Chooser", autoChooser);
     loggedAutoChooser = new LoggedDashboardChooser<>("Auto Routine", autoChooser);
+    autoChooser.onChange(name -> autoFor(name, flipChooser.getSelected()));
+    flipChooser.onChange(flip -> autoFor(autoChooser.getSelected(), flip));
 
     configureSysIdDashboard();
   }
@@ -294,6 +301,7 @@ public class RobotContainer {
         Commands.defer(() -> {
           ControlAllShooting shootCmd = new ControlAllShooting(
               m_shooter, m_conveyor, m_kicker, m_hood, m_rollers, m_turret, drivebase, operatorXbox.povUp());
+          activeShot = shootCmd;
           AimHood aimHoodCmd = new AimHood(m_hood, drivebase);
           return Commands.sequence(
               Commands.parallel(
@@ -335,11 +343,13 @@ public class RobotContainer {
             m_intake.runOuttakeCommand(),
             m_rollers.runReverseRollersCommand()));
 
-    // POV left — drive to pose
-    driverXbox.povLeft().whileTrue(drivebase.driveToPoseDeffered());
-
     // start zero gyro
     driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyro));
+
+    drivebase.setDefenseCondition(() -> DriverStation.isTeleopEnabled()
+        && driverXbox.rightTrigger().getAsBoolean()
+        && SwerveSubsystem.sticksIdle(driverXbox.getLeftX(), driverXbox.getLeftY(),
+            driverXbox.getRightX(), driverXbox.getRightY()));
 
     // ==================== OPERATOR BINDINGS ====================
 
@@ -351,7 +361,6 @@ public class RobotContainer {
     // RB - turret to 45 deg. A real arc, so Turret/FrameDisagreementDeg should stay near
     //      zero the whole way if GEAR_RATIO = 50 is right.
     operatorXbox.rightBumper().whileTrue(m_turret.goToAngleCommand(45.0));
-            operatorXbox.povDown().whileTrue(m_hood.justmoveHooReverseCommandd());
     // Testing
     operatorXbox.rightTrigger().whileTrue(
         Commands.parallel(
@@ -453,6 +462,39 @@ public class RobotContainer {
     return error <= toleranceDegrees;
   }
 
+  public void updateFeedback() {
+    boolean unjamming = m_rollers.isUnjamming() || m_kicker.isUnjamming();
+    if (unjamming && !wasUnjamming) {
+      driverRumble.pulse(OperatorConstants.RUMBLE_JAM, OperatorConstants.RUMBLE_JAM_SECONDS);
+      operatorRumble.pulse(OperatorConstants.RUMBLE_JAM, OperatorConstants.RUMBLE_JAM_SECONDS);
+    }
+    wasUnjamming = unjamming;
+
+    boolean firing = activeShot != null && activeShot.isScheduled() && activeShot.isFiring();
+    if (firing && !wasFiring) {
+      driverRumble.pulse(OperatorConstants.RUMBLE_FIRE, OperatorConstants.RUMBLE_FIRE_SECONDS);
+    }
+    wasFiring = firing;
+
+    double battery = batteryAverage.calculate(RobotController.getBatteryVoltage());
+    boolean lowBattery = DriverStation.isEnabled() && battery < OperatorConstants.LOW_BATTERY_VOLTS;
+    if (lowBattery && (!lowBatteryTimer.isRunning()
+        || lowBatteryTimer.hasElapsed(OperatorConstants.LOW_BATTERY_PULSE_PERIOD_SECONDS))) {
+      driverRumble.pulse(OperatorConstants.RUMBLE_LOW_BATTERY, OperatorConstants.RUMBLE_LOW_BATTERY_SECONDS);
+      lowBatteryTimer.restart();
+    }
+    if (!lowBattery) {
+      lowBatteryTimer.stop();
+    }
+    Logger.recordOutput("Feedback/BatteryAverageVolts", battery);
+    Logger.recordOutput("Feedback/LowBattery", lowBattery);
+
+    driverRumble.update();
+    operatorRumble.update();
+    Logger.recordOutput("Feedback/DriverRumble", driverRumble.getLevel());
+    Logger.recordOutput("Feedback/OperatorRumble", operatorRumble.getLevel());
+  }
+
   public void logControllerInputs() {
     Logger.recordOutput("Input/Driver/LeftX", driverXbox.getLeftX());
     Logger.recordOutput("Input/Driver/LeftY", driverXbox.getLeftY());
@@ -472,11 +514,26 @@ public class RobotContainer {
     Logger.recordOutput("Shooting/InAllianceZone", isInAllianceZone());
   }
 
-  public Command getAutonomousCommand() {
-    Command selected = loggedAutoChooser.get();
-    if (selected == null)
+  private Command autoFor(String name, Boolean flip) {
+    if (name == null || name.equals(NO_AUTO)) {
       return Commands.none();
-    return selected;
+    }
+    boolean mirror = flip != null && flip;
+    if (!name.equals(builtAutoName) || mirror != builtAutoFlip) {
+      try {
+        builtAuto = new PathPlannerAuto(name, mirror);
+      } catch (RuntimeException e) {
+        DriverStation.reportError("Auto \"" + name + "\" failed to load: " + e.getMessage(), e.getStackTrace());
+        builtAuto = Commands.none();
+      }
+      builtAutoName = name;
+      builtAutoFlip = mirror;
+    }
+    return builtAuto;
+  }
+
+  public Command getAutonomousCommand() {
+    return autoFor(loggedAutoChooser.get(), flipChooser.getSelected());
   }
 
   public void setMotorBrake(boolean brake) {

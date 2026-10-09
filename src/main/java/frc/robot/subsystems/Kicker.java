@@ -40,8 +40,8 @@ public class Kicker extends SubsystemBase {
     private double vertRollerTargetRPM = 0.0;
 
     private final JamDetector jamDetector = new JamDetector(KickerConstants.JAMCURRENT,
-            KickerConstants.JAM_IGNORE_SECONDS, KickerConstants.JAM_DEBOUNCE_SECONDS,
-            KickerConstants.JAM_REVERSE_SECONDS);
+            KickerConstants.JAM_STALL_SPEED_FRACTION, KickerConstants.JAM_IGNORE_SECONDS,
+            KickerConstants.JAM_DEBOUNCE_SECONDS, KickerConstants.JAM_REVERSE_SECONDS);
 
     public Kicker() {
         TalonFXConfiguration KickerConfig = new TalonFXConfiguration();
@@ -72,8 +72,8 @@ public class Kicker extends SubsystemBase {
     }
  public void ReverseVerticalRoller(double surfaceMps) {
         double feederRPS = surfaceMps / (Math.PI * KickerConstants.FEEDER_WHEEL_DIAMETER_M) * KickerConstants.FEEDER_GEAR_RATIO;
-        vertRollerTargetRPM = KickerConstants.VERT_ROLLER_REVERSE_SPEED;
-        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_SPEED, ControlType.kDutyCycle);
+        vertRollerTargetRPM = 0.0;
+        VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_REVERSE_SPEED, ControlType.kDutyCycle);
         KickerMotor.setControl(velocityRequest.withVelocity(feederRPS).withEnableFOC(Constants.USE_FOC));
     }
 
@@ -90,13 +90,18 @@ public class Kicker extends SubsystemBase {
 
     private void feedAtSurfaceSpeed(double surfaceMps) {
         double feederRPS = surfaceMps / (Math.PI * KickerConstants.FEEDER_WHEEL_DIAMETER_M) * KickerConstants.FEEDER_GEAR_RATIO;
-        vertRollerTargetRPM = KickerConstants.VERT_ROLLER_RPM;
+        vertRollerTargetRPM = 0.0;
         VerticalRollerController.setSetpoint(KickerConstants.VERT_ROLLER_SPEED, ControlType.kDutyCycle);
         KickerMotor.setControl(velocityRequest.withVelocity(feederRPS).withEnableFOC(Constants.USE_FOC));
     }
 
+    private double vertRollerSpeedFraction() {
+        return VertRollerEncoder.getVelocity()
+                / (KickerConstants.VERT_ROLLER_SPEED * KickerConstants.VERT_ROLLER_FREE_RPM);
+    }
+
     public void ConveyorToShooter() {
-        if(jamDetector.shouldReverse(getStatorCurrent(VerticalRollerMotor)))
+        if(jamDetector.shouldReverse(getStatorCurrent(VerticalRollerMotor), vertRollerSpeedFraction()))
         {
             ReverseVerticalRoller(KickerConstants.FEEDER_MIN_SURFACE_MPS);
         }
@@ -107,7 +112,7 @@ public class Kicker extends SubsystemBase {
     }
 
     public void ConveyorToShooter(double shooterRPM) {
-        if(jamDetector.shouldReverse(getStatorCurrent(VerticalRollerMotor)))
+        if(jamDetector.shouldReverse(getStatorCurrent(VerticalRollerMotor), vertRollerSpeedFraction()))
         {
             ReverseVerticalRoller(KickerConstants.FEEDER_MIN_SURFACE_MPS);
         }
@@ -117,6 +122,15 @@ public class Kicker extends SubsystemBase {
         }
     }
     
+
+    public boolean isUnjamming() {
+        return jamDetector.isReversing();
+    }
+
+    public void ReverseForUnjam() {
+        jamDetector.reset();
+        ReverseVerticalRoller(KickerConstants.FEEDER_MIN_SURFACE_MPS);
+    }
 
     public void ClearBall() {
         // KickerMotor.setControl(dutyCycleRequest.withOutput(KickerConstants.KICKER_SPEED));
@@ -169,6 +183,7 @@ public class Kicker extends SubsystemBase {
         Logger.recordOutput("Kicker/KickerStatorCurrent", getStatorCurrent(KickerMotor));
 
         Logger.recordOutput("Kicker/Unjamming", jamDetector.isReversing());
+        Logger.recordOutput("Kicker/VerticalRoller/SpeedFraction", vertRollerSpeedFraction());
         logFOC("Kicker/Top", KickerMotor);
     }
 }

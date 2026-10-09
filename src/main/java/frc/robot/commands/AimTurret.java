@@ -65,7 +65,7 @@ public class AimTurret extends Command {
         double turretTargetDegrees = fieldAngleToTarget.minus(robotPose.getRotation()).getDegrees();
 
         double aimRateDegPerSec = aimRateDegPerSec(turretToTarget,
-                swerveSubsystem.getTurretFieldVelocity(),
+                swerveSubsystem.getTurretFieldAimVelocity(),
                 swerveSubsystem.getFieldVelocity().omegaRadiansPerSecond);
 
         boolean reachable = turret.setAngleClamped(turretTargetDegrees, aimRateDegPerSec);

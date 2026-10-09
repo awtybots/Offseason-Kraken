@@ -85,6 +85,11 @@ public class Rollers extends SubsystemBase {
         return jamDetector.isReversing();
     }
 
+    public void ReverseForUnjam() {
+        jamDetector.reset();
+        ReverseRollers();
+    }
+
     public void stopRollers() {
         jamDetector.reset();
         // RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));
