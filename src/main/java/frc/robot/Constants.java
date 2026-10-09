@@ -283,16 +283,17 @@ public final class Constants {
     // Flight time of the hubHoodTable shot, solved with linear drag AND Magnus lift
     // (see MECHANISM/AERO block above).
     //
-    // MODEL OUTPUT, NOT MEASURED.
+    // The 2.5 and 3.5 m values are linearly interpolated from the current 2, 3, and 4 m anchors.
+    // Other distances retain the existing model values.
     static {
       for (var entry : List.of(
           Pair.of(Meters.of(1.0), Seconds.of(0.570)),
           Pair.of(Meters.of(1.5), Seconds.of(0.812)),
-          Pair.of(Meters.of(2.0), Seconds.of(1.000)),
-          Pair.of(Meters.of(2.5), Seconds.of(1.078)),
-          Pair.of(Meters.of(3.0), Seconds.of(1.153)),
-          Pair.of(Meters.of(3.5), Seconds.of(1.232)),
-          Pair.of(Meters.of(4.0), Seconds.of(1.310)),
+          Pair.of(Meters.of(2.0), Seconds.of(0.98)),
+          Pair.of(Meters.of(2.5), Seconds.of(1.105)),
+          Pair.of(Meters.of(3.0), Seconds.of(1.23)),
+          Pair.of(Meters.of(3.5), Seconds.of(1.170)),
+          Pair.of(Meters.of(4.0), Seconds.of(1.11)),
           Pair.of(Meters.of(4.5), Seconds.of(1.382)),
           Pair.of(Meters.of(5.0), Seconds.of(1.455)),
           Pair.of(Meters.of(5.5), Seconds.of(1.526)),
@@ -345,28 +346,24 @@ public final class Constants {
     public static final InterpolatingDoubleTreeMap ferryShooterTable = new InterpolatingDoubleTreeMap();
     static {
 
-      // BOTTOM roller RPM (= motor RPM). Solved for the launch speed that reaches
-      // dz = 1.3111 m at each distance on the hubHoodTable angle, integrating linear
-      // drag plus Magnus lift. Ball speed from the MECHANISM block above.
-      //
-      // Expect the far end to droop under load - if long shots land low
-      // while short ones are fine, that is the flywheel running out, not the table.
+      // Bottom roller RPM: linear interpolation through the 2, 3, and 4 m anchors.
+      // Outside that range, extend the nearest segment. Values retain rPM_Factor.
       for (var entry : List.of(
-          Pair.of(Meters.of(1.0), RPM.of(2754.4*rPM_Factor)),
-          Pair.of(Meters.of(1.5), RPM.of(3047.0*rPM_Factor)),
+          Pair.of(Meters.of(1.0), RPM.of(2748.8*rPM_Factor)),
+          Pair.of(Meters.of(1.5), RPM.of(3076.1*rPM_Factor)),
           Pair.of(Meters.of(2.0), RPM.of(3403.4*rPM_Factor)),
-          Pair.of(Meters.of(2.5), RPM.of(3616.8*rPM_Factor)),
-          Pair.of(Meters.of(3.0), RPM.of(3829.1*rPM_Factor)),
-          Pair.of(Meters.of(3.5), RPM.of(4048.0*rPM_Factor)),
-          Pair.of(Meters.of(4.0), RPM.of(4266.9*rPM_Factor)),
-          Pair.of(Meters.of(4.5), RPM.of(4477.0*rPM_Factor)),
-          Pair.of(Meters.of(5.0), RPM.of(4687.1*rPM_Factor)),
-          Pair.of(Meters.of(5.5), RPM.of(4893.9*rPM_Factor)),
-          Pair.of(Meters.of(6.0), RPM.of(5091.9*rPM_Factor)),
-          Pair.of(Meters.of(6.5), RPM.of(5296.5*rPM_Factor)),
-          Pair.of(Meters.of(7.0), RPM.of(5487.9*rPM_Factor)),
-          Pair.of(Meters.of(7.5), RPM.of(5688.1*rPM_Factor)),
-          Pair.of(Meters.of(8.0), RPM.of(5874.0*rPM_Factor)))) {
+          Pair.of(Meters.of(2.5), RPM.of(3730.7*rPM_Factor)),
+          Pair.of(Meters.of(3.0), RPM.of(4058.0*rPM_Factor)),
+          Pair.of(Meters.of(3.5), RPM.of(4077.0*rPM_Factor)),
+          Pair.of(Meters.of(4.0), RPM.of(4096.0*rPM_Factor)),
+          Pair.of(Meters.of(4.5), RPM.of(4115.0*rPM_Factor)),
+          Pair.of(Meters.of(5.0), RPM.of(4134.0*rPM_Factor)),
+          Pair.of(Meters.of(5.5), RPM.of(4153.0*rPM_Factor)),
+          Pair.of(Meters.of(6.0), RPM.of(4172.0*rPM_Factor)),
+          Pair.of(Meters.of(6.5), RPM.of(4191.0*rPM_Factor)),
+          Pair.of(Meters.of(7.0), RPM.of(4210.0*rPM_Factor)),
+          Pair.of(Meters.of(7.5), RPM.of(4229.0*rPM_Factor)),
+          Pair.of(Meters.of(8.0), RPM.of(4248.0*rPM_Factor)))) {
         hubShooterTable.put(entry.getFirst().in(Meters), entry.getSecond().in(RPM)); // store rpm
       }
 
