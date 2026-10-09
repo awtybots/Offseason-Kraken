@@ -404,7 +404,7 @@ public final class Constants {
     // REV Through Bore in the SPARK MAX data port (absolute encoder adapter)
     public static final double ABSOLUTE_ENCODER_RATIO = 10.0; // encoder revolutions pe
     // \r one full turret revolution
-    public static final double ABSOLUTE_ENCODER_OFFSET = 0.545324;
+    public static final double ABSOLUTE_ENCODER_OFFSET = 0.433174;
     public static final boolean ABSOLUTE_ENCODER_INVERTED = true; // flip if the encoder counts down when the turret
                                                                    // goes counterclockwise
 
@@ -444,7 +444,7 @@ public final class Constants {
     public static final double v = 0.004; // inert in kPosition
     public static final double a = 0.0003; // inert in kPosition
 
-    public static final double ANGLE_TOLERANCE_DEGREES = 2.0;
+    public static final double ANGLE_TOLERANCE_DEGREES = 0.5;
     public static final double CLOSED_LOOP_DEADBAND_DEGREES = 0.3;
 
     public static final double MAX_OUTPUT = 0.88; // speed limit to keep it safe for tuning use 0.88 after testing
