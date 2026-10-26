@@ -47,7 +47,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "Shoot",
+      "name": "Control All Shooting",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": 1.0,
       "command": {
