@@ -24,6 +24,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -45,6 +46,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.DrivebaseConstants;
 import frc.robot.Constants.LimelightConstants;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import frc.robot.utils.VisionJumpGate;
 import frc.robot.LimelightHelpers;
 
 import java.io.File;
@@ -53,6 +56,7 @@ import java.util.Arrays;
 // import java.util.Optional;
 // import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.json.simple.parser.ParseException;
@@ -94,9 +98,11 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public boolean useFrontLimelight = true;
   public boolean useBackLimelight = true;
+  private final VisionJumpGate visionGate = new VisionJumpGate();
   public boolean useLeftLimelight = true;
 
   boolean locked = false;
+  private BooleanSupplier defenseCondition = () -> false;
 
   // Initialize to non-kZero so YAGSL's SwerveInputStream.aim(supplier) actually registers the target.
   // At registration time it calls supplier.get().equals(Pose2d.kZero) and skips the target if true.
@@ -131,7 +137,7 @@ public class SwerveSubsystem extends SubsystemBase {
         : new Pose2d(Meter.of(16), Meter.of(4), Rotation2d.fromDegrees(180));
     // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
     // objects being created.
-    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+    SwerveDriveTelemetry.verbosity = TelemetryVerbosity.POSE;
     try {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED, startingPose);
       // Alternative method if you don't want to supply the conversion factor via JSON
@@ -346,6 +352,7 @@ public class SwerveSubsystem extends SubsystemBase {
     Logger.recordOutput("Drive/CommandedFieldVelocity", lastCommandedFieldVelocity);
     // Commanded rotational rate (rad/sec); should be ~0 when no turn input.
     Logger.recordOutput("Drive/CommandedOmega", lastCommandedRobotVelocity.omegaRadiansPerSecond);
+    Logger.recordOutput("Drive/DefenseMode", isDefenseMode());
     // Measured rotational rate (rad/sec); should match commanded omega.
     Logger.recordOutput("Drive/ActualOmega", robotVel.omegaRadiansPerSecond);
 
@@ -753,6 +760,8 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public void stop() {
+    lastCommandedRobotVelocity = new ChassisSpeeds();
+    lastCommandedFieldVelocity = new ChassisSpeeds();
     swerveDrive.drive(new ChassisSpeeds(0, 0, 0));
     
     swerveDrive.setModuleStates((swerveDrive.kinematics.toSwerveModuleStates(
@@ -765,6 +774,12 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param velocity Velocity according to the field.
    */
   public void driveFieldOriented(ChassisSpeeds velocity) {
+    lastCommandedFieldVelocity = velocity;
+    lastCommandedRobotVelocity = ChassisSpeeds.fromFieldRelativeSpeeds(
+        velocity.vxMetersPerSecond,
+        velocity.vyMetersPerSecond,
+        velocity.omegaRadiansPerSecond,
+        getHeading());
     swerveDrive.driveFieldOriented(velocity);
   }
   
@@ -775,16 +790,7 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param velocity Velocity according to the field.
    */
   public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity) {
-    return run(() -> {
-      ChassisSpeeds field = velocity.get();
-      lastCommandedFieldVelocity = field;
-      lastCommandedRobotVelocity = ChassisSpeeds.fromFieldRelativeSpeeds(
-          field.vxMetersPerSecond,
-          field.vyMetersPerSecond,
-          field.omegaRadiansPerSecond,
-          getHeading());
-      swerveDrive.driveFieldOriented(field);
-    });
+    return run(() -> driveFieldOriented(velocity.get()));
   }
 
   /**
@@ -840,6 +846,10 @@ public class SwerveSubsystem extends SubsystemBase {
     if(megaTag == 1) // If using mega tag 1
     {
       LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(cameraName);
+      if(!visionGate.isNewFrame(cameraName, mt1.timestampSeconds))
+      {
+        return;
+      }
 
       if(mt1.tagCount == 0)
       {
@@ -870,15 +880,22 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         doRejectUpdate = true;
       }
+      boolean jumpRejected = !doRejectUpdate
+          && !visionGate.accept(cameraName, mt1.pose, mt1.tagCount, getPose());
+      if(jumpRejected)
+      {
+        doRejectUpdate = true;
+      }
+      Logger.recordOutput("Vision/" + cameraName + "/JumpRejected", jumpRejected);
 
       if(!doRejectUpdate)
       {
         // Scale std devs by distance: close tags = more trust, far tags = less trust
-        double dist = mt1.avgTagDist;
-        double xyStd = LimelightConstants.MT1_STD_BASE
-            + (dist * dist * LimelightConstants.MT1_STD_DIST_COEFF);
-        if(mt1.tagCount < 2) xyStd *= LimelightConstants.SINGLE_TAG_STD_SCALE;
-        if(DriverStation.isDisabled()) xyStd *= LimelightConstants.DISABLED_STD_SCALE;
+        ChassisSpeeds moving = getRobotVelocity();
+        double xyStd = visionStdDev(LimelightConstants.MT1_STD_BASE, LimelightConstants.MT1_STD_DIST_COEFF,
+            mt1.avgTagDist, mt1.tagCount, DriverStation.isDisabled(),
+            Math.hypot(moving.vxMetersPerSecond, moving.vyMetersPerSecond), moving.omegaRadiansPerSecond,
+            isDefenseMode());
 
         swerveDrive.setVisionMeasurementStdDevs(
             VecBuilder.fill(xyStd, xyStd, LimelightConstants.THETA_STD_IGNORE));
@@ -895,6 +912,10 @@ public class SwerveSubsystem extends SubsystemBase {
       swerveDrive.getOdometryHeading().getDegrees(),
       0.0, 0.0, 0.0, 0.0, 0.0);
       LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(cameraName);
+      if(!visionGate.isNewFrame(cameraName, mt2.timestampSeconds))
+      {
+        return;
+      }
 
       if(Math.abs(swerveDrive.getGyro().getYawAngularVelocity().in(DegreesPerSecond)) > 720)
       {
@@ -909,14 +930,21 @@ public class SwerveSubsystem extends SubsystemBase {
       {
         doRejectUpdate = true;
       }
+      boolean jumpRejected = !doRejectUpdate
+          && !visionGate.accept(cameraName, mt2.pose, mt2.tagCount, getPose());
+      if(jumpRejected)
+      {
+        doRejectUpdate = true;
+      }
+      Logger.recordOutput("Vision/" + cameraName + "/JumpRejected", jumpRejected);
       if(!doRejectUpdate)
       {
         // Scale std devs by distance and tag count
-        double dist = mt2.avgTagDist;
-        double xyStd = LimelightConstants.MT2_STD_BASE
-            + (dist * dist * LimelightConstants.MT2_STD_DIST_COEFF);
-        if(mt2.tagCount < 2) xyStd *= LimelightConstants.SINGLE_TAG_STD_SCALE;
-        if(DriverStation.isDisabled()) xyStd *= LimelightConstants.DISABLED_STD_SCALE;
+        ChassisSpeeds moving = getRobotVelocity();
+        double xyStd = visionStdDev(LimelightConstants.MT2_STD_BASE, LimelightConstants.MT2_STD_DIST_COEFF,
+            mt2.avgTagDist, mt2.tagCount, DriverStation.isDisabled(),
+            Math.hypot(moving.vxMetersPerSecond, moving.vyMetersPerSecond), moving.omegaRadiansPerSecond,
+            isDefenseMode());
 
         swerveDrive.setVisionMeasurementStdDevs(
             VecBuilder.fill(xyStd, xyStd, LimelightConstants.THETA_STD_IGNORE));
@@ -927,6 +955,18 @@ public class SwerveSubsystem extends SubsystemBase {
       }
       logVision(cameraName, megaTag, mt2, !doRejectUpdate);
     }
+  }
+
+  public static double visionStdDev(double base, double distCoeff, double avgTagDist, int tagCount,
+      boolean disabled, double speedMps, double omegaRadPerSec, boolean defense)
+  {
+    double std = base + avgTagDist * avgTagDist * distCoeff;
+    if(tagCount < 2) std *= LimelightConstants.SINGLE_TAG_STD_SCALE;
+    if(disabled) std *= LimelightConstants.DISABLED_STD_SCALE;
+    std *= 1.0 + LimelightConstants.STD_PER_MPS * speedMps
+        + LimelightConstants.STD_PER_RAD_PER_SEC * Math.abs(omegaRadPerSec);
+    if(defense) std *= LimelightConstants.DEFENSE_STD_SCALE;
+    return std;
   }
 
   private void logVision(String cameraName, int megaTag, LimelightHelpers.PoseEstimate estimate, boolean accepted)
@@ -956,6 +996,12 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param chassisSpeeds Chassis Speeds to set.
    */
   public void setChassisSpeeds(ChassisSpeeds chassisSpeeds) {
+    lastCommandedRobotVelocity = chassisSpeeds;
+    lastCommandedFieldVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(
+        chassisSpeeds.vxMetersPerSecond,
+        chassisSpeeds.vyMetersPerSecond,
+        chassisSpeeds.omegaRadiansPerSecond,
+        getHeading());
     swerveDrive.setChassisSpeeds(chassisSpeeds);
   }
 
@@ -1126,7 +1172,21 @@ public class SwerveSubsystem extends SubsystemBase {
    */
   public void lock() {
     SmartDashboard.putBoolean("Wheel Lock", true);
+    lastCommandedRobotVelocity = new ChassisSpeeds();
+    lastCommandedFieldVelocity = new ChassisSpeeds();
     swerveDrive.lockPose();
+  }
+
+  public void setDefenseCondition(BooleanSupplier condition) {
+    defenseCondition = condition;
+  }
+
+  public boolean isDefenseMode() {
+    return defenseCondition.getAsBoolean();
+  }
+
+  public static boolean sticksIdle(double leftX, double leftY, double rightX, double rightY) {
+    return Math.hypot(leftX, leftY) + Math.hypot(rightX, rightY) <= Constants.OperatorConstants.DEADBAND;
   }
 
   public Command lockCommand () {
@@ -1195,26 +1255,40 @@ public class SwerveSubsystem extends SubsystemBase {
  *
  * @return A Pose2d representing the compensated aim point.
  */
+    public static double dragLeadSeconds(double flightSeconds) {
+        double k = Constants.ShooterConstants.LINEAR_DRAG_K;
+        return (1.0 - Math.exp(-k * flightSeconds)) / k;
+    }
+
+    public static Translation2d leadTarget(Translation2d target, Translation2d turretPos,
+        Translation2d vel, InterpolatingDoubleTreeMap tofMap) {
+        double speed = vel.getNorm();
+        double lo = 0.0;
+        double hi = tofMap.get(Double.MAX_VALUE) * Constants.ShooterConstants.TOF_SCALE;
+        for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS
+            && speed * (hi - lo) > Constants.ShooterConstants.SOTM_TOLERANCE_M; i++) {
+            double mid = 0.5 * (lo + hi);
+            Translation2d aim = target.minus(vel.times(dragLeadSeconds(mid)));
+            double flight = tofMap.get(aim.minus(turretPos).getNorm())
+                * Constants.ShooterConstants.TOF_SCALE;
+            if (flight > mid) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        return target.minus(vel.times(dragLeadSeconds(0.5 * (lo + hi))));
+    }
+
     public Pose2d getDynamicHubLocation() {
 
         Translation2d hubVec = Constants.DrivebaseConstants.getHubPose2D().getTranslation();
         Translation2d robotVec = getTurretFieldPosition();
-        Translation2d robotVel = getTurretFieldVelocity(); // includes omega x r
+        Translation2d robotVel = getLeadVelocity();
 
         // velocity compensation — iterative TOF convergence
-        Translation2d CompensatedHub = hubVec;
-        for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS; i++) {
-            double distance = CompensatedHub.minus(robotVec).getNorm();
-            double tof = Constants.ShooterConstants.TOF.get(distance)
-                * Constants.ShooterConstants.TOF_SCALE;
-            Translation2d next = hubVec.minus(robotVel.times(tof));
-            boolean settled = next.getDistance(CompensatedHub)
-                < Constants.ShooterConstants.SOTM_TOLERANCE_M;
-            CompensatedHub = next;
-            if (settled) {
-                break;
-            }
-        }
+        Translation2d CompensatedHub = leadTarget(hubVec, robotVec, robotVel,
+            Constants.ShooterConstants.TOF);
 
         // // tilt compensation
         // double pitchRad = swerveDrive.getPitch().getRadians(); // tilt forward/back
@@ -1288,6 +1362,31 @@ public class SwerveSubsystem extends SubsystemBase {
           fieldVel.vyMetersPerSecond + omega * r.getX());
     }
 
+    public Translation2d getTurretFieldCommandedVelocity() {
+      ChassisSpeeds commanded = lastCommandedFieldVelocity;
+      Translation2d r = Constants.DrivebaseConstants.TURRET_OFFSET
+          .rotateBy(getPose().getRotation());
+      double omega = commanded.omegaRadiansPerSecond;
+      return new Translation2d(
+          commanded.vxMetersPerSecond - omega * r.getY(),
+          commanded.vyMetersPerSecond + omega * r.getX());
+    }
+
+    public static Translation2d blendAimVelocity(Translation2d commanded, Translation2d measured) {
+      double mismatch = commanded.minus(measured).getNorm();
+      double weight = MathUtil.clamp(
+          1.0 - mismatch / Constants.ShooterConstants.SOTM_VELOCITY_MISMATCH_MPS, 0.0, 1.0);
+      return commanded.times(weight).plus(measured.times(1.0 - weight));
+    }
+
+    public Translation2d getTurretFieldAimVelocity() {
+      return blendAimVelocity(getTurretFieldCommandedVelocity(), getTurretFieldVelocity());
+    }
+
+    public Translation2d getLeadVelocity() {
+      return isDefenseMode() ? new Translation2d() : getTurretFieldAimVelocity();
+    }
+
     public Translation2d getTurretFieldPosition() {
       Pose2d robotPose = getPose();
       // double xOffset = (-29.5 / 2.0 + 3.0) * 0.0254;
@@ -1309,23 +1408,10 @@ public class SwerveSubsystem extends SubsystemBase {
   public Pose2d getDynamicFerryLocation() {
     Translation2d ferryVec = Constants.DrivebaseConstants.getFerryPose(getPose().getTranslation()).getTranslation();
     Translation2d robotVec = getTurretFieldPosition();
-    Translation2d robotVel = getTurretFieldVelocity(); // includes omega x r
+    Translation2d robotVel = getLeadVelocity();
 
-    Translation2d CompensatedFerry = ferryVec;
-    for (int i = 0; i < Constants.ShooterConstants.SOTM_MAX_ITERATIONS; i++) {
-      double distance = CompensatedFerry.minus(robotVec).getNorm();
-      // ferryTOF, not the hub TOF map: the hub map only spans 2-6 m and clamps, so
-      // every pass past 6 m used to lead with the 6 m hub flight time.
-      double tof = Constants.ShooterConstants.ferryTOF.get(distance)
-          * Constants.ShooterConstants.TOF_SCALE;
-      Translation2d next = ferryVec.minus(robotVel.times(tof));
-      boolean settled = next.getDistance(CompensatedFerry)
-          < Constants.ShooterConstants.SOTM_TOLERANCE_M;
-      CompensatedFerry = next;
-      if (settled) {
-        break;
-      }
-    }
+    Translation2d CompensatedFerry = leadTarget(ferryVec, robotVec, robotVel,
+        Constants.ShooterConstants.ferryTOF);
 
     return new Pose2d(CompensatedFerry, new Rotation2d());
   }
@@ -1356,7 +1442,7 @@ public class SwerveSubsystem extends SubsystemBase {
   /**
    * True when the robot is between the two alliance zones. We ferry only from here -
    * never from the opponent's alliance zone - so this bounds ferry distance to about
-   * 1.8-10.6 m, which is the domain ferryTOF and the ferry tables are built over.
+   * 1.8-10.6 m.
    */
   public boolean isInNeutralZone() {
     double x = getPose().getX();

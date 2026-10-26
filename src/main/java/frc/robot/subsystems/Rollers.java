@@ -85,6 +85,11 @@ public class Rollers extends SubsystemBase {
         return jamDetector.isReversing();
     }
 
+    public void ReverseForUnjam() {
+        jamDetector.reset();
+        ReverseRollers();
+    }
+
     public void stopRollers() {
         jamDetector.reset();
         // RollersMotor.setControl(dutyCycleRequest.withOutput(0.0));
@@ -98,6 +103,11 @@ public class Rollers extends SubsystemBase {
         }).finallyDo(interrupted -> stopRollers());
     }
 
+    public Command RunRollersCommand() {
+        return this.run(() -> {
+            RunRollers(false);
+        }).finallyDo(interrupted -> stopRollers());
+    }
 
     public Command runReverseRollersCommand() {
         return this.run(() -> {

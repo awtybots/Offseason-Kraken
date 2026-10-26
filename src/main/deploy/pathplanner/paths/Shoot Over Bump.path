@@ -45,7 +45,19 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Shoot",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": 1.0,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Control All Shooting"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.75,
     "maxAcceleration": 3.75,

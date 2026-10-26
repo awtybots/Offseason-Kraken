@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -19,9 +18,11 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 
 import static frc.robot.utils.utils.*;
 
@@ -45,12 +46,15 @@ public class Turret extends SubsystemBase {
     private AbsoluteEncoder turretAbsoluteEncoder = TurretMotor.getAbsoluteEncoder(); // REV Through Bore on the data
                                                                                       // port
 
-    private int wrapCount = 0; // # of times the through bore has wrapped since the last resync
-    private double lastAbsolutePosition = 0.0; // last abs encoder reading in encoder degrees, used for tracking wraps
     private double currentTargetDegrees = 0.0; // tracks last commanded angle, used for isAtAngle check
     private boolean setpointWasClamped = false; // last setAngle call hit a travel limit
+    private double arbFFVolts = 0.0;
     private final Timer bootTimer = new Timer();
-    private boolean bootResyncDone = false;
+    private boolean seeded = false;
+    private double seedOffsetDegrees = 0.0;
+    private double lastKnownDegrees = 0.0;
+    private int resetRecoveries = 0;
+    private int implausibleLoops = 0;
 
     public Turret() {
         // TalonFXConfiguration motorConfig = new TalonFXConfiguration();
@@ -75,7 +79,6 @@ public class Turret extends SubsystemBase {
                 PersistMode.kPersistParameters);
         TurretMotor.clearFaults();
 
-        resyncFromAbsolute(); // assumes the turret booted parked at the reference spot
         bootTimer.start();
     }
 
@@ -89,9 +92,31 @@ public class Turret extends SubsystemBase {
     }
 
     public double getContinuousDegrees() { // actual turret angle, unwrapped, 0 = robot forward
-        double degreesFromReference = (wrapCount * 360.0 + getAbsoluteDegrees())
-                / TurretConstants.ABSOLUTE_ENCODER_RATIO;
-        return TurretConstants.REFERENCE_TURRET_DEGREES + degreesFromReference;
+        return getRelativeDegrees();
+    }
+
+    public double throughBoreDegreesNear(double nearDegrees) {
+        double ratio = TurretConstants.ABSOLUTE_ENCODER_RATIO;
+        double absolute = getAbsoluteDegrees();
+        long window = Math.round(
+                ((nearDegrees - TurretConstants.REFERENCE_TURRET_DEGREES) * ratio - absolute) / 360.0);
+        return TurretConstants.REFERENCE_TURRET_DEGREES + (window * 360.0 + absolute) / ratio;
+    }
+
+    private void seedNear(double nearDegrees) {
+        double seed = throughBoreDegreesNear(nearDegrees);
+        turretRelativeEncoder.setPosition(degreesToRotations(seed));
+        lastKnownDegrees = seed;
+        implausibleLoops = 0;
+        seeded = true;
+    }
+
+    public boolean isSeeded() {
+        return seeded;
+    }
+
+    private double turretDegreesPerSecond() {
+        return turretRelativeEncoder.getVelocity() * 6.0 / TurretConstants.GEAR_RATIO;
     }
 
     private double degreesToRotations(double degrees) { // gets motor rotations from the desired angle accounting for
@@ -101,19 +126,6 @@ public class Turret extends SubsystemBase {
 
     private double rotationsToDegrees(double rotations) { // same but backwards
         return (rotations / TurretConstants.GEAR_RATIO) * 360.0;
-    }
-
-    private void updateWrapCount() { // detects when abs encoder crosses boundary and changes the wrap count
-        double current = getAbsoluteDegrees(); // if the reading jumps 180 degrees then it wrapped itself
-        double delta = current - lastAbsolutePosition;
-
-        if (delta < -180.0) {
-            wrapCount++; // crossed the seam going forward from 180 to -180
-        } else if (delta > 180.0) {
-            wrapCount--; // crossed the seam going backward from -180 to 180
-        }
-
-        lastAbsolutePosition = current; // update for next loop
     }
 
     // Travel limits backed off from the hard stops by the safety margin. Every
@@ -140,8 +152,7 @@ public class Turret extends SubsystemBase {
      *
      * <p>Assumes positive output raises {@link #getContinuousDegrees()}. That is the
      * same convention {@link #degreesToRotations} already bakes into the position
-     * loop, so it is not a new assumption - but confirm it during the gear ratio
-     * sweep, and flip ABSOLUTE_ENCODER_INVERTED if the encoder counts the other way.
+     * loop, so it is not a new assumption.
      */
     public boolean wouldExceedCableLimit(double speed) {
         double continuous = getContinuousDegrees();
@@ -156,7 +167,8 @@ public class Turret extends SubsystemBase {
 
      // true = turret is within tolerance of its last commanded angle
  public boolean isAtAngle() {
-    return Math.abs(getContinuousDegrees() - currentTargetDegrees) <= TurretConstants.ANGLE_TOLERANCE_DEGREES;
+    return seeded
+            && Math.abs(getContinuousDegrees() - currentTargetDegrees) <= TurretConstants.ANGLE_TOLERANCE_DEGREES;
 }
 
     // only call this with the turret parked at the reference spot. the through bore
@@ -164,10 +176,7 @@ public class Turret extends SubsystemBase {
     // which 36 degree window its in, so this is us promising it that its in the
     // reference one.
     public void resyncFromAbsolute() {
-        wrapCount = 0;
-        lastAbsolutePosition = getAbsoluteDegrees(); // seed from where it actually is, otherwise the next loop fakes a
-                                                     // wrap
-        turretRelativeEncoder.setPosition(degreesToRotations(getContinuousDegrees()));
+        seedNear(TurretConstants.REFERENCE_TURRET_DEGREES);
     }
 
     public double angleToSetpoint(double targetDegrees) { // converts angle to setpoint
@@ -211,6 +220,10 @@ public class Turret extends SubsystemBase {
      * Returns false if the requested angle was outside that range.
      */
     public boolean setAngleClamped(double targetDegrees) {
+        return setAngleClamped(targetDegrees, 0.0);
+    }
+
+    public boolean setAngleClamped(double targetDegrees, double feedforwardDegPerSec) {
         double setpoint = angleToSetpoint(targetDegrees);
         if (Double.isNaN(setpoint)) {
             double base = MathUtil.inputModulus(targetDegrees, -180.0, 180.0);
@@ -219,16 +232,24 @@ public class Turret extends SubsystemBase {
         } else {
             targetReachable = true;
         }
-        setAngle(setpoint);
+        setAngle(setpoint, targetReachable ? feedforwardDegPerSec : 0.0);
         return targetReachable;
     }
 
-    public void setAngle(double degrees) { // send turret to angle in degrees using position control
+    public void setAngle(double degrees) {
+        setAngle(degrees, 0.0);
+    }
+
+    public void setAngle(double degrees, double feedforwardDegPerSec) { // send turret to angle in degrees using position control
         // Hard guard for the closed loop. A position setpoint inside the soft range
         // cannot command the turret into a stop no matter who calls this.
         double clamped = MathUtil.clamp(degrees, softMinDegrees(), softMaxDegrees());
         setpointWasClamped = clamped != degrees;
         currentTargetDegrees = clamped; // track target so isAtAngle can check it
+        double maxVolts = TurretConstants.MAX_OUTPUT * 12.0;
+        arbFFVolts = setpointWasClamped ? 0.0
+                : MathUtil.clamp(feedforwardDegPerSec * TurretConstants.FF_VOLTS_PER_DEG_PER_SEC,
+                        -maxVolts, maxVolts);
         // kPosition, not kMAXMotionPositionControl. Two reasons:
         // 1. TurretMotorConfig never sets a maxMotion block, and we configure with
         //    kResetSafeParameters, which wipes whatever was stored on the SPARK. So
@@ -237,7 +258,8 @@ public class Turret extends SubsystemBase {
         // 2. MAXMotion is the wrong mode for a continuously moving setpoint anyway;
         //    it re-plans a deceleration ramp every loop. The hood already uses
         //    kPosition. If a trapezoid is wanted later, configure maxMotion first.
-        turretController.setSetpoint(degreesToRotations(clamped), ControlType.kPosition);
+        turretController.setSetpoint(degreesToRotations(clamped), ControlType.kPosition,
+                ClosedLoopSlot.kSlot0, arbFFVolts, ArbFFUnits.kVoltage);
     }
 
     public void stopTurret() {
@@ -281,18 +303,37 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (!bootResyncDone && DriverStation.isDisabled()
-                && bootTimer.hasElapsed(TurretConstants.BOOT_RESYNC_DELAY_SECONDS)) {
-            resyncFromAbsolute();
-            bootResyncDone = true;
+        Logger.recordOutput("Turret/StickyFaultBits", TurretMotor.getStickyFaults().rawBits);
+        double plausibleJump = Math.abs(turretDegreesPerSecond()) * TurretConstants.TRACK_JUMP_WINDOW_SECONDS
+                + TurretConstants.TRACK_JUMP_MARGIN_DEGREES;
+        if (TurretMotor.getStickyWarnings().hasReset) {
+            TurretMotor.clearFaults();
+            if (seeded && Math.abs(getRelativeDegrees() - lastKnownDegrees) > plausibleJump) {
+                seeded = false;
+                seedOffsetDegrees = lastKnownDegrees;
+                resetRecoveries++;
+            }
         }
-        updateWrapCount(); // must run every loop for it to not blow up
+        if (!seeded && bootTimer.hasElapsed(TurretConstants.BOOT_RESYNC_DELAY_SECONDS)
+                && Math.abs(turretDegreesPerSecond()) < TurretConstants.SEED_MAX_DEGREES_PER_SECOND) {
+            seedNear(seedOffsetDegrees + getRelativeDegrees());
+            seedOffsetDegrees = 0.0;
+        }
+        if (seeded) {
+            double now = getContinuousDegrees();
+            if (Math.abs(now - lastKnownDegrees) <= plausibleJump
+                    || ++implausibleLoops > TurretConstants.TRACK_JUMP_ACCEPT_LOOPS) {
+                lastKnownDegrees = now;
+                implausibleLoops = 0;
+            }
+        }
 
         Logger.recordOutput("Turret/AbsoluteDegrees", getAbsoluteDegrees());
         Logger.recordOutput("Turret/AbsoluteDegPerSec", turretAbsoluteEncoder.getVelocity());
         Logger.recordOutput("Turret/RelativeDegrees", getRelativeDegrees());
         Logger.recordOutput("Turret/ContinuousDegrees", getContinuousDegrees());
-        Logger.recordOutput("Turret/WrapCount", wrapCount);
+        Logger.recordOutput("Turret/Seeded", seeded);
+        Logger.recordOutput("Turret/ResetRecoveries", resetRecoveries);
         Logger.recordOutput("Turret/IsAtAngle", isAtAngle());
         Logger.recordOutput("Turret/IsAtCableLimit", isAtCableLimit());
         Logger.recordOutput("Turret/TargetDegrees", currentTargetDegrees);
@@ -303,10 +344,12 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/CurrentDraw", getSupplyCurrent(TurretMotor));
         Logger.recordOutput("Turret/StatorCurrent", getStatorCurrent(TurretMotor));
         Logger.recordOutput("Turret/MotorRotations", turretRelativeEncoder.getPosition());
-        Logger.recordOutput("Turret/FrameDisagreementDeg", getContinuousDegrees() - getRelativeDegrees());
+        Logger.recordOutput("Turret/FrameDisagreementDeg",
+                throughBoreDegreesNear(getContinuousDegrees()) - getContinuousDegrees());
         Logger.recordOutput("Turret/SoftMinDegrees", softMinDegrees());
         Logger.recordOutput("Turret/SoftMaxDegrees", softMaxDegrees());
         Logger.recordOutput("Turret/SetpointWasClamped", setpointWasClamped);
+        Logger.recordOutput("Turret/ArbFFVolts", arbFFVolts);
         Logger.recordOutput("Turret/IsTargetReachable", isTargetReachable());
     }
 }

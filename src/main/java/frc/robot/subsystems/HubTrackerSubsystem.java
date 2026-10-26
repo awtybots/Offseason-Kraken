@@ -1,8 +1,9 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.utils.ControllerRumble;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,7 +31,7 @@ public class HubTrackerSubsystem extends SubsystemBase
     @SuppressWarnings("unused")
     private FieldObject2d traj;
 
-    final CommandXboxController driverController;
+    private final ControllerRumble rumble;
 
     boolean active = true;
 
@@ -45,22 +45,16 @@ public class HubTrackerSubsystem extends SubsystemBase
     
     int x = 0;
     
-    public HubTrackerSubsystem(SwerveSubsystem drivebase, CommandXboxController driverController)
+    public HubTrackerSubsystem(SwerveSubsystem drivebase, ControllerRumble rumble)
     {
         SmartDashboard.putString("Hub Color For Xavier", RED.toHexString());
         this.drivebase = drivebase;
         circle = field.getObject("Circle"); 
         traj = field.getObject("Trajectory");
         dynamicHubCircle = field.getObject("DynamicHubCircle");
-        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-        hubPose = switch (alliance)
-        {
-            case Blue -> new Pose2d(4.6, 4, new Rotation2d());
-            case Red -> new Pose2d(11.9, 4, new Rotation2d());
-            default -> new Pose2d(4.6, 4.1, new Rotation2d());
-        };
+        hubPose = Constants.DrivebaseConstants.getHubPose2D();
         SmartDashboard.putData("Field", field);
-        this.driverController = driverController;
+        this.rumble = rumble;
     }
 
     public boolean isHubActive() {
@@ -175,9 +169,8 @@ public class HubTrackerSubsystem extends SubsystemBase
   {
     if(r <= 0.15 && DriverStation.isFMSAttached() && DriverStation.isTeleop())
     {
-        driverController.setRumble(RumbleType.kBothRumble, 0.15 * Math.pow((1.0 - r), 2));
+        rumble.hold(0.15 * Math.pow((1.0 - r), 2));
     }
-    else driverController.setRumble(RumbleType.kBothRumble, 0);
   }
 
   public List<Pose2d> createCircle(Pose2d center, double r, int pts)
@@ -201,6 +194,7 @@ public class HubTrackerSubsystem extends SubsystemBase
   public void runPeriodic()
   {
     Pose2d robotPose = drivebase.getPose();
+    hubPose = Constants.DrivebaseConstants.getHubPose2D();
 
     field.setRobotPose(robotPose);
     active = isHubActive();
